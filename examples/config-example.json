@@ -28,8 +28,7 @@
       },
       "failDelay": 5
     },
-    "allowReadAccess": false,
-    "allowOverwrite": true
+    "allowReadAccess": false
   },
   "log":{
     "level":"debug",

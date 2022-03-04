@@ -140,7 +140,7 @@ func New() *Config {
 		Commit:     Commit,
 		BinaryType: BinaryType,
 		Storage:    GlobalStorageConfig{GC: true, GCDelay: storage.DefaultGCDelay, Dedupe: true},
-		HTTP:       HTTPConfig{Address: "127.0.0.1", Port: "8080"},
+		HTTP:       HTTPConfig{Address: "127.0.0.1", Port: "8080", AllowOverwrites: true},
 		Log:        &LogConfig{Level: "debug"},
 	}
 }
