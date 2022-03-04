@@ -638,6 +638,11 @@ func (is *ImageStoreFS) PutImageManifest(repo string, reference string, mediaTyp
 				break
 			}
 			// manifest contents have changed for the same tag,
+			
+			if allowOverwrite == false {
+				return "", zerr.ErrCannotOverwrite
+			}
+
 			// so update index.json descriptor
 			is.log.Info().
 				Int64("old size", desc.Size).

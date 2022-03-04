@@ -451,6 +451,9 @@ func (rh *RouteHandler) UpdateManifest(response http.ResponseWriter, request *ht
 		} else if errors.Is(err, zerr.ErrBlobNotFound) {
 			WriteJSON(response, http.StatusBadRequest,
 				NewErrorList(NewError(BLOB_UNKNOWN, map[string]string{"blob": digest})))
+		} else if errors.Is(err, zerr.ErrCannotOverwrite) {
+			WriteJSON(response, http.StatusMethodNotAllowed,
+				NewErrorList(NewError(DENIED, map[string]string{})))
 		} else {
 			rh.c.Log.Error().Err(err).Msg("unexpected error")
 			response.WriteHeader(http.StatusInternalServerError)

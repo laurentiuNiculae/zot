@@ -363,6 +363,7 @@ func applyDefaultValues(config *config.Config, viperInstance *viper.Viper) {
 			}
 		}
 	}
+	// TODO: add default for allowOverwrite
 }
 
 func LoadConfiguration(config *config.Config, configPath string) {
