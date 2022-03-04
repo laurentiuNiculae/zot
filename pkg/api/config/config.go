@@ -68,7 +68,7 @@ type HTTPConfig struct {
 	Auth             *AuthConfig
 	RawAccessControl map[string]interface{} `mapstructure:"accessControl,omitempty"`
 	Realm            string
-	AllowOverwrites  bool
+	AllowOverwrites  bool             `mapstructure:",omitempty"`
 	AllowReadAccess  bool             `mapstructure:",omitempty"`
 	ReadOnly         bool             `mapstructure:",omitempty"`
 	Ratelimit        *RatelimitConfig `mapstructure:",omitempty"`
@@ -140,7 +140,7 @@ func New() *Config {
 		Commit:     Commit,
 		BinaryType: BinaryType,
 		Storage:    GlobalStorageConfig{GC: true, GCDelay: storage.DefaultGCDelay, Dedupe: true},
-		HTTP:       HTTPConfig{Address: "127.0.0.1", Port: "8080"},
+		HTTP:       HTTPConfig{Address: "127.0.0.1", Port: "8080", AllowOverwrites: true},
 		Log:        &LogConfig{Level: "debug"},
 	}
 }

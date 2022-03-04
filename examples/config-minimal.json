@@ -6,7 +6,8 @@
     "http": {
         "address": "127.0.0.1",
         "port": "8080",
-        "ReadOnly": false
+        "ReadOnly": false,
+        "allowOverwrites": false
     },
     "log": {
         "level": "debug"

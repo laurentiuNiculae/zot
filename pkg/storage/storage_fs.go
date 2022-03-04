@@ -55,16 +55,17 @@ type StoreController struct {
 
 // ImageStoreFS provides the image storage operations.
 type ImageStoreFS struct {
-	rootDir     string
-	lock        *sync.RWMutex
-	blobUploads map[string]BlobUpload
-	cache       *Cache
-	gc          bool
-	dedupe      bool
-	commit      bool
-	gcDelay     time.Duration
-	log         zerolog.Logger
-	metrics     monitoring.MetricServer
+	rootDir        string
+	lock           *sync.RWMutex
+	blobUploads    map[string]BlobUpload
+	cache          *Cache
+	gc             bool
+	dedupe         bool
+	commit         bool
+	allowOverwrite bool
+	gcDelay        time.Duration
+	log            zerolog.Logger
+	metrics        monitoring.MetricServer
 }
 
 func (is *ImageStoreFS) RootDir() string {
@@ -105,7 +106,7 @@ func (sc StoreController) GetImageStore(name string) ImageStore {
 }
 
 // NewImageStore returns a new image store backed by a file storage.
-func NewImageStore(rootDir string, gc bool, gcDelay time.Duration, dedupe, commit bool,
+func NewImageStore(rootDir string, gc bool, gcDelay time.Duration, dedupe, commit, allowOverwrite bool,
 	log zlog.Logger, metrics monitoring.MetricServer) ImageStore {
 	if _, err := os.Stat(rootDir); os.IsNotExist(err) {
 		if err := os.MkdirAll(rootDir, DefaultDirPerms); err != nil {
@@ -116,15 +117,16 @@ func NewImageStore(rootDir string, gc bool, gcDelay time.Duration, dedupe, commi
 	}
 
 	imgStore := &ImageStoreFS{
-		rootDir:     rootDir,
-		lock:        &sync.RWMutex{},
-		blobUploads: make(map[string]BlobUpload),
-		gc:          gc,
-		gcDelay:     gcDelay,
-		dedupe:      dedupe,
-		commit:      commit,
-		log:         log.With().Caller().Logger(),
-		metrics:     metrics,
+		rootDir:        rootDir,
+		lock:           &sync.RWMutex{},
+		blobUploads:    make(map[string]BlobUpload),
+		gc:             gc,
+		gcDelay:        gcDelay,
+		dedupe:         dedupe,
+		commit:         commit,
+		allowOverwrite: allowOverwrite,
+		log:            log.With().Caller().Logger(),
+		metrics:        metrics,
 	}
 
 	if dedupe {
@@ -638,8 +640,8 @@ func (is *ImageStoreFS) PutImageManifest(repo string, reference string, mediaTyp
 				break
 			}
 			// manifest contents have changed for the same tag,
-			
-			if allowOverwrite == false {
+
+			if is.allowOverwrite == false {
 				return "", zerr.ErrCannotOverwrite
 			}
 
