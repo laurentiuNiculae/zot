@@ -68,7 +68,7 @@ type HTTPConfig struct {
 	Auth             *AuthConfig
 	RawAccessControl map[string]interface{} `mapstructure:"accessControl,omitempty"`
 	Realm            string
-	AllowOverwrites  bool
+	AllowOverwrites  bool             `mapstructure:",omitempty"`
 	AllowReadAccess  bool             `mapstructure:",omitempty"`
 	ReadOnly         bool             `mapstructure:",omitempty"`
 	Ratelimit        *RatelimitConfig `mapstructure:",omitempty"`

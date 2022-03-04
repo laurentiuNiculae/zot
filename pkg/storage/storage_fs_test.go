@@ -39,7 +39,7 @@ func TestStorageFSAPIs(t *testing.T) {
 
 	log := log.Logger{Logger: zerolog.New(os.Stdout)}
 	metrics := monitoring.NewMetricsServer(false, log)
-	imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, log, metrics)
+	imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, true, log, metrics)
 
 	Convey("Repo layout", t, func(c C) {
 		repoName := "test"
@@ -176,7 +176,7 @@ func TestDedupeLinks(t *testing.T) {
 
 	log := log.Logger{Logger: zerolog.New(os.Stdout)}
 	metrics := monitoring.NewMetricsServer(false, log)
-	imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, log, metrics)
+	imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, true, log, metrics)
 
 	Convey("Dedupe", t, func(c C) {
 		// manifest1
@@ -316,7 +316,7 @@ func TestDedupe(t *testing.T) {
 
 			log := log.Logger{Logger: zerolog.New(os.Stdout)}
 			metrics := monitoring.NewMetricsServer(false, log)
-			il := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, log, metrics)
+			il := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, true, log, metrics)
 
 			So(il.DedupeBlob("", "", ""), ShouldNotBeNil)
 		})
@@ -335,9 +335,9 @@ func TestNegativeCases(t *testing.T) {
 		log := log.Logger{Logger: zerolog.New(os.Stdout)}
 		metrics := monitoring.NewMetricsServer(false, log)
 
-		So(storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, log, metrics), ShouldNotBeNil)
+		So(storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, true, log, metrics), ShouldNotBeNil)
 		if os.Geteuid() != 0 {
-			So(storage.NewImageStore("/deadBEEF", true, storage.DefaultGCDelay, true, true, log, metrics), ShouldBeNil)
+			So(storage.NewImageStore("/deadBEEF", true, storage.DefaultGCDelay, true, true, true, log, metrics), ShouldBeNil)
 		}
 	})
 
@@ -350,7 +350,7 @@ func TestNegativeCases(t *testing.T) {
 
 		log := log.Logger{Logger: zerolog.New(os.Stdout)}
 		metrics := monitoring.NewMetricsServer(false, log)
-		imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, log, metrics)
+		imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, true, log, metrics)
 
 		err = os.Chmod(dir, 0o000) // remove all perms
 		if err != nil {
@@ -389,7 +389,7 @@ func TestNegativeCases(t *testing.T) {
 
 		log := log.Logger{Logger: zerolog.New(os.Stdout)}
 		metrics := monitoring.NewMetricsServer(false, log)
-		imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, log, metrics)
+		imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, true, log, metrics)
 
 		So(imgStore, ShouldNotBeNil)
 		So(imgStore.InitRepo("test"), ShouldBeNil)
@@ -507,7 +507,7 @@ func TestNegativeCases(t *testing.T) {
 
 		log := log.Logger{Logger: zerolog.New(os.Stdout)}
 		metrics := monitoring.NewMetricsServer(false, log)
-		imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, log, metrics)
+		imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, true, log, metrics)
 
 		So(imgStore, ShouldNotBeNil)
 		So(imgStore.InitRepo("test"), ShouldBeNil)
@@ -534,7 +534,7 @@ func TestNegativeCases(t *testing.T) {
 
 		log := log.Logger{Logger: zerolog.New(os.Stdout)}
 		metrics := monitoring.NewMetricsServer(false, log)
-		imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, log, metrics)
+		imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, true, log, metrics)
 
 		So(imgStore, ShouldNotBeNil)
 		So(imgStore.InitRepo("test"), ShouldBeNil)
@@ -579,7 +579,7 @@ func TestNegativeCases(t *testing.T) {
 
 		log := log.Logger{Logger: zerolog.New(os.Stdout)}
 		metrics := monitoring.NewMetricsServer(false, log)
-		imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, log, metrics)
+		imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, true, log, metrics)
 
 		So(imgStore, ShouldNotBeNil)
 		So(imgStore.InitRepo("test"), ShouldBeNil)
@@ -641,7 +641,7 @@ func TestNegativeCases(t *testing.T) {
 
 		log := log.Logger{Logger: zerolog.New(os.Stdout)}
 		metrics := monitoring.NewMetricsServer(false, log)
-		imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, log, metrics)
+		imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, true, log, metrics)
 
 		upload, err := imgStore.NewBlobUpload("dedupe1")
 		So(err, ShouldBeNil)
@@ -801,7 +801,7 @@ func TestInjectWriteFile(t *testing.T) {
 
 		log := log.Logger{Logger: zerolog.New(os.Stdout)}
 		metrics := monitoring.NewMetricsServer(false, log)
-		imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, log, metrics)
+		imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, true, log, metrics)
 
 		Convey("Failure path1", func() {
 			injected := test.InjectFailure(0)
@@ -833,7 +833,7 @@ func TestInjectWriteFile(t *testing.T) {
 
 		log := log.Logger{Logger: zerolog.New(os.Stdout)}
 		metrics := monitoring.NewMetricsServer(false, log)
-		imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, false, log, metrics)
+		imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, false, true, log, metrics)
 
 		Convey("Failure path not reached", func() {
 			err := imgStore.InitRepo("repo1")
@@ -855,7 +855,7 @@ func TestGarbageCollect(t *testing.T) {
 		metrics := monitoring.NewMetricsServer(false, log)
 
 		Convey("Garbage collect with default/long delay", func() {
-			imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, log, metrics)
+			imgStore := storage.NewImageStore(dir, true, storage.DefaultGCDelay, true, true, true, log, metrics)
 			repoName := "gc-long"
 
 			upload, err := imgStore.NewBlobUpload(repoName)
@@ -921,7 +921,7 @@ func TestGarbageCollect(t *testing.T) {
 		})
 
 		Convey("Garbage collect with short delay", func() {
-			imgStore := storage.NewImageStore(dir, true, 1*time.Second, true, true, log, metrics)
+			imgStore := storage.NewImageStore(dir, true, 1*time.Second, true, true, true, log, metrics)
 			repoName := "gc-short"
 
 			// upload orphan blob
