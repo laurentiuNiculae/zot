@@ -49,5 +49,5 @@ var (
 	ErrInvalidMetric           = errors.New("metrics: invalid metric func")
 	ErrInjected                = errors.New("test: injected failure")
 	ErrSyncInvalidUpstreamURL  = errors.New("sync: upstream url not found in sync config")
-	ErrCannotOverwrite		   = errors.New("storage: not allowed to overwrite manifest")
+	ErrCannotOverwrite         = errors.New("storage: not allowed to overwrite manifest")
 )
