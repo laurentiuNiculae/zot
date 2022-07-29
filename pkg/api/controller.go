@@ -26,6 +26,7 @@ import (
 	"zotregistry.io/zot/pkg/extensions/monitoring"
 	"zotregistry.io/zot/pkg/log"
 	"zotregistry.io/zot/pkg/storage"
+	"zotregistry.io/zot/pkg/storage/repodb"
 	"zotregistry.io/zot/pkg/storage/s3"
 )
 
@@ -36,6 +37,7 @@ const (
 type Controller struct {
 	Config          *config.Config
 	Router          *mux.Router
+	RepoDB          repodb.RepoDB
 	StoreController storage.StoreController
 	Log             log.Logger
 	Audit           *log.Logger
@@ -155,6 +157,10 @@ func (c *Controller) Run(reloadCtx context.Context) error {
 	c.Metrics = monitoring.NewMetricsServer(enabled, c.Log)
 
 	if err := c.InitImageStore(reloadCtx); err != nil {
+		return err
+	}
+
+	if err := c.InitSearchDB(reloadCtx); err != nil {
 		return err
 	}
 
@@ -416,6 +422,25 @@ func compareImageStore(root1, root2 string) bool {
 	}
 
 	return isSameFile
+}
+
+func (c *Controller) InitSearchDB(reloadCtx context.Context) error {
+	if c.Config.Extensions != nil && c.Config.Extensions.Search != nil && *c.Config.Extensions.Search.Enable {
+		var err error
+
+		c.RepoDB, err = c.CreateSearchDBDriver()
+		if err != nil {
+			c.Log.Error().Err(err).Msgf("can't create driver for search-db")
+
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *Controller) CreateSearchDBDriver() (repodb.RepoDB, error) {
+	return repodb.NewBotDBWrapper(c.StoreController.DefaultStore)
 }
 
 func (c *Controller) LoadNewConfig(reloadCtx context.Context, config *config.Config) {

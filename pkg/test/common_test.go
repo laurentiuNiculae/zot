@@ -6,6 +6,7 @@ package test_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path"
 	"testing"
@@ -13,6 +14,7 @@ import (
 	"github.com/opencontainers/go-digest"
 	ispec "github.com/opencontainers/image-spec/specs-go/v1"
 	. "github.com/smartystreets/goconvey/convey"
+	"golang.org/x/crypto/bcrypt"
 	"zotregistry.io/zot/pkg/api"
 	"zotregistry.io/zot/pkg/api/config"
 	"zotregistry.io/zot/pkg/test"
@@ -235,6 +237,78 @@ func TestUploadImage(t *testing.T) {
 		So(err, ShouldBeNil)
 	})
 
+	Convey("Upload image with authentification", t, func() {
+		tempDir := t.TempDir()
+		conf := config.New()
+		port := test.GetFreePort()
+		baseURL := test.GetBaseURL(port)
+
+		user1 := "test"
+		password1 := "test"
+		testString1 := getCredString(user1, password1)
+		htpasswdPath := test.MakeHtpasswdFileFromString(testString1)
+		defer os.Remove(htpasswdPath)
+		conf.HTTP.Auth = &config.AuthConfig{
+			HTPasswd: config.AuthHTPasswd{
+				Path: htpasswdPath,
+			},
+		}
+
+		conf.HTTP.Port = port
+
+		conf.AccessControl = &config.AccessControlConfig{
+			Repositories: config.Repositories{
+				"repo": config.PolicyGroup{
+					Policies: []config.Policy{
+						{
+							Users:   []string{user1},
+							Actions: []string{"read", "create"},
+						},
+					},
+					DefaultPolicy: []string{},
+				},
+				"inaccessibleRepo": config.PolicyGroup{
+					Policies: []config.Policy{
+						{
+							Users:   []string{user1},
+							Actions: []string{"create"},
+						},
+					},
+					DefaultPolicy: []string{},
+				},
+			},
+			AdminPolicy: config.Policy{
+				Users:   []string{},
+				Actions: []string{},
+			},
+		}
+
+		ctlr := api.NewController(conf)
+
+		ctlr.Config.Storage.RootDirectory = tempDir
+
+		go startServer(ctlr)
+		defer stopServer(ctlr)
+		test.WaitTillServerReady(baseURL)
+
+		Convey("Request fail while pushing layer", func() {
+			err := test.UploadImageWithBasicAuth(test.Image{Layers: [][]byte{{1, 2, 3}}}, "badURL", "", "", "")
+			So(err, ShouldNotBeNil)
+		})
+		Convey("Request status is not StatusOk while pushing layer", func() {
+			err := test.UploadImageWithBasicAuth(test.Image{Layers: [][]byte{{1, 2, 3}}}, baseURL, "repo", "", "")
+			So(err, ShouldNotBeNil)
+		})
+		Convey("Request fail while pushing config", func() {
+			err := test.UploadImageWithBasicAuth(test.Image{}, "badURL", "", "", "")
+			So(err, ShouldNotBeNil)
+		})
+		Convey("Request status is not StatusOk while pushing config", func() {
+			err := test.UploadImageWithBasicAuth(test.Image{}, baseURL, "repo", "", "")
+			So(err, ShouldNotBeNil)
+		})
+	})
+
 	Convey("Blob upload wrong response status code", t, func() {
 		port := test.GetFreePort()
 		baseURL := test.GetBaseURL(port)
@@ -327,6 +401,17 @@ func TestUploadImage(t *testing.T) {
 			}
 		})
 	})
+}
+
+func getCredString(username, password string) string {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+	if err != nil {
+		panic(err)
+	}
+
+	usernameAndHash := fmt.Sprintf("%s:%s", username, string(hash))
+
+	return usernameAndHash
 }
 
 func TestInjectUploadImage(t *testing.T) {

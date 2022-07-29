@@ -27,56 +27,89 @@ type RepoInfo {
 # Search results in all repos/images/layers
 # There will be other more structures for more detailed information
 type GlobalSearchResult {
-    Images: [ImageSummary]
-    Repos: [RepoSummary]
-    Layers: [LayerSummary]
+     Page: PageInfo
+     Images: [ImageSummary]
+     Repos: [RepoSummary]
+     Layers: [LayerSummary]
 }
 
 # Brief on a specific image to be used in queries returning a list of images
 # We define an image as a pairing or a repo and a tag belonging to that repo
 type ImageSummary {
-    RepoName: String
-    Tag: String
-    Digest: String
-    ConfigDigest: String
-    LastUpdated: Time
-    IsSigned: Boolean
-    Size: String
-    Platform: OsArch
-    Vendor: String
-    Score: Int
-    DownloadCount: Int
-    Layers: [LayerSummary]
-    Description: String
-    Licenses: String
-    Labels: String
+     RepoName: String
+     Tag: String
+     Digest: String
+     ConfigDigest: String
+     LastUpdated: Time
+     IsSigned: Boolean
+     Size: String
+     Platform: OsArch
+     Vendor: String
+     Score: Int
+     DownloadCount: Int
+     Layers: [LayerSummary]
+     Description: String
+     Licenses: String  #  The value of the annotation if present, 'unknown' otherwise).
+     Labels: String
+     History: [HistoryEntry]
 }
 
 # Brief on a specific repo to be used in queries returning a list of repos
 type RepoSummary {
-    Name: String
-    LastUpdated: Time
-    Size: String
-    Platforms: [OsArch]
-    Vendors: [String]
-    Score: Int
-    NewestImage: ImageSummary
-    DownloadCount: Int
-    StarCount: Int
-    IsBookmarked: Boolean
+     Name: String
+     LastUpdated: Time
+     Size: String
+     Platforms: [OsArch]
+     Vendors: [String]
+     Score: Int
+     NewestImage: ImageSummary # Newest based on created timestamp
+     DownloadCount: Int
+     StarCount: Int
+     IsBookmarked: Boolean
+     IsStarred: Boolean
 }
 
 # Currently the same as LayerInfo, we can refactor later
 # For detailed information on the layer a ImageListForDigest call can be made
 type LayerSummary {
-    Size: String  # Int64 is not supported.
-    Digest: String
-    Score: Int
+     Size: String  # Int64 is not supported.
+     Digest: String
+     Score: Int
 }
 
 type OsArch {
     Os: String
     Arch: String
+}
+
+enum SortCriteria {
+     RELEVANCE
+     UPDATE_TIME
+     ALPHABETIC_ASC
+     ALPHABETIC_DSC
+     STARS
+     DOWNLOADS
+}
+
+type HistoryEntry {
+     Author: String
+     Created: Time
+     CreatedBy: String
+     EmptyLayer: Boolean
+}
+
+type PageInfo {
+     ObjectCount: Int!
+     PreviousPage: Int
+     NextPage: Int
+     Pages: Int
+}
+
+# Pagination parameters
+input PageInput {
+  limit: Int
+  offset: Int
+  sortBy: SortCriteria
 }
 
 type Query {
@@ -87,5 +120,5 @@ type Query {
     RepoListWithNewestImage: [RepoSummary!]!  # Newest based on created timestamp
     ImageList(repo: String!): [ImageSummary!]
     ExpandedRepoInfo(repo: String!): RepoInfo!
-    GlobalSearch(query: String!): GlobalSearchResult!
+    GlobalSearch(query: String!, requestedPage: PageInput): GlobalSearchResult!  # Return all images/repos/layers which match the query
 }

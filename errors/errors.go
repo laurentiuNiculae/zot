@@ -56,4 +56,6 @@ var (
 	ErrImageLintAnnotations    = errors.New("routes: lint checks failed")
 	ErrParsingAuthHeader       = errors.New("auth: failed parsing authorization header")
 	ErrBadType                 = errors.New("core: invalid type")
+	ErrManifestMetaNotFound    = errors.New("repodb: image metadata not found for given manifest digest")
+	ErrRepoMetaNotFound        = errors.New("repodb: repo metadata not found for given repo name")
 )
