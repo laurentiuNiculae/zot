@@ -10,7 +10,6 @@ import (
 	"net/url"
 	"os"
 	"testing"
-	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
 	"gopkg.in/resty.v1"
@@ -144,27 +143,9 @@ func TestDigestSearchHTTP(t *testing.T) {
 
 		ctlr := api.NewController(conf)
 
-		go func() {
-			// this blocks
-			if err := ctlr.Run(context.Background()); err != nil {
-				return
-			}
-		}()
-
-		// wait till ready
-		for {
-			_, err := resty.R().Get(baseURL)
-			if err == nil {
-				break
-			}
-			time.Sleep(100 * time.Millisecond)
-		}
-
-		// shut down server
-		defer func() {
-			ctx := context.Background()
-			_ = ctlr.Server.Shutdown(ctx)
-		}()
+		go startServer(ctlr)
+		defer stopServer(ctlr)
+		WaitTillServerReady(baseURL)
 
 		resp, err := resty.R().Get(baseURL + "/v2/")
 		So(resp, ShouldNotBeNil)
@@ -177,9 +158,18 @@ func TestDigestSearchHTTP(t *testing.T) {
 		So(resp.StatusCode(), ShouldEqual, 422)
 
 		// "sha" should match all digests in all images
+		query := `{
+			ImageListForDigest(id:"sha") {
+				RepoName Tag 
+				Manifests {
+					Digest ConfigDigest Size 
+					Layers { Digest }
+				}
+				Size
+			}
+		}`
 		resp, err = resty.R().Get(
-			baseURL + constants.FullSearchPrefix + `?query={ImageListForDigest(id:"sha")` +
-				`{RepoName%20Tag%20Digest%20ConfigDigest%20Size%20Layers%20{%20Digest}}}`,
+			baseURL + constants.FullSearchPrefix + "?query=" + url.QueryEscape(query),
 		)
 		So(resp, ShouldNotBeNil)
 		So(err, ShouldBeNil)
@@ -196,7 +186,7 @@ func TestDigestSearchHTTP(t *testing.T) {
 		// GetTestBlobDigest("zot-test", "manifest").Encoded() should match the manifest of 1 image
 
 		gqlQuery := url.QueryEscape(`{ImageListForDigest(id:"` + GetTestBlobDigest("zot-test", "manifest").Encoded() + `")
-			{RepoName Tag Digest ConfigDigest Size Layers { Digest }}}`)
+			{RepoName Tag Manifests {Digest ConfigDigest Size Layers { Digest }}}}`)
 		targetURL := baseURL + constants.FullSearchPrefix + `?query=` + gqlQuery
 
 		resp, err = resty.R().Get(targetURL)
@@ -214,7 +204,7 @@ func TestDigestSearchHTTP(t *testing.T) {
 
 		// GetTestBlobDigest("zot-test", "config").Encoded() should match the config of 1 image.
 		gqlQuery = url.QueryEscape(`{ImageListForDigest(id:"` + GetTestBlobDigest("zot-test", "config").Encoded() + `")
-			{RepoName Tag Digest ConfigDigest Size Layers { Digest }}}`)
+		{RepoName Tag Manifests {Digest ConfigDigest Size Layers { Digest }}}}`)
 
 		targetURL = baseURL + constants.FullSearchPrefix + `?query=` + gqlQuery
 		resp, err = resty.R().Get(targetURL)
@@ -233,7 +223,7 @@ func TestDigestSearchHTTP(t *testing.T) {
 		// Call should return {"data":{"ImageListForDigest":[{"Name":"zot-cve-test","Tags":["0.0.1"]}]}}
 		// GetTestBlobDigest("zot-cve-test", "layer").Encoded() should match the layer of 1 image
 		gqlQuery = url.QueryEscape(`{ImageListForDigest(id:"` + GetTestBlobDigest("zot-cve-test", "layer").Encoded() + `")
-			{RepoName Tag Digest ConfigDigest Size Layers { Digest }}}`)
+		{RepoName Tag Manifests {Digest ConfigDigest Size Layers { Digest }}}}`)
 		targetURL = baseURL + constants.FullSearchPrefix + `?query=` + gqlQuery
 
 		resp, err = resty.R().Get(
@@ -254,9 +244,17 @@ func TestDigestSearchHTTP(t *testing.T) {
 
 		// Call should return {"data":{"ImageListForDigest":[]}}
 		// "1111111" should match 0 images
+		query = `{
+			ImageListForDigest(id:"1111111") {
+				RepoName Tag 
+				Manifests {
+					Digest ConfigDigest Size 
+					Layers { Digest }
+					}
+				}
+			}`
 		resp, err = resty.R().Get(
-			baseURL + constants.FullSearchPrefix + `?query={ImageListForDigest(id:"1111111")` +
-				`{RepoName%20Tag%20Digest%20ConfigDigest%20Size%20Layers%20{%20Digest}}}`,
+			baseURL + constants.FullSearchPrefix + "?query=" + url.QueryEscape(query),
 		)
 		So(resp, ShouldNotBeNil)
 		So(err, ShouldBeNil)
@@ -268,9 +266,12 @@ func TestDigestSearchHTTP(t *testing.T) {
 		So(len(responseStruct.ImgListForDigest.Images), ShouldEqual, 0)
 
 		// Call should return {"errors": [{....}]", data":null}}
+		query = `{
+			ImageListForDigest(id:"1111111") {
+				RepoName Tag343s
+			}`
 		resp, err = resty.R().Get(
-			baseURL + constants.FullSearchPrefix + `?query={ImageListForDigest(id:"1111111")` +
-				`{RepoName%20Tag343s}}`,
+			baseURL + constants.FullSearchPrefix + "?query=" + url.QueryEscape(query),
 		)
 		So(resp, ShouldNotBeNil)
 		So(err, ShouldBeNil)
@@ -311,27 +312,9 @@ func TestDigestSearchHTTPSubPaths(t *testing.T) {
 
 		ctlr.Config.Storage.SubPaths = subPathMap
 
-		go func() {
-			// this blocks
-			if err := ctlr.Run(context.Background()); err != nil {
-				return
-			}
-		}()
-
-		// wait till ready
-		for {
-			_, err := resty.R().Get(baseURL)
-			if err == nil {
-				break
-			}
-			time.Sleep(100 * time.Millisecond)
-		}
-
-		// shut down server
-		defer func() {
-			ctx := context.Background()
-			_ = ctlr.Server.Shutdown(ctx)
-		}()
+		go startServer(ctlr)
+		defer stopServer(ctlr)
+		WaitTillServerReady(baseURL)
 
 		resp, err := resty.R().Get(baseURL + "/v2/")
 		So(resp, ShouldNotBeNil)
@@ -343,9 +326,17 @@ func TestDigestSearchHTTPSubPaths(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(resp.StatusCode(), ShouldEqual, 422)
 
+		query := `{
+			ImageListForDigest(id:"sha") {
+				RepoName Tag 
+				Manifests {
+					Digest ConfigDigest Size 
+					Layers { Digest }
+					}
+				}
+			}`
 		resp, err = resty.R().Get(
-			baseURL + constants.FullSearchPrefix + `?query={ImageListForDigest(id:"sha")` +
-				`{RepoName%20Tag%20Digest%20ConfigDigest%20Size%20Layers%20{%20Digest}}}`,
+			baseURL + constants.FullSearchPrefix + "?query=" + url.QueryEscape(query),
 		)
 		So(resp, ShouldNotBeNil)
 		So(err, ShouldBeNil)
@@ -373,27 +364,9 @@ func TestDigestSearchDisabled(t *testing.T) {
 
 		ctlr := api.NewController(conf)
 
-		go func() {
-			// this blocks
-			if err := ctlr.Run(context.Background()); err != nil {
-				return
-			}
-		}()
-
-		// wait till ready
-		for {
-			_, err := resty.R().Get(baseURL)
-			if err == nil {
-				break
-			}
-			time.Sleep(100 * time.Millisecond)
-		}
-
-		// shut down server
-		defer func() {
-			ctx := context.Background()
-			_ = ctlr.Server.Shutdown(ctx)
-		}()
+		go startServer(ctlr)
+		defer stopServer(ctlr)
+		WaitTillServerReady(baseURL)
 
 		resp, err := resty.R().Get(baseURL + "/v2/")
 		So(resp, ShouldNotBeNil)
@@ -405,4 +378,17 @@ func TestDigestSearchDisabled(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(resp.StatusCode(), ShouldEqual, 404)
 	})
+}
+
+func startServer(c *api.Controller) {
+	// this blocks
+	ctx := context.Background()
+	if err := c.Run(ctx); err != nil {
+		return
+	}
+}
+
+func stopServer(c *api.Controller) {
+	ctx := context.Background()
+	_ = c.Server.Shutdown(ctx)
 }

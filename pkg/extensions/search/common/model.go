@@ -22,6 +22,26 @@ type RepoSummary struct {
 type ImageSummary struct {
 	RepoName        string                    `json:"repoName"`
 	Tag             string                    `json:"tag"`
+	Manifests       []ManifestSummary         `json:"manifests"`
+	Size            string                    `json:"size"`
+	DownloadCount   int                       `json:"downloadCount"`
+	LastUpdated     time.Time                 `json:"lastUpdated"`
+	Description     string                    `json:"description"`
+	IsSigned        bool                      `json:"isSigned"`
+	Licenses        string                    `json:"licenses"`
+	Labels          string                    `json:"labels"`
+	Title           string                    `json:"title"`
+	Score           int                       `json:"score"`
+	Source          string                    `json:"source"`
+	Documentation   string                    `json:"documentation"`
+	Logo            string                    `json:"logo"`
+	Authors         string                    `json:"authors"`
+	Vulnerabilities ImageVulnerabilitySummary `json:"vulnerabilities"`
+}
+
+type ManifestSummary struct {
+	RepoName        string                    `json:"repoName"`
+	Tag             string                    `json:"tag"`
 	Digest          string                    `json:"digest"`
 	ConfigDigest    string                    `json:"configDigest"`
 	LastUpdated     time.Time                 `json:"lastUpdated"`
@@ -29,16 +49,9 @@ type ImageSummary struct {
 	Size            string                    `json:"size"`
 	Platform        OsArch                    `json:"platform"`
 	Vendor          string                    `json:"vendor"`
-	Score           int                       `json:"score"`
 	DownloadCount   int                       `json:"downloadCount"`
-	Description     string                    `json:"description"`
-	Licenses        string                    `json:"licenses"`
-	Labels          string                    `json:"labels"`
-	Title           string                    `json:"title"`
-	Source          string                    `json:"source"`
-	Documentation   string                    `json:"documentation"`
-	History         []LayerHistory            `json:"history"`
 	Layers          []LayerSummary            `json:"layers"`
+	History         []LayerHistory            `json:"history"`
 	Vulnerabilities ImageVulnerabilitySummary `json:"vulnerabilities"`
 	Authors         string                    `json:"authors"`
 	Logo            string                    `json:"logo"`

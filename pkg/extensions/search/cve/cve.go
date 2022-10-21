@@ -76,39 +76,49 @@ func (cveinfo BaseCveInfo) GetImageListForCVE(repo, cveID string) ([]common.TagI
 			return nil, err
 		}
 
-		manifestMeta, err := cveinfo.RepoDB.GetManifestMeta(repo, manifestDigest)
-		if err != nil {
-			return nil, err
+		switch descriptor.MediaType {
+		case ispec.MediaTypeImageManifest:
+			manifestMeta, err := cveinfo.RepoDB.GetManifestMeta(repo, manifestDigest)
+			if err != nil {
+				return nil, err
+			}
+
+			var manifestContent ispec.Manifest
+
+			err = json.Unmarshal(manifestMeta.ManifestBlob, &manifestContent)
+			if err != nil {
+				cveinfo.Log.Error().Err(err).Str("repo", repo).Str("tag", tag).
+					Str("cve-id", cveID).Msg("unable to unmashal manifest blob")
+
+				continue
+			}
+
+			image := fmt.Sprintf("%s:%s", repo, tag)
+
+			isValidImage, _ := cveinfo.Scanner.IsImageFormatScannable(image)
+			if !isValidImage {
+				continue
+			}
+
+			cveMap, err := cveinfo.Scanner.ScanImage(image)
+			if err != nil {
+				continue
+			}
+
+			if _, hasCVE := cveMap[cveID]; hasCVE {
+				imgList = append(imgList, common.TagInfo{
+					Name: tag,
+					Descriptor: common.Descriptor{
+						Digest:    manifestDigest,
+						MediaType: descriptor.MediaType,
+					},
+				})
+			}
+		case ispec.MediaTypeImageIndex:
+		default:
+			// TODO:
 		}
 
-		var manifestContent ispec.Manifest
-
-		err = json.Unmarshal(manifestMeta.ManifestBlob, &manifestContent)
-		if err != nil {
-			cveinfo.Log.Error().Err(err).Str("repo", repo).Str("tag", tag).
-				Str("cve-id", cveID).Msg("unable to unmashal manifest blob")
-
-			continue
-		}
-
-		image := fmt.Sprintf("%s:%s", repo, tag)
-
-		isValidImage, _ := cveinfo.Scanner.IsImageFormatScannable(image)
-		if !isValidImage {
-			continue
-		}
-
-		cveMap, err := cveinfo.Scanner.ScanImage(image)
-		if err != nil {
-			continue
-		}
-
-		if _, hasCVE := cveMap[cveID]; hasCVE {
-			imgList = append(imgList, common.TagInfo{
-				Name:   tag,
-				Digest: manifestDigest,
-			})
-		}
 	}
 
 	return imgList, nil
@@ -126,67 +136,86 @@ func (cveinfo BaseCveInfo) GetImageListWithCVEFixed(repo, cveID string) ([]commo
 	vulnerableTags := make([]common.TagInfo, 0)
 	allTags := make([]common.TagInfo, 0)
 
+	var hasCVE bool
+
 	for tag, descriptor := range repoMeta.Tags {
 		manifestDigestStr := descriptor.Digest
 
-		manifestDigest, err := godigest.Parse(manifestDigestStr)
-		if err != nil {
-			cveinfo.Log.Error().Err(err).Str("repo", repo).Str("tag", tag).
-				Str("cve-id", cveID).Str("digest", manifestDigestStr).Msg("unable to parse digest")
+		switch descriptor.MediaType {
+		case ispec.MediaTypeImageManifest:
+			manifestDigest, err := godigest.Parse(manifestDigestStr)
+			if err != nil {
+				cveinfo.Log.Error().Err(err).Str("repo", repo).Str("tag", tag).
+					Str("cve-id", cveID).Str("digest", manifestDigestStr).Msg("unable to parse digest")
 
-			continue
-		}
+				continue
+			}
 
-		manifestMeta, err := cveinfo.RepoDB.GetManifestMeta(repo, manifestDigest)
-		if err != nil {
-			cveinfo.Log.Error().Err(err).Str("repo", repo).Str("tag", tag).
-				Str("cve-id", cveID).Msg("unable to obtain manifest meta")
+			manifestMeta, err := cveinfo.RepoDB.GetManifestMeta(repo, manifestDigest)
+			if err != nil {
+				cveinfo.Log.Error().Err(err).Str("repo", repo).Str("tag", tag).
+					Str("cve-id", cveID).Msg("unable to obtain manifest meta")
 
-			continue
-		}
+				continue
+			}
 
-		var configContent ispec.Image
+			var configContent ispec.Image
 
-		err = json.Unmarshal(manifestMeta.ConfigBlob, &configContent)
-		if err != nil {
-			cveinfo.Log.Error().Err(err).Str("repo", repo).Str("tag", tag).
-				Str("cve-id", cveID).Msg("unable to unmashal manifest blob")
+			err = json.Unmarshal(manifestMeta.ConfigBlob, &configContent)
+			if err != nil {
+				cveinfo.Log.Error().Err(err).Str("repo", repo).Str("tag", tag).
+					Str("cve-id", cveID).Msg("unable to unmashal manifest blob")
 
-			continue
-		}
+				continue
+			}
 
-		tagInfo := common.TagInfo{
-			Name:      tag,
-			Timestamp: common.GetImageLastUpdated(configContent),
-			Digest:    manifestDigest,
-		}
+			tagInfo := common.TagInfo{
+				Name:       tag,
+				Timestamp:  common.GetImageLastUpdated(configContent),
+				Descriptor: common.Descriptor{Digest: manifestDigest, MediaType: descriptor.MediaType},
+			}
 
-		allTags = append(allTags, tagInfo)
+			allTags = append(allTags, tagInfo)
 
-		image := fmt.Sprintf("%s:%s", repo, tag)
+			image := fmt.Sprintf("%s:%s", repo, tag)
 
-		isValidImage, _ := cveinfo.Scanner.IsImageFormatScannable(image)
-		if !isValidImage {
-			cveinfo.Log.Debug().Str("image", image).Str("cve-id", cveID).
-				Msg("image media type not supported for scanning, adding as a vulnerable image")
+			isValidImage, _ := cveinfo.Scanner.IsImageFormatScannable(image)
+			if !isValidImage {
+				cveinfo.Log.Debug().Str("image", image).Str("cve-id", cveID).
+					Msg("image media type not supported for scanning, adding as a vulnerable image")
 
-			vulnerableTags = append(vulnerableTags, tagInfo)
+				vulnerableTags = append(vulnerableTags, tagInfo)
 
-			continue
-		}
+				continue
+			}
 
-		cveMap, err := cveinfo.Scanner.ScanImage(image)
-		if err != nil {
-			cveinfo.Log.Debug().Str("image", image).Str("cve-id", cveID).
-				Msg("scanning failed, adding as a vulnerable image")
+			cveMap, err := cveinfo.Scanner.ScanImage(image)
+			if err != nil {
+				cveinfo.Log.Debug().Str("image", image).Str("cve-id", cveID).
+					Msg("scanning failed, adding as a vulnerable image")
 
-			vulnerableTags = append(vulnerableTags, tagInfo)
+				vulnerableTags = append(vulnerableTags, tagInfo)
 
-			continue
-		}
+				continue
+			}
 
-		if _, hasCVE := cveMap[cveID]; hasCVE {
-			vulnerableTags = append(vulnerableTags, tagInfo)
+			hasCVE = false
+
+			for id := range cveMap {
+				if id == cveID {
+					hasCVE = true
+
+					break
+				}
+			}
+
+			if hasCVE {
+				vulnerableTags = append(vulnerableTags, tagInfo)
+			}
+		case ispec.MediaTypeImageIndex:
+			panic("not implemented")
+		default:
+			cveinfo.Log.Info().Msg("media type not supported %s")
 		}
 	}
 

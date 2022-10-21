@@ -34,8 +34,8 @@ func TestGlobalSearch(t *testing.T) {
 		Convey("RepoDB SearchRepos error", func() {
 			mockRepoDB := mocks.RepoDBMock{
 				SearchReposFn: func(ctx context.Context, searchText string, filter repodb.Filter, requestedPage repodb.PageInput,
-				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
-					return make([]repodb.RepoMetadata, 0), make(map[string]repodb.ManifestMetadata), repodb.PageInfo{}, ErrTestError
+				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
+					return make([]repodb.RepoMetadata, 0), make(map[string]repodb.ManifestMetadata), map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, ErrTestError
 				},
 			}
 			responseContext := graphql.WithResponseContext(context.Background(), graphql.DefaultErrorPresenter,
@@ -52,7 +52,7 @@ func TestGlobalSearch(t *testing.T) {
 		Convey("RepoDB SearchRepo is successful", func() {
 			mockRepoDB := mocks.RepoDBMock{
 				SearchReposFn: func(ctx context.Context, searchText string, filter repodb.Filter, requestedPage repodb.PageInput,
-				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
+				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
 					repos := []repodb.RepoMetadata{
 						{
 							Name: "repo1",
@@ -64,6 +64,13 @@ func TestGlobalSearch(t *testing.T) {
 								"1.0.2": {
 									Digest:    "digestTag1.0.2",
 									MediaType: ispec.MediaTypeImageManifest,
+								},
+							},
+							Signatures: map[string]repodb.ManifestSignatures{
+								"digestTag1.0.1": repodb.ManifestSignatures{
+									"cosign": []repodb.SignatureInfo{
+										{SignatureManifestDigest: "testSignature", LayersInfo: []repodb.LayerInfo{}},
+									},
 								},
 							},
 							Stars: 100,
@@ -104,7 +111,7 @@ func TestGlobalSearch(t *testing.T) {
 						},
 					}
 
-					return repos, manifestMetas, repodb.PageInfo{}, nil
+					return repos, manifestMetas, map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, nil
 				},
 			}
 
@@ -133,7 +140,7 @@ func TestGlobalSearch(t *testing.T) {
 		Convey("RepoDB SearchRepo Bad manifest referenced", func() {
 			mockRepoDB := mocks.RepoDBMock{
 				SearchReposFn: func(ctx context.Context, searchText string, filter repodb.Filter, requestedPage repodb.PageInput,
-				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
+				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
 					repos := []repodb.RepoMetadata{
 						{
 							Name: "repo1",
@@ -141,6 +148,13 @@ func TestGlobalSearch(t *testing.T) {
 								"1.0.1": {
 									Digest:    "digestTag1.0.1",
 									MediaType: ispec.MediaTypeImageManifest,
+								},
+							},
+							Signatures: map[string]repodb.ManifestSignatures{
+								"digestTag1.0.1": repodb.ManifestSignatures{
+									"cosign": []repodb.SignatureInfo{
+										{SignatureManifestDigest: "testSignature", LayersInfo: []repodb.LayerInfo{}},
+									},
 								},
 							},
 							Stars: 100,
@@ -157,7 +171,7 @@ func TestGlobalSearch(t *testing.T) {
 						},
 					}
 
-					return repos, manifestMetas, repodb.PageInfo{}, nil
+					return repos, manifestMetas, map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, nil
 				},
 			}
 
@@ -197,7 +211,7 @@ func TestGlobalSearch(t *testing.T) {
 		Convey("RepoDB SearchRepo good manifest referenced and bad config blob", func() {
 			mockRepoDB := mocks.RepoDBMock{
 				SearchReposFn: func(ctx context.Context, searchText string, filter repodb.Filter, requestedPage repodb.PageInput,
-				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
+				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
 					repos := []repodb.RepoMetadata{
 						{
 							Name: "repo1",
@@ -205,6 +219,13 @@ func TestGlobalSearch(t *testing.T) {
 								"1.0.1": {
 									Digest:    "digestTag1.0.1",
 									MediaType: ispec.MediaTypeImageManifest,
+								},
+							},
+							Signatures: map[string]repodb.ManifestSignatures{
+								"digestTag1.0.1": repodb.ManifestSignatures{
+									"cosign": []repodb.SignatureInfo{
+										{SignatureManifestDigest: "testSignature", LayersInfo: []repodb.LayerInfo{}},
+									},
 								},
 							},
 							Stars: 100,
@@ -221,7 +242,7 @@ func TestGlobalSearch(t *testing.T) {
 						},
 					}
 
-					return repos, manifestMetas, repodb.PageInfo{}, nil
+					return repos, manifestMetas, map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, nil
 				},
 			}
 
@@ -260,8 +281,8 @@ func TestGlobalSearch(t *testing.T) {
 		Convey("RepoDB SearchTags gives error", func() {
 			mockRepoDB := mocks.RepoDBMock{
 				SearchTagsFn: func(ctx context.Context, searchText string, filter repodb.Filter, requestedPage repodb.PageInput,
-				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
-					return make([]repodb.RepoMetadata, 0), make(map[string]repodb.ManifestMetadata), repodb.PageInfo{}, ErrTestError
+				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
+					return make([]repodb.RepoMetadata, 0), make(map[string]repodb.ManifestMetadata), map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, ErrTestError
 				},
 			}
 			const query = "repo1:1.0.1"
@@ -280,7 +301,7 @@ func TestGlobalSearch(t *testing.T) {
 		Convey("RepoDB SearchTags is successful", func() {
 			mockRepoDB := mocks.RepoDBMock{
 				SearchTagsFn: func(ctx context.Context, searchText string, filter repodb.Filter, requestedPage repodb.PageInput,
-				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
+				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
 					repos := []repodb.RepoMetadata{
 						{
 							Name: "repo1",
@@ -288,6 +309,13 @@ func TestGlobalSearch(t *testing.T) {
 								"1.0.1": {
 									Digest:    "digestTag1.0.1",
 									MediaType: ispec.MediaTypeImageManifest,
+								},
+							},
+							Signatures: map[string]repodb.ManifestSignatures{
+								"digestTag1.0.1": repodb.ManifestSignatures{
+									"cosign": []repodb.SignatureInfo{
+										{SignatureManifestDigest: "testSignature", LayersInfo: []repodb.LayerInfo{}},
+									},
 								},
 							},
 							Stars: 100,
@@ -326,7 +354,7 @@ func TestGlobalSearch(t *testing.T) {
 						},
 					}
 
-					return repos, manifestMetas, repodb.PageInfo{}, nil
+					return repos, manifestMetas, map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, nil
 				},
 			}
 
@@ -359,8 +387,8 @@ func TestRepoListWithNewestImage(t *testing.T) {
 		Convey("RepoDB SearchRepos error", func() {
 			mockRepoDB := mocks.RepoDBMock{
 				SearchReposFn: func(ctx context.Context, searchText string, filter repodb.Filter, requestedPage repodb.PageInput,
-				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
-					return make([]repodb.RepoMetadata, 0), make(map[string]repodb.ManifestMetadata), repodb.PageInfo{}, ErrTestError
+				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
+					return make([]repodb.RepoMetadata, 0), make(map[string]repodb.ManifestMetadata), map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, ErrTestError
 				},
 			}
 			responseContext := graphql.WithResponseContext(context.Background(), graphql.DefaultErrorPresenter,
@@ -383,7 +411,7 @@ func TestRepoListWithNewestImage(t *testing.T) {
 		Convey("RepoDB SearchRepo Bad manifest referenced", func() {
 			mockRepoDB := mocks.RepoDBMock{
 				SearchReposFn: func(ctx context.Context, searchText string, filter repodb.Filter, requestedPage repodb.PageInput,
-				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
+				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
 					repos := []repodb.RepoMetadata{
 						{
 							Name: "repo1",
@@ -391,6 +419,13 @@ func TestRepoListWithNewestImage(t *testing.T) {
 								"1.0.1": {
 									Digest:    "digestTag1.0.1",
 									MediaType: ispec.MediaTypeImageManifest,
+								},
+							},
+							Signatures: map[string]repodb.ManifestSignatures{
+								"digestTag1.0.1": repodb.ManifestSignatures{
+									"cosign": []repodb.SignatureInfo{
+										{SignatureManifestDigest: "testSignature", LayersInfo: []repodb.LayerInfo{}},
+									},
 								},
 							},
 							Stars: 100,
@@ -401,6 +436,13 @@ func TestRepoListWithNewestImage(t *testing.T) {
 								"1.0.2": {
 									Digest:    "digestTag1.0.2",
 									MediaType: ispec.MediaTypeImageManifest,
+								},
+							},
+							Signatures: map[string]repodb.ManifestSignatures{
+								"digestTag1.0.1": repodb.ManifestSignatures{
+									"cosign": []repodb.SignatureInfo{
+										{SignatureManifestDigest: "testSignature", LayersInfo: []repodb.LayerInfo{}},
+									},
 								},
 							},
 							Stars: 100,
@@ -425,7 +467,7 @@ func TestRepoListWithNewestImage(t *testing.T) {
 						},
 					}
 
-					return repos, manifestMetas, repodb.PageInfo{}, nil
+					return repos, manifestMetas, map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, nil
 				},
 			}
 
@@ -451,7 +493,7 @@ func TestRepoListWithNewestImage(t *testing.T) {
 			createTime2 := createTime.Add(time.Second)
 			mockRepoDB := mocks.RepoDBMock{
 				SearchReposFn: func(ctx context.Context, searchText string, filter repodb.Filter, requestedPage repodb.PageInput,
-				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
+				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
 					pageFinder, err := repodb.NewBaseRepoPageFinder(requestedPage.Limit, requestedPage.Offset, requestedPage.SortBy)
 					So(err, ShouldBeNil)
 
@@ -464,6 +506,13 @@ func TestRepoListWithNewestImage(t *testing.T) {
 									MediaType: ispec.MediaTypeImageManifest,
 								},
 							},
+							Signatures: map[string]repodb.ManifestSignatures{
+								"digestTag1.0.1": repodb.ManifestSignatures{
+									"cosign": []repodb.SignatureInfo{
+										{SignatureManifestDigest: "testSignature", LayersInfo: []repodb.LayerInfo{}},
+									},
+								},
+							},
 							Stars: 100,
 						},
 						{
@@ -472,6 +521,13 @@ func TestRepoListWithNewestImage(t *testing.T) {
 								"1.0.2": {
 									Digest:    "digestTag1.0.2",
 									MediaType: ispec.MediaTypeImageManifest,
+								},
+							},
+							Signatures: map[string]repodb.ManifestSignatures{
+								"digestTag1.0.1": repodb.ManifestSignatures{
+									"cosign": []repodb.SignatureInfo{
+										{SignatureManifestDigest: "testSignature", LayersInfo: []repodb.LayerInfo{}},
+									},
 								},
 							},
 							Stars: 100,
@@ -518,7 +574,7 @@ func TestRepoListWithNewestImage(t *testing.T) {
 						},
 					}
 
-					return repos, manifestMetas, repodb.PageInfo{}, nil
+					return repos, manifestMetas, map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, nil
 				},
 			}
 			Convey("RepoDB missing requestedPage", func() {
@@ -562,8 +618,8 @@ func TestImageListForDigest(t *testing.T) {
 			mockSearchDB := mocks.RepoDBMock{
 				FilterTagsFn: func(ctx context.Context, filter repodb.FilterFunc,
 					requestedPage repodb.PageInput,
-				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
-					return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, repodb.PageInfo{}, ErrTestError
+				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
+					return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, ErrTestError
 				},
 			}
 
@@ -577,7 +633,7 @@ func TestImageListForDigest(t *testing.T) {
 			mockSearchDB := mocks.RepoDBMock{
 				FilterTagsFn: func(ctx context.Context, filter repodb.FilterFunc,
 					requestedPage repodb.PageInput,
-				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
+				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
 					repos := []repodb.RepoMetadata{
 						{
 							Name: "test",
@@ -604,7 +660,7 @@ func TestImageListForDigest(t *testing.T) {
 						},
 					}
 
-					return repos, manifestMetaDatas, repodb.PageInfo{}, nil
+					return repos, manifestMetaDatas, map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, nil
 				},
 			}
 
@@ -625,7 +681,7 @@ func TestImageListForDigest(t *testing.T) {
 			mockSearchDB := mocks.RepoDBMock{
 				FilterTagsFn: func(ctx context.Context, filter repodb.FilterFunc,
 					requestedPage repodb.PageInput,
-				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
+				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
 					repos := []repodb.RepoMetadata{
 						{
 							Name: "test",
@@ -647,10 +703,10 @@ func TestImageListForDigest(t *testing.T) {
 						},
 					}
 					matchedTags := repos[0].Tags
-					for tag, descriptor := range repos[0].Tags {
-						if !filter(repos[0], manifestMetaDatas[descriptor.Digest]) {
+					for tag, manifestDescriptor := range repos[0].Tags {
+						if !filter(repos[0], manifestMetaDatas[manifestDescriptor.Digest]) {
 							delete(matchedTags, tag)
-							delete(manifestMetaDatas, descriptor.Digest)
+							delete(manifestMetaDatas, manifestDescriptor.Digest)
 
 							continue
 						}
@@ -658,7 +714,7 @@ func TestImageListForDigest(t *testing.T) {
 
 					repos[0].Tags = matchedTags
 
-					return repos, manifestMetaDatas, repodb.PageInfo{}, nil
+					return repos, manifestMetaDatas, map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, nil
 				},
 			}
 
@@ -698,7 +754,7 @@ func TestImageListForDigest(t *testing.T) {
 			mockSearchDB := mocks.RepoDBMock{
 				FilterTagsFn: func(ctx context.Context, filter repodb.FilterFunc,
 					requestedPage repodb.PageInput,
-				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
+				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
 					repos := []repodb.RepoMetadata{
 						{
 							Name: "test",
@@ -725,10 +781,10 @@ func TestImageListForDigest(t *testing.T) {
 					}
 
 					matchedTags := repos[0].Tags
-					for tag, descriptor := range repos[0].Tags {
-						if !filter(repos[0], manifestMetaDatas[descriptor.Digest]) {
+					for tag, manifestDescriptor := range repos[0].Tags {
+						if !filter(repos[0], manifestMetaDatas[manifestDescriptor.Digest]) {
 							delete(matchedTags, tag)
-							delete(manifestMetaDatas, descriptor.Digest)
+							delete(manifestMetaDatas, manifestDescriptor.Digest)
 
 							continue
 						}
@@ -736,7 +792,7 @@ func TestImageListForDigest(t *testing.T) {
 
 					repos[0].Tags = matchedTags
 
-					return repos, manifestMetaDatas, repodb.PageInfo{}, nil
+					return repos, manifestMetaDatas, map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, nil
 				},
 			}
 
@@ -772,7 +828,7 @@ func TestImageListForDigest(t *testing.T) {
 			mockSearchDB := mocks.RepoDBMock{
 				FilterTagsFn: func(ctx context.Context, filter repodb.FilterFunc,
 					requestedPage repodb.PageInput,
-				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
+				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
 					repos := []repodb.RepoMetadata{
 						{
 							Name: "test",
@@ -801,10 +857,10 @@ func TestImageListForDigest(t *testing.T) {
 					}
 
 					matchedTags := repos[0].Tags
-					for tag, descriptor := range repos[0].Tags {
-						if !filter(repos[0], manifestMetaDatas[descriptor.Digest]) {
+					for tag, manifestDescriptor := range repos[0].Tags {
+						if !filter(repos[0], manifestMetaDatas[manifestDescriptor.Digest]) {
 							delete(matchedTags, tag)
-							delete(manifestMetaDatas, descriptor.Digest)
+							delete(manifestMetaDatas, manifestDescriptor.Digest)
 
 							continue
 						}
@@ -812,7 +868,7 @@ func TestImageListForDigest(t *testing.T) {
 
 					repos[0].Tags = matchedTags
 
-					return repos, manifestMetaDatas, repodb.PageInfo{}, nil
+					return repos, manifestMetaDatas, map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, nil
 				},
 			}
 
@@ -846,7 +902,7 @@ func TestImageListForDigest(t *testing.T) {
 			mockSearchDB := mocks.RepoDBMock{
 				FilterTagsFn: func(ctx context.Context, filter repodb.FilterFunc,
 					requestedPage repodb.PageInput,
-				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
+				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
 					repos := []repodb.RepoMetadata{
 						{
 							Name: "test",
@@ -869,10 +925,10 @@ func TestImageListForDigest(t *testing.T) {
 					for i, repo := range repos {
 						matchedTags := repo.Tags
 
-						for tag, descriptor := range repo.Tags {
-							if !filter(repo, manifestMetaDatas[descriptor.Digest]) {
+						for tag, manifestDescriptor := range repo.Tags {
+							if !filter(repo, manifestMetaDatas[manifestDescriptor.Digest]) {
 								delete(matchedTags, tag)
-								delete(manifestMetaDatas, descriptor.Digest)
+								delete(manifestMetaDatas, manifestDescriptor.Digest)
 
 								continue
 							}
@@ -881,7 +937,7 @@ func TestImageListForDigest(t *testing.T) {
 						repos[i].Tags = matchedTags
 					}
 
-					return repos, manifestMetaDatas, repodb.PageInfo{}, nil
+					return repos, manifestMetaDatas, map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, nil
 				},
 			}
 
@@ -915,10 +971,10 @@ func TestImageListForDigest(t *testing.T) {
 			mockSearchDB := mocks.RepoDBMock{
 				FilterTagsFn: func(ctx context.Context, filter repodb.FilterFunc,
 					requestedPage repodb.PageInput,
-				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
+				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
 					pageFinder, err := repodb.NewBaseImagePageFinder(requestedPage.Limit, requestedPage.Offset, requestedPage.SortBy)
 					if err != nil {
-						return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, repodb.PageInfo{}, err
+						return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, err
 					}
 
 					repos := []repodb.RepoMetadata{
@@ -943,10 +999,10 @@ func TestImageListForDigest(t *testing.T) {
 					for i, repo := range repos {
 						matchedTags := repo.Tags
 
-						for tag, descriptor := range repo.Tags {
-							if !filter(repo, manifestMetaDatas[descriptor.Digest]) {
+						for tag, manifestDescriptor := range repo.Tags {
+							if !filter(repo, manifestMetaDatas[manifestDescriptor.Digest]) {
 								delete(matchedTags, tag)
-								delete(manifestMetaDatas, descriptor.Digest)
+								delete(manifestMetaDatas, manifestDescriptor.Digest)
 
 								continue
 							}
@@ -961,7 +1017,7 @@ func TestImageListForDigest(t *testing.T) {
 
 					repos, _ = pageFinder.Page()
 
-					return repos, manifestMetaDatas, repodb.PageInfo{}, nil
+					return repos, manifestMetaDatas, map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, nil
 				},
 			}
 
@@ -992,8 +1048,8 @@ func TestImageList(t *testing.T) {
 			mockSearchDB := mocks.RepoDBMock{
 				FilterTagsFn: func(ctx context.Context, filter repodb.FilterFunc,
 					requestedPage repodb.PageInput,
-				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
-					return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, repodb.PageInfo{}, ErrTestError
+				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
+					return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, ErrTestError
 				},
 			}
 
@@ -1008,12 +1064,22 @@ func TestImageList(t *testing.T) {
 			mockSearchDB := mocks.RepoDBMock{
 				FilterTagsFn: func(ctx context.Context, filter repodb.FilterFunc,
 					requestedPage repodb.PageInput,
-				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
+				) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
 					repos := []repodb.RepoMetadata{
 						{
 							Name: "test",
 							Tags: map[string]repodb.Descriptor{
-								"1.0.1": {Digest: "digestTag1.0.1", MediaType: ispec.MediaTypeImageManifest},
+								"1.0.1": {
+									Digest:    "digestTag1.0.1",
+									MediaType: ispec.MediaTypeImageManifest,
+								},
+							},
+							Signatures: map[string]repodb.ManifestSignatures{
+								"digestTag1.0.1": repodb.ManifestSignatures{
+									"cosign": []repodb.SignatureInfo{
+										{SignatureManifestDigest: "testSignature", LayersInfo: []repodb.LayerInfo{}},
+									},
+								},
 							},
 							Stars: 100,
 						},
@@ -1038,7 +1104,7 @@ func TestImageList(t *testing.T) {
 						},
 					}
 
-					return repos, manifestMetaDatas, repodb.PageInfo{}, nil
+					return repos, manifestMetaDatas, map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, nil
 				},
 			}
 
@@ -1947,8 +2013,8 @@ func TestDerivedImageList(t *testing.T) {
 		mockSearchDB := mocks.RepoDBMock{
 			FilterTagsFn: func(ctx context.Context, filter repodb.FilterFunc,
 				requestedPage repodb.PageInput,
-			) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
-				return make([]repodb.RepoMetadata, 0), make(map[string]repodb.ManifestMetadata), repodb.PageInfo{}, ErrTestError
+			) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
+				return make([]repodb.RepoMetadata, 0), make(map[string]repodb.ManifestMetadata), map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, ErrTestError
 			},
 			GetRepoMetaFn: func(repo string) (repodb.RepoMetadata, error) {
 				return repodb.RepoMetadata{}, ErrTestError
@@ -1986,14 +2052,17 @@ func TestDerivedImageList(t *testing.T) {
 		mockSearchDB := mocks.RepoDBMock{
 			FilterTagsFn: func(ctx context.Context, filter repodb.FilterFunc,
 				requestedPage repodb.PageInput,
-			) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
-				return make([]repodb.RepoMetadata, 0), make(map[string]repodb.ManifestMetadata), repodb.PageInfo{}, nil
+			) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
+				return make([]repodb.RepoMetadata, 0), make(map[string]repodb.ManifestMetadata), map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, nil
 			},
 			GetRepoMetaFn: func(repo string) (repodb.RepoMetadata, error) {
 				return repodb.RepoMetadata{
 					Name: "repo1",
 					Tags: map[string]repodb.Descriptor{
-						"1.0.1": {Digest: manifestDigest.String(), MediaType: ispec.MediaTypeImageManifest},
+						"1.0.1": {
+							Digest:    manifestDigest.String(),
+							MediaType: ispec.MediaTypeImageManifest,
+						},
 					},
 				}, nil
 			},
@@ -2122,7 +2191,10 @@ func TestDerivedImageList(t *testing.T) {
 				return repodb.RepoMetadata{
 					Name: "repo1",
 					Tags: map[string]repodb.Descriptor{
-						"1.0.1": {Digest: manifestDigest.String(), MediaType: ispec.MediaTypeImageManifest},
+						"1.0.1": {
+							Digest:    manifestDigest.String(),
+							MediaType: ispec.MediaTypeImageManifest,
+						},
 					},
 				}, nil
 			},
@@ -2134,7 +2206,7 @@ func TestDerivedImageList(t *testing.T) {
 			},
 			FilterTagsFn: func(ctx context.Context, filter repodb.FilterFunc,
 				requestedPage repodb.PageInput,
-			) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
+			) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
 				pageFinder, err := repodb.NewBaseImagePageFinder(requestedPage.Limit, requestedPage.Offset, requestedPage.SortBy)
 				So(err, ShouldBeNil)
 
@@ -2170,7 +2242,7 @@ func TestDerivedImageList(t *testing.T) {
 				}
 				repos, pageInfo := pageFinder.Page()
 
-				return repos, manifestMetas, pageInfo, nil
+				return repos, manifestMetas, map[string]repodb.IndexMetadata{}, pageInfo, nil
 			},
 		}
 
@@ -2211,8 +2283,8 @@ func TestBaseImageList(t *testing.T) {
 		mockSearchDB := mocks.RepoDBMock{
 			FilterTagsFn: func(ctx context.Context, filter repodb.FilterFunc,
 				requestedPage repodb.PageInput,
-			) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
-				return make([]repodb.RepoMetadata, 0), make(map[string]repodb.ManifestMetadata), repodb.PageInfo{}, ErrTestError
+			) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
+				return make([]repodb.RepoMetadata, 0), make(map[string]repodb.ManifestMetadata), map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, ErrTestError
 			},
 			GetRepoMetaFn: func(repo string) (repodb.RepoMetadata, error) {
 				return repodb.RepoMetadata{}, ErrTestError
@@ -2250,8 +2322,8 @@ func TestBaseImageList(t *testing.T) {
 		mockSearchDB := mocks.RepoDBMock{
 			FilterTagsFn: func(ctx context.Context, filter repodb.FilterFunc,
 				requestedPage repodb.PageInput,
-			) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
-				return make([]repodb.RepoMetadata, 0), make(map[string]repodb.ManifestMetadata), repodb.PageInfo{}, nil
+			) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
+				return make([]repodb.RepoMetadata, 0), make(map[string]repodb.ManifestMetadata), map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, nil
 			},
 			GetRepoMetaFn: func(repo string) (repodb.RepoMetadata, error) {
 				return repodb.RepoMetadata{
@@ -2392,7 +2464,7 @@ func TestBaseImageList(t *testing.T) {
 			},
 			FilterTagsFn: func(ctx context.Context, filter repodb.FilterFunc,
 				requestedPage repodb.PageInput,
-			) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
+			) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
 				pageFinder, err := repodb.NewBaseImagePageFinder(requestedPage.Limit, requestedPage.Offset, requestedPage.SortBy)
 				So(err, ShouldBeNil)
 
@@ -2429,7 +2501,7 @@ func TestBaseImageList(t *testing.T) {
 
 				repos, pageInfo := pageFinder.Page()
 
-				return repos, manifestMetas, pageInfo, nil
+				return repos, manifestMetas, map[string]repodb.IndexMetadata{}, pageInfo, nil
 			},
 		}
 		responseContext := graphql.WithResponseContext(context.Background(), graphql.DefaultErrorPresenter,
@@ -2566,7 +2638,7 @@ func TestBaseImageList(t *testing.T) {
 			},
 			FilterTagsFn: func(ctx context.Context, filter repodb.FilterFunc,
 				requestedPage repodb.PageInput,
-			) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
+			) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo, error) {
 				pageFinder, err := repodb.NewBaseImagePageFinder(requestedPage.Limit, requestedPage.Offset, requestedPage.SortBy)
 				So(err, ShouldBeNil)
 
@@ -2600,7 +2672,7 @@ func TestBaseImageList(t *testing.T) {
 					})
 				}
 
-				return repos, manifestMetas, repodb.PageInfo{}, nil
+				return repos, manifestMetas, map[string]repodb.IndexMetadata{}, repodb.PageInfo{}, nil
 			},
 		}
 		responseContext := graphql.WithResponseContext(context.Background(), graphql.DefaultErrorPresenter,

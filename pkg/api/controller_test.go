@@ -3857,10 +3857,10 @@ func TestImageSignatures(t *testing.T) {
 
 		err = test.UploadImage(
 			test.Image{
-				Config:   cfg,
-				Layers:   layers,
-				Manifest: manifest,
-				Tag:      "1.0",
+				Config:    cfg,
+				Layers:    layers,
+				Manifest:  manifest,
+				Reference: "1.0",
 			}, baseURL, repoName)
 		So(err, ShouldBeNil)
 
@@ -4126,10 +4126,10 @@ func TestArtifactReferences(t *testing.T) {
 
 		err = test.UploadImage(
 			test.Image{
-				Config:   cfg,
-				Layers:   layers,
-				Manifest: manifest,
-				Tag:      "1.0",
+				Config:    cfg,
+				Layers:    layers,
+				Manifest:  manifest,
+				Reference: "1.0",
 			}, baseURL, repoName)
 		So(err, ShouldBeNil)
 
@@ -4966,10 +4966,10 @@ func TestStorageCommit(t *testing.T) {
 			repoName := "repo7"
 			err = test.UploadImage(
 				test.Image{
-					Config:   cfg,
-					Layers:   layers,
-					Manifest: manifest,
-					Tag:      "test:1.0",
+					Config:    cfg,
+					Layers:    layers,
+					Manifest:  manifest,
+					Reference: "test:1.0",
 				}, baseURL, repoName)
 			So(err, ShouldBeNil)
 
@@ -5001,10 +5001,10 @@ func TestStorageCommit(t *testing.T) {
 
 			err = test.UploadImage(
 				test.Image{
-					Config:   cfg,
-					Layers:   layers,
-					Manifest: manifest,
-					Tag:      "test:1.0.1",
+					Config:    cfg,
+					Layers:    layers,
+					Manifest:  manifest,
+					Reference: "test:1.0.1",
 				}, baseURL, repoName)
 			So(err, ShouldBeNil)
 
@@ -5013,10 +5013,10 @@ func TestStorageCommit(t *testing.T) {
 
 			err = test.UploadImage(
 				test.Image{
-					Config:   cfg,
-					Layers:   layers,
-					Manifest: manifest,
-					Tag:      "test:2.0",
+					Config:    cfg,
+					Layers:    layers,
+					Manifest:  manifest,
+					Reference: "test:2.0",
 				}, baseURL, repoName)
 			So(err, ShouldBeNil)
 
@@ -5123,10 +5123,10 @@ func TestManifestImageIndex(t *testing.T) {
 		repoName := "index"
 		err = test.UploadImage(
 			test.Image{
-				Config:   cfg,
-				Layers:   layers,
-				Manifest: manifest,
-				Tag:      "test:1.0",
+				Config:    cfg,
+				Layers:    layers,
+				Manifest:  manifest,
+				Reference: "test:1.0",
 			}, baseURL, repoName)
 		So(err, ShouldBeNil)
 
@@ -5551,10 +5551,10 @@ func TestManifestCollision(t *testing.T) {
 
 		err = test.UploadImage(
 			test.Image{
-				Config:   cfg,
-				Layers:   layers,
-				Manifest: manifest,
-				Tag:      "test:1.0",
+				Config:    cfg,
+				Layers:    layers,
+				Manifest:  manifest,
+				Reference: "test:1.0",
 			}, baseURL, "index")
 		So(err, ShouldBeNil)
 
@@ -5578,10 +5578,10 @@ func TestManifestCollision(t *testing.T) {
 
 		err = test.UploadImage(
 			test.Image{
-				Config:   cfg,
-				Layers:   layers,
-				Manifest: manifest,
-				Tag:      "test:2.0",
+				Config:    cfg,
+				Layers:    layers,
+				Manifest:  manifest,
+				Reference: "test:2.0",
 			}, baseURL, "index")
 		So(err, ShouldBeNil)
 
@@ -6217,10 +6217,10 @@ func TestGCSignaturesAndUntaggedManifests(t *testing.T) {
 
 				err = test.UploadImage(
 					test.Image{
-						Config:   cfg,
-						Layers:   layers,
-						Manifest: manifest,
-						Tag:      tag,
+						Config:    cfg,
+						Layers:    layers,
+						Manifest:  manifest,
+						Reference: tag,
 					}, baseURL, repoName)
 				So(err, ShouldBeNil)
 
@@ -6238,10 +6238,10 @@ func TestGCSignaturesAndUntaggedManifests(t *testing.T) {
 
 			err = test.UploadImage(
 				test.Image{
-					Config:   cfg,
-					Layers:   layers,
-					Manifest: manifest,
-					Tag:      untaggedManifestDigest.String(),
+					Config:    cfg,
+					Layers:    layers,
+					Manifest:  manifest,
+					Reference: untaggedManifestDigest.String(),
 				}, baseURL, repoName)
 			So(err, ShouldBeNil)
 
@@ -6251,10 +6251,10 @@ func TestGCSignaturesAndUntaggedManifests(t *testing.T) {
 
 			err = test.UploadImage(
 				test.Image{
-					Config:   cfg,
-					Layers:   layers,
-					Manifest: manifest,
-					Tag:      tag,
+					Config:    cfg,
+					Layers:    layers,
+					Manifest:  manifest,
+					Reference: tag,
 				}, baseURL, repoName)
 			So(err, ShouldBeNil)
 
@@ -6322,10 +6322,10 @@ func TestGCSignaturesAndUntaggedManifests(t *testing.T) {
 
 				err = test.UploadImage(
 					test.Image{
-						Manifest: manifest,
-						Config:   config,
-						Layers:   layers,
-						Tag:      manifestDigest.String(),
+						Manifest:  manifest,
+						Config:    config,
+						Layers:    layers,
+						Reference: manifestDigest.String(),
 					},
 					baseURL,
 					repoName)
@@ -6513,10 +6513,10 @@ func TestSearchRoutes(t *testing.T) {
 
 		err = test.UploadImage(
 			test.Image{
-				Config:   cfg,
-				Layers:   layers,
-				Manifest: manifest,
-				Tag:      "latest",
+				Config:    cfg,
+				Layers:    layers,
+				Manifest:  manifest,
+				Reference: "latest",
 			}, baseURL, repoName)
 
 		So(err, ShouldBeNil)
@@ -6527,10 +6527,10 @@ func TestSearchRoutes(t *testing.T) {
 
 		err = test.UploadImage(
 			test.Image{
-				Config:   cfg,
-				Layers:   layers,
-				Manifest: manifest,
-				Tag:      "latest",
+				Config:    cfg,
+				Layers:    layers,
+				Manifest:  manifest,
+				Reference: "latest",
 			}, baseURL, inaccessibleRepo)
 
 		So(err, ShouldBeNil)
@@ -6601,10 +6601,10 @@ func TestSearchRoutes(t *testing.T) {
 
 			err = test.UploadImageWithBasicAuth(
 				test.Image{
-					Config:   cfg,
-					Layers:   layers,
-					Manifest: manifest,
-					Tag:      "latest",
+					Config:    cfg,
+					Layers:    layers,
+					Manifest:  manifest,
+					Reference: "latest",
 				}, baseURL, repoName,
 				user1, password1)
 
@@ -6616,10 +6616,10 @@ func TestSearchRoutes(t *testing.T) {
 
 			err = test.UploadImageWithBasicAuth(
 				test.Image{
-					Config:   cfg,
-					Layers:   layers,
-					Manifest: manifest,
-					Tag:      "latest",
+					Config:    cfg,
+					Layers:    layers,
+					Manifest:  manifest,
+					Reference: "latest",
 				}, baseURL, inaccessibleRepo,
 				user1, password1)
 

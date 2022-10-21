@@ -14,6 +14,7 @@ import (
 	zerr "zotregistry.io/zot/errors"
 	"zotregistry.io/zot/pkg/extensions/monitoring"
 	"zotregistry.io/zot/pkg/log"
+	"zotregistry.io/zot/pkg/meta/repodb"
 	bolt_wrapper "zotregistry.io/zot/pkg/meta/repodb/boltdb-wrapper"
 	repoDBUpdate "zotregistry.io/zot/pkg/meta/repodb/update"
 	"zotregistry.io/zot/pkg/storage"
@@ -42,7 +43,8 @@ func TestOnUpdateManifest(t *testing.T) {
 		config, layers, manifest, err := test.GetRandomImageComponents(100)
 		So(err, ShouldBeNil)
 
-		err = test.WriteImageToFileSystem(test.Image{Config: config, Manifest: manifest, Layers: layers, Tag: "tag1"},
+		err = test.WriteImageToFileSystem(test.Image{Config: config, Manifest: manifest, Layers: layers,
+			Reference: "tag1"},
 			"repo", storeController)
 		So(err, ShouldBeNil)
 
@@ -160,7 +162,7 @@ func TestUpdateErrors(t *testing.T) {
 			repoDB := mocks.RepoDBMock{}
 			log := log.NewLogger("debug", "")
 
-			err := repoDBUpdate.SetMetadataFromInput("repo", "ref", "digest", "", []byte("BadManifestBlob"),
+			err := repodb.SetMetadataFromInput("repo", "ref", "digest", "", []byte("BadManifestBlob"),
 				storeController, repoDB, log)
 			So(err, ShouldNotBeNil)
 
@@ -177,7 +179,7 @@ func TestUpdateErrors(t *testing.T) {
 				return []byte("{}"), nil
 			}
 
-			err = repoDBUpdate.SetMetadataFromInput("repo", string(godigest.FromString("reference")), "", "digest",
+			err = repodb.SetMetadataFromInput("repo", string(godigest.FromString("reference")), "", "digest",
 				manifestBlob, storeController, repoDB, log)
 			So(err, ShouldBeNil)
 		})

@@ -886,10 +886,10 @@ func TestOutputFormat(t *testing.T) {
 		space := regexp.MustCompile(`\s+`)
 		str := space.ReplaceAllString(buff.String(), " ")
 		So(strings.TrimSpace(str), ShouldEqual, `{ "repoName": "dummyImageName", "tag": "tag", `+
-			`"configDigest": "sha256:4c10985c40365538426f2ba8cf0c21384a7769be502a550dcc0601b3736625e0", `+
+			`"Manifests": [ { "configDigest": "sha256:4c10985c40365538426f2ba8cf0c21384a7769be502a550dcc0601b3736625e0", `+
 			`"digest": "sha256:6e2f80bf9cfaabad474fbaf8ad68fdb652f776ea80b63492ecca404e5f6446a6", `+
-			`"layers": [ { "size": "0", `+
-			`"digest": "sha256:c122a146f0d02349be211bb95cc2530f4a5793f96edbdfa00860f741e5d8c0e6" } ], `+
+			`"layers": [ { "size": "0", "digest": "sha256:c122a146f0d02349be211bb95cc2530f4a5793f96edbdfa00860f741e5d8c0e6" } ], `+
+			`"size": "123445", "isSigned": false } ], `+
 			`"size": "123445", "isSigned": false }`)
 		So(err, ShouldBeNil)
 	})
@@ -910,9 +910,11 @@ func TestOutputFormat(t *testing.T) {
 			strings.TrimSpace(str),
 			ShouldEqual,
 			`reponame: dummyImageName tag: tag `+
+				`manifests: - `+
 				`configdigest: sha256:4c10985c40365538426f2ba8cf0c21384a7769be502a550dcc0601b3736625e0 `+
 				`digest: sha256:6e2f80bf9cfaabad474fbaf8ad68fdb652f776ea80b63492ecca404e5f6446a6 `+
 				`layers: - size: 0 digest: sha256:c122a146f0d02349be211bb95cc2530f4a5793f96edbdfa00860f741e5d8c0e6 `+
+				`size: "123445" issigned: false `+
 				`size: "123445" issigned: false`,
 		)
 		So(err, ShouldBeNil)
@@ -936,9 +938,11 @@ func TestOutputFormat(t *testing.T) {
 				strings.TrimSpace(str),
 				ShouldEqual,
 				`reponame: dummyImageName tag: tag `+
+					`manifests: - `+
 					`configdigest: sha256:4c10985c40365538426f2ba8cf0c21384a7769be502a550dcc0601b3736625e0 `+
 					`digest: sha256:6e2f80bf9cfaabad474fbaf8ad68fdb652f776ea80b63492ecca404e5f6446a6 `+
 					`layers: - size: 0 digest: sha256:c122a146f0d02349be211bb95cc2530f4a5793f96edbdfa00860f741e5d8c0e6 `+
+					`size: "123445" issigned: false `+
 					`size: "123445" issigned: false`,
 			)
 			So(err, ShouldBeNil)
@@ -1715,12 +1719,17 @@ func (service mockService) getDerivedImageListGQL(ctx context.Context, config se
 	imageListGQLResponse := &imageListStructForDerivedImagesGQL{}
 	imageListGQLResponse.Data.ImageList.Results = []imageStruct{
 		{
-			RepoName:     "dummyImageName",
-			Tag:          "tag",
-			Digest:       godigest.FromString("Digest").String(),
-			ConfigDigest: godigest.FromString("ConfigDigest").String(),
-			Size:         "123445",
-			Layers:       []layer{{Digest: godigest.FromString("LayerDigest").String()}},
+			RepoName: "dummyImageName",
+			Tag:      "tag",
+			Manifests: []manifestStruct{
+				{
+					Digest:       godigest.FromString("Digest").String(),
+					ConfigDigest: godigest.FromString("ConfigDigest").String(),
+					Size:         "123445",
+					Layers:       []layer{{Digest: godigest.FromString("LayerDigest").String()}},
+				},
+			},
+			Size: "123445",
 		},
 	}
 
@@ -1733,12 +1742,17 @@ func (service mockService) getBaseImageListGQL(ctx context.Context, config searc
 	imageListGQLResponse := &imageListStructForBaseImagesGQL{}
 	imageListGQLResponse.Data.ImageList.Results = []imageStruct{
 		{
-			RepoName:     "dummyImageName",
-			Tag:          "tag",
-			Digest:       godigest.FromString("Digest").String(),
-			ConfigDigest: godigest.FromString("ConfigDigest").String(),
-			Size:         "123445",
-			Layers:       []layer{{Digest: godigest.FromString("LayerDigest").String()}},
+			RepoName: "dummyImageName",
+			Tag:      "tag",
+			Manifests: []manifestStruct{
+				{
+					Digest:       godigest.FromString("Digest").String(),
+					ConfigDigest: godigest.FromString("ConfigDigest").String(),
+					Size:         "123445",
+					Layers:       []layer{{Digest: godigest.FromString("LayerDigest").String()}},
+				},
+			},
+			Size: "123445",
 		},
 	}
 
@@ -1751,12 +1765,17 @@ func (service mockService) getImagesGQL(ctx context.Context, config searchConfig
 	imageListGQLResponse := &imageListStructGQL{}
 	imageListGQLResponse.Data.ImageList = []imageStruct{
 		{
-			RepoName:     "dummyImageName",
-			Tag:          "tag",
-			Digest:       godigest.FromString("Digest").String(),
-			ConfigDigest: godigest.FromString("ConfigDigest").String(),
-			Size:         "123445",
-			Layers:       []layer{{Digest: godigest.FromString("LayerDigest").String()}},
+			RepoName: "dummyImageName",
+			Tag:      "tag",
+			Manifests: []manifestStruct{
+				{
+					Digest:       godigest.FromString("Digest").String(),
+					ConfigDigest: godigest.FromString("ConfigDigest").String(),
+					Size:         "123445",
+					Layers:       []layer{{Digest: godigest.FromString("LayerDigest").String()}},
+				},
+			},
+			Size: "123445",
 		},
 	}
 
@@ -1769,12 +1788,17 @@ func (service mockService) getImagesByDigestGQL(ctx context.Context, config sear
 	imageListGQLResponse := &imageListStructForDigestGQL{}
 	imageListGQLResponse.Data.ImageList = []imageStruct{
 		{
-			RepoName:     "randomimageName",
-			Tag:          "tag",
-			Digest:       godigest.FromString("Digest").String(),
-			ConfigDigest: godigest.FromString("ConfigDigest").String(),
-			Size:         "123445",
-			Layers:       []layer{{Digest: godigest.FromString("LayerDigest").String()}},
+			RepoName: "randomimageName",
+			Tag:      "tag",
+			Manifests: []manifestStruct{
+				{
+					Digest:       godigest.FromString("Digest").String(),
+					ConfigDigest: godigest.FromString("ConfigDigest").String(),
+					Layers:       []layer{{Digest: godigest.FromString("LayerDigest").String()}},
+					Size:         "123445",
+				},
+			},
+			Size: "123445",
 		},
 	}
 
@@ -1868,10 +1892,15 @@ func (service mockService) getMockedImageByName(imageName string) imageStruct {
 	image := imageStruct{}
 	image.RepoName = imageName
 	image.Tag = "tag"
-	image.Digest = godigest.FromString("Digest").String()
-	image.ConfigDigest = godigest.FromString("ConfigDigest").String()
+	image.Manifests = []manifestStruct{
+		{
+			Digest:       godigest.FromString("Digest").String(),
+			ConfigDigest: godigest.FromString("ConfigDigest").String(),
+			Layers:       []layer{{Digest: godigest.FromString("LayerDigest").String()}},
+			Size:         "123445",
+		},
+	}
 	image.Size = "123445"
-	image.Layers = []layer{{Digest: godigest.FromString("LayerDigest").String()}}
 
 	return image
 }
@@ -1885,10 +1914,15 @@ func (service mockService) getAllImages(ctx context.Context, config searchConfig
 	image := &imageStruct{}
 	image.RepoName = "randomimageName"
 	image.Tag = "tag"
-	image.Digest = godigest.FromString("Digest").String()
-	image.ConfigDigest = godigest.FromString("ConfigDigest").String()
+	image.Manifests = []manifestStruct{
+		{
+			Digest:       godigest.FromString("Digest").String(),
+			ConfigDigest: godigest.FromString("ConfigDigest").String(),
+			Layers:       []layer{{Digest: godigest.FromString("LayerDigest").String()}},
+			Size:         "123445",
+		},
+	}
 	image.Size = "123445"
-	image.Layers = []layer{{Digest: godigest.FromString("LayerDigest").String()}}
 
 	str, err := image.string(*config.outputFormat, len(image.RepoName), len(image.Tag))
 	if err != nil {
@@ -1909,10 +1943,15 @@ func (service mockService) getImageByName(ctx context.Context, config searchConf
 	image := &imageStruct{}
 	image.RepoName = imageName
 	image.Tag = "tag"
-	image.Digest = godigest.FromString("Digest").String()
-	image.ConfigDigest = godigest.FromString("ConfigDigest").String()
+	image.Manifests = []manifestStruct{
+		{
+			Digest:       godigest.FromString("Digest").String(),
+			ConfigDigest: godigest.FromString("ConfigDigest").String(),
+			Layers:       []layer{{Digest: godigest.FromString("LayerDigest").String()}},
+			Size:         "123445",
+		},
+	}
 	image.Size = "123445"
-	image.Layers = []layer{{Digest: godigest.FromString("LayerDigest").String()}}
 
 	str, err := image.string(*config.outputFormat, len(image.RepoName), len(image.Tag))
 	if err != nil {

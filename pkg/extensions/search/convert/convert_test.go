@@ -52,7 +52,7 @@ func TestConvertErrors(t *testing.T) {
 		err = repoDB.SetRepoTag("repo1", "0.1.0", digest11, ispec.MediaTypeImageManifest)
 		So(err, ShouldBeNil)
 
-		repoMetas, manifestMetaMap, _, err := repoDB.SearchRepos(context.Background(), "", repodb.Filter{},
+		repoMetas, manifestMetaMap, _, _, err := repoDB.SearchRepos(context.Background(), "", repodb.Filter{},
 			repodb.PageInput{})
 		So(err, ShouldBeNil)
 
@@ -63,6 +63,7 @@ func TestConvertErrors(t *testing.T) {
 			ctx,
 			repoMetas[0],
 			manifestMetaMap,
+			map[string]repodb.IndexMetadata{},
 			convert.SkipQGLField{},
 			mocks.CveInfoMock{
 				GetCVESummaryForImageFn: func(image string) (cveinfo.ImageCVESummary, error) {

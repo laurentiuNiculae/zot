@@ -61,26 +61,21 @@ type HistoryDescription struct {
 type ImageSummary struct {
 	RepoName        *string                    `json:"RepoName"`
 	Tag             *string                    `json:"Tag"`
-	Digest          *string                    `json:"Digest"`
-	ConfigDigest    *string                    `json:"ConfigDigest"`
-	LastUpdated     *time.Time                 `json:"LastUpdated"`
-	IsSigned        *bool                      `json:"IsSigned"`
+	Manifests       []*ManifestSummary         `json:"Manifests"`
 	Size            *string                    `json:"Size"`
-	Platform        *OsArch                    `json:"Platform"`
-	Vendor          *string                    `json:"Vendor"`
-	Score           *int                       `json:"Score"`
 	DownloadCount   *int                       `json:"DownloadCount"`
-	Layers          []*LayerSummary            `json:"Layers"`
+	LastUpdated     *time.Time                 `json:"LastUpdated"`
 	Description     *string                    `json:"Description"`
+	IsSigned        *bool                      `json:"IsSigned"`
 	Licenses        *string                    `json:"Licenses"`
 	Labels          *string                    `json:"Labels"`
 	Title           *string                    `json:"Title"`
+	Score           *int                       `json:"Score"`
 	Source          *string                    `json:"Source"`
 	Documentation   *string                    `json:"Documentation"`
-	History         []*LayerHistory            `json:"History"`
-	Vulnerabilities *ImageVulnerabilitySummary `json:"Vulnerabilities"`
-	Authors         *string                    `json:"Authors"`
 	Logo            *string                    `json:"Logo"`
+	Authors         *string                    `json:"Authors"`
+	Vulnerabilities *ImageVulnerabilitySummary `json:"Vulnerabilities"`
 }
 
 type ImageVulnerabilitySummary struct {
@@ -98,6 +93,24 @@ type LayerSummary struct {
 	Size   *string `json:"Size"`
 	Digest *string `json:"Digest"`
 	Score  *int    `json:"Score"`
+}
+
+type ManifestSummary struct {
+	RepoName        *string                    `json:"RepoName"`
+	Tag             *string                    `json:"Tag"`
+	Digest          *string                    `json:"Digest"`
+	ConfigDigest    *string                    `json:"ConfigDigest"`
+	LastUpdated     *time.Time                 `json:"LastUpdated"`
+	IsSigned        *bool                      `json:"IsSigned"`
+	Size            *string                    `json:"Size"`
+	Platform        *OsArch                    `json:"Platform"`
+	Vendor          *string                    `json:"Vendor"`
+	DownloadCount   *int                       `json:"DownloadCount"`
+	Layers          []*LayerSummary            `json:"Layers"`
+	History         []*LayerHistory            `json:"History"`
+	Vulnerabilities *ImageVulnerabilitySummary `json:"Vulnerabilities"`
+	Authors         *string                    `json:"Authors"`
+	Logo            *string                    `json:"Logo"`
 }
 
 // Contains details about the supported OS and architecture of the image

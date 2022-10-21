@@ -8,9 +8,10 @@ import (
 
 // MetadataDB.
 const (
-	ManifestDataBucket = "ManifestData"
-	UserMetadataBucket = "UserMeta"
-	RepoMetadataBucket = "RepoMetadata"
+	ManifestDataBucket  = "ManifestData"
+	IndexMetadataBucket = "IndexMetadata"
+	UserMetadataBucket  = "UserMeta"
+	RepoMetadataBucket  = "RepoMetadata"
 	VersionBucket      = "Version"
 )
 
@@ -59,6 +60,12 @@ type RepoDB interface { //nolint:interfacebloat
 	// GetManifestMeta sets ManifestMetadata for a given manifest in the database
 	SetManifestMeta(repo string, manifestDigest godigest.Digest, mm ManifestMetadata) error
 
+	// SetIndexMeta sets IndexMetadata for a given index in the database
+	SetIndexMeta(digest godigest.Digest, indexMetadata IndexMetadata) error
+
+	// GetIndexMeta returns IndexMetadata for a given Index from the database
+	GetIndexMeta(indexDigest godigest.Digest) (IndexMetadata, error)
+
 	// IncrementManifestDownloads adds 1 to the download count of a manifest
 	IncrementImageDownloads(repo string, reference string) error
 
@@ -70,15 +77,15 @@ type RepoDB interface { //nolint:interfacebloat
 
 	// SearchRepos searches for repos given a search string
 	SearchRepos(ctx context.Context, searchText string, filter Filter, requestedPage PageInput) (
-		[]RepoMetadata, map[string]ManifestMetadata, PageInfo, error)
+		[]RepoMetadata, map[string]ManifestMetadata, map[string]IndexMetadata, PageInfo, error)
 
 	// SearchTags searches for images(repo:tag) given a search string
 	SearchTags(ctx context.Context, searchText string, filter Filter, requestedPage PageInput) (
-		[]RepoMetadata, map[string]ManifestMetadata, PageInfo, error)
+		[]RepoMetadata, map[string]ManifestMetadata, map[string]IndexMetadata, PageInfo, error)
 
 	// FilterTags filters for images given a filter function
 	FilterTags(ctx context.Context, filter FilterFunc,
-		requestedPage PageInput) ([]RepoMetadata, map[string]ManifestMetadata, PageInfo, error)
+		requestedPage PageInput) ([]RepoMetadata, map[string]ManifestMetadata, map[string]IndexMetadata, PageInfo, error)
 
 	PatchDB() error
 }
@@ -88,6 +95,10 @@ type ManifestMetadata struct {
 	ConfigBlob    []byte
 	DownloadCount int
 	Signatures    ManifestSignatures
+}
+
+type IndexMetadata struct {
+	IndexBlob []byte
 }
 
 type ManifestData struct {

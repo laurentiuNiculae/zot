@@ -56,6 +56,11 @@ func NewBoltDBWrapper(params DBParameters) (*DBWrapper, error) {
 			return err
 		}
 
+		_, err = transaction.CreateBucketIfNotExists([]byte(repodb.IndexMetadataBucket))
+		if err != nil {
+			return err
+		}
+
 		_, err = transaction.CreateBucketIfNotExists([]byte(repodb.RepoMetadataBucket))
 		if err != nil {
 			return err
@@ -207,6 +212,51 @@ func (bdw DBWrapper) GetManifestMeta(repo string, manifestDigest godigest.Digest
 	})
 
 	return manifestMetadata, err
+}
+
+func (bdw DBWrapper) SetIndexMeta(indexDigest godigest.Digest, indexMetadata repodb.IndexMetadata) error {
+	// we make the assumption that the oci layout is consistent and all manifests refferenced inside the
+	// index are present
+	err := bdw.DB.Update(func(tx *bolt.Tx) error {
+		buck := tx.Bucket([]byte(repodb.IndexMetadataBucket))
+
+		imBlob, err := json.Marshal(indexMetadata)
+		if err != nil {
+			return errors.Wrapf(err, "repodb: error while calculating blob for manifest with digest %s", indexDigest)
+		}
+
+		err = buck.Put([]byte(indexDigest), imBlob)
+		if err != nil {
+			return errors.Wrapf(err, "repodb: error while setting manifest meta with for digest %s", indexDigest)
+		}
+
+		return nil
+	})
+
+	return err
+}
+
+func (bdw DBWrapper) GetIndexMeta(indexDigest godigest.Digest) (repodb.IndexMetadata, error) {
+	var indexMetadata repodb.IndexMetadata
+
+	err := bdw.DB.View(func(tx *bolt.Tx) error {
+		buck := tx.Bucket([]byte(repodb.IndexMetadataBucket))
+
+		mmBlob := buck.Get([]byte(indexDigest))
+
+		if len(mmBlob) == 0 {
+			return zerr.ErrManifestMetaNotFound
+		}
+
+		err := json.Unmarshal(mmBlob, &indexMetadata)
+		if err != nil {
+			return errors.Wrapf(err, "repodb: error while unmashaling manifest meta for digest %s", indexDigest)
+		}
+
+		return nil
+	})
+
+	return indexMetadata, err
 }
 
 func (bdw DBWrapper) SetRepoTag(repo string, tag string, manifestDigest godigest.Digest,
@@ -622,17 +672,20 @@ func (bdw DBWrapper) DeleteSignature(repo string, signedManifestDigest godigest.
 
 func (bdw DBWrapper) SearchRepos(ctx context.Context, searchText string, filter repodb.Filter,
 	requestedPage repodb.PageInput,
-) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
+) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexMetadata, repodb.PageInfo,
+	error) {
 	var (
 		foundRepos               = make([]repodb.RepoMetadata, 0)
 		foundManifestMetadataMap = make(map[string]repodb.ManifestMetadata)
+		foundindexMetadataMap    = make(map[string]repodb.IndexMetadata)
 		pageFinder               repodb.PageFinder
 		pageInfo                 repodb.PageInfo
 	)
 
 	pageFinder, err := repodb.NewBaseRepoPageFinder(requestedPage.Limit, requestedPage.Offset, requestedPage.SortBy)
 	if err != nil {
-		return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, repodb.PageInfo{}, err
+		return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, map[string]repodb.IndexMetadata{},
+			repodb.PageInfo{}, err
 	}
 
 	err = bdw.DB.View(func(tx *bolt.Tx) error {
@@ -741,7 +794,7 @@ func (bdw DBWrapper) SearchRepos(ctx context.Context, searchText string, filter 
 		return nil
 	})
 
-	return foundRepos, foundManifestMetadataMap, pageInfo, err
+	return foundRepos, foundManifestMetadataMap, foundindexMetadataMap, pageInfo, err
 }
 
 func (bdw DBWrapper) FilterTags(ctx context.Context, filter repodb.FilterFunc,

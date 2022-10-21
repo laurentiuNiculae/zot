@@ -25,10 +25,15 @@ const (
 	logoKey                      = "com.zot.logo"
 )
 
-type TagInfo struct {
-	Name      string
+type Descriptor struct {
 	Digest    godigest.Digest
-	Timestamp time.Time
+	MediaType string
+}
+
+type TagInfo struct {
+	Name       string
+	Descriptor Descriptor
+	Timestamp  time.Time
 }
 
 func GetRootDir(image string, storeController storage.StoreController) string {

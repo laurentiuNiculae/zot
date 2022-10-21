@@ -148,6 +148,27 @@ func (olu BaseOciLayoutUtils) GetImageBlobManifest(repo string, digest godigest.
 	return blobIndex, nil
 }
 
+func (olu BaseOciLayoutUtils) GetImageBlobIndex(repo string, digest godigest.Digest) (ispec.Index, error) {
+	var blobIndex ispec.Index
+
+	imageStore := olu.StoreController.GetImageStore(repo)
+
+	blobBuf, err := imageStore.GetBlobContent(repo, digest)
+	if err != nil {
+		olu.Log.Error().Err(err).Msg("unable to open image metadata file")
+
+		return blobIndex, err
+	}
+
+	if err := json.Unmarshal(blobBuf, &blobIndex); err != nil {
+		olu.Log.Error().Err(err).Msg("unable to marshal blob index")
+
+		return blobIndex, err
+	}
+
+	return blobIndex, nil
+}
+
 func (olu BaseOciLayoutUtils) GetImageInfo(repo string, configDigest godigest.Digest) (ispec.Image, error) {
 	var imageInfo ispec.Image
 
@@ -206,7 +227,8 @@ func (olu BaseOciLayoutUtils) GetImageTagsWithTimestamp(repo string) ([]TagInfo,
 
 			timeStamp := GetImageLastUpdated(imageInfo)
 
-			tagsInfo = append(tagsInfo, TagInfo{Name: val, Timestamp: timeStamp, Digest: digest})
+			tagsInfo = append(tagsInfo, TagInfo{Name: val, Timestamp: timeStamp,
+				Descriptor: Descriptor{Digest: digest, MediaType: manifest.MediaType}})
 		}
 	}
 
@@ -325,7 +347,7 @@ func (olu BaseOciLayoutUtils) GetRepoLastUpdated(repo string) (TagInfo, error) {
 
 func (olu BaseOciLayoutUtils) GetExpandedRepoInfo(name string) (RepoInfo, error) {
 	repo := RepoInfo{}
-
+	// TODO: Make olu work with indexes also
 	repoBlob2Size := make(map[string]int64, 10)
 
 	// made up of all manifests, configs and image layers
@@ -473,15 +495,26 @@ func (olu BaseOciLayoutUtils) GetExpandedRepoInfo(name string) (RepoInfo, error)
 		score := 0
 
 		imageSummary := ImageSummary{
-			RepoName:      name,
-			Tag:           tag,
+			RepoName: name,
+			Tag:      tag,
+			Manifests: []ManifestSummary{
+				{
+					RepoName:     name,
+					Tag:          tag,
+					Digest:       manifestDigest,
+					ConfigDigest: configDigest,
+					LastUpdated:  lastUpdated,
+					IsSigned:     isSigned,
+					Size:         size,
+					Platform:     osArch,
+					Vendor:       annotations.Vendor,
+					Layers:       layers,
+					History:      allHistory,
+				},
+			},
 			LastUpdated:   lastUpdated,
-			Digest:        manifestDigest,
-			ConfigDigest:  configDigest,
 			IsSigned:      isSigned,
 			Size:          size,
-			Platform:      osArch,
-			Vendor:        annotations.Vendor,
 			Score:         score,
 			Description:   annotations.Description,
 			Title:         annotations.Title,
@@ -489,14 +522,12 @@ func (olu BaseOciLayoutUtils) GetExpandedRepoInfo(name string) (RepoInfo, error)
 			Licenses:      annotations.Licenses,
 			Labels:        annotations.Labels,
 			Source:        annotations.Source,
-			Layers:        layers,
-			History:       allHistory,
 			Logo:          annotations.Logo,
 		}
 
 		imageSummaries = append(imageSummaries, imageSummary)
 
-		if man.Digest.String() == lastUpdatedTag.Digest.String() {
+		if man.Digest.String() == lastUpdatedTag.Descriptor.Digest.String() {
 			lastUpdatedImageSummary = imageSummary
 		}
 	}

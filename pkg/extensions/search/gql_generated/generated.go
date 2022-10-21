@@ -79,26 +79,21 @@ type ComplexityRoot struct {
 
 	ImageSummary struct {
 		Authors         func(childComplexity int) int
-		ConfigDigest    func(childComplexity int) int
 		Description     func(childComplexity int) int
-		Digest          func(childComplexity int) int
 		Documentation   func(childComplexity int) int
 		DownloadCount   func(childComplexity int) int
-		History         func(childComplexity int) int
 		IsSigned        func(childComplexity int) int
 		Labels          func(childComplexity int) int
 		LastUpdated     func(childComplexity int) int
-		Layers          func(childComplexity int) int
 		Licenses        func(childComplexity int) int
 		Logo            func(childComplexity int) int
-		Platform        func(childComplexity int) int
+		Manifests       func(childComplexity int) int
 		RepoName        func(childComplexity int) int
 		Score           func(childComplexity int) int
 		Size            func(childComplexity int) int
 		Source          func(childComplexity int) int
 		Tag             func(childComplexity int) int
 		Title           func(childComplexity int) int
-		Vendor          func(childComplexity int) int
 		Vulnerabilities func(childComplexity int) int
 	}
 
@@ -116,6 +111,24 @@ type ComplexityRoot struct {
 		Digest func(childComplexity int) int
 		Score  func(childComplexity int) int
 		Size   func(childComplexity int) int
+	}
+
+	ManifestSummary struct {
+		Authors         func(childComplexity int) int
+		ConfigDigest    func(childComplexity int) int
+		Digest          func(childComplexity int) int
+		DownloadCount   func(childComplexity int) int
+		History         func(childComplexity int) int
+		IsSigned        func(childComplexity int) int
+		LastUpdated     func(childComplexity int) int
+		Layers          func(childComplexity int) int
+		Logo            func(childComplexity int) int
+		Platform        func(childComplexity int) int
+		RepoName        func(childComplexity int) int
+		Size            func(childComplexity int) int
+		Tag             func(childComplexity int) int
+		Vendor          func(childComplexity int) int
+		Vulnerabilities func(childComplexity int) int
 	}
 
 	OsArch struct {
@@ -357,26 +370,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ImageSummary.Authors(childComplexity), true
 
-	case "ImageSummary.ConfigDigest":
-		if e.complexity.ImageSummary.ConfigDigest == nil {
-			break
-		}
-
-		return e.complexity.ImageSummary.ConfigDigest(childComplexity), true
-
 	case "ImageSummary.Description":
 		if e.complexity.ImageSummary.Description == nil {
 			break
 		}
 
 		return e.complexity.ImageSummary.Description(childComplexity), true
-
-	case "ImageSummary.Digest":
-		if e.complexity.ImageSummary.Digest == nil {
-			break
-		}
-
-		return e.complexity.ImageSummary.Digest(childComplexity), true
 
 	case "ImageSummary.Documentation":
 		if e.complexity.ImageSummary.Documentation == nil {
@@ -391,13 +390,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ImageSummary.DownloadCount(childComplexity), true
-
-	case "ImageSummary.History":
-		if e.complexity.ImageSummary.History == nil {
-			break
-		}
-
-		return e.complexity.ImageSummary.History(childComplexity), true
 
 	case "ImageSummary.IsSigned":
 		if e.complexity.ImageSummary.IsSigned == nil {
@@ -420,13 +412,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ImageSummary.LastUpdated(childComplexity), true
 
-	case "ImageSummary.Layers":
-		if e.complexity.ImageSummary.Layers == nil {
-			break
-		}
-
-		return e.complexity.ImageSummary.Layers(childComplexity), true
-
 	case "ImageSummary.Licenses":
 		if e.complexity.ImageSummary.Licenses == nil {
 			break
@@ -441,12 +426,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ImageSummary.Logo(childComplexity), true
 
-	case "ImageSummary.Platform":
-		if e.complexity.ImageSummary.Platform == nil {
+	case "ImageSummary.Manifests":
+		if e.complexity.ImageSummary.Manifests == nil {
 			break
 		}
 
-		return e.complexity.ImageSummary.Platform(childComplexity), true
+		return e.complexity.ImageSummary.Manifests(childComplexity), true
 
 	case "ImageSummary.RepoName":
 		if e.complexity.ImageSummary.RepoName == nil {
@@ -489,13 +474,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ImageSummary.Title(childComplexity), true
-
-	case "ImageSummary.Vendor":
-		if e.complexity.ImageSummary.Vendor == nil {
-			break
-		}
-
-		return e.complexity.ImageSummary.Vendor(childComplexity), true
 
 	case "ImageSummary.Vulnerabilities":
 		if e.complexity.ImageSummary.Vulnerabilities == nil {
@@ -552,6 +530,111 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.LayerSummary.Size(childComplexity), true
+
+	case "ManifestSummary.Authors":
+		if e.complexity.ManifestSummary.Authors == nil {
+			break
+		}
+
+		return e.complexity.ManifestSummary.Authors(childComplexity), true
+
+	case "ManifestSummary.ConfigDigest":
+		if e.complexity.ManifestSummary.ConfigDigest == nil {
+			break
+		}
+
+		return e.complexity.ManifestSummary.ConfigDigest(childComplexity), true
+
+	case "ManifestSummary.Digest":
+		if e.complexity.ManifestSummary.Digest == nil {
+			break
+		}
+
+		return e.complexity.ManifestSummary.Digest(childComplexity), true
+
+	case "ManifestSummary.DownloadCount":
+		if e.complexity.ManifestSummary.DownloadCount == nil {
+			break
+		}
+
+		return e.complexity.ManifestSummary.DownloadCount(childComplexity), true
+
+	case "ManifestSummary.History":
+		if e.complexity.ManifestSummary.History == nil {
+			break
+		}
+
+		return e.complexity.ManifestSummary.History(childComplexity), true
+
+	case "ManifestSummary.IsSigned":
+		if e.complexity.ManifestSummary.IsSigned == nil {
+			break
+		}
+
+		return e.complexity.ManifestSummary.IsSigned(childComplexity), true
+
+	case "ManifestSummary.LastUpdated":
+		if e.complexity.ManifestSummary.LastUpdated == nil {
+			break
+		}
+
+		return e.complexity.ManifestSummary.LastUpdated(childComplexity), true
+
+	case "ManifestSummary.Layers":
+		if e.complexity.ManifestSummary.Layers == nil {
+			break
+		}
+
+		return e.complexity.ManifestSummary.Layers(childComplexity), true
+
+	case "ManifestSummary.Logo":
+		if e.complexity.ManifestSummary.Logo == nil {
+			break
+		}
+
+		return e.complexity.ManifestSummary.Logo(childComplexity), true
+
+	case "ManifestSummary.Platform":
+		if e.complexity.ManifestSummary.Platform == nil {
+			break
+		}
+
+		return e.complexity.ManifestSummary.Platform(childComplexity), true
+
+	case "ManifestSummary.RepoName":
+		if e.complexity.ManifestSummary.RepoName == nil {
+			break
+		}
+
+		return e.complexity.ManifestSummary.RepoName(childComplexity), true
+
+	case "ManifestSummary.Size":
+		if e.complexity.ManifestSummary.Size == nil {
+			break
+		}
+
+		return e.complexity.ManifestSummary.Size(childComplexity), true
+
+	case "ManifestSummary.Tag":
+		if e.complexity.ManifestSummary.Tag == nil {
+			break
+		}
+
+		return e.complexity.ManifestSummary.Tag(childComplexity), true
+
+	case "ManifestSummary.Vendor":
+		if e.complexity.ManifestSummary.Vendor == nil {
+			break
+		}
+
+		return e.complexity.ManifestSummary.Vendor(childComplexity), true
+
+	case "ManifestSummary.Vulnerabilities":
+		if e.complexity.ManifestSummary.Vulnerabilities == nil {
+			break
+		}
+
+		return e.complexity.ManifestSummary.Vulnerabilities(childComplexity), true
 
 	case "OsArch.Arch":
 		if e.complexity.OsArch.Arch == nil {
@@ -1014,6 +1097,26 @@ Contains details about the image
 type ImageSummary {
     RepoName: String
     Tag: String
+    Manifests: [ManifestSummary]
+    Size: String
+    DownloadCount: Int
+    LastUpdated: Time
+    Description: String
+    IsSigned: Boolean
+    Licenses: String  #  The value of the annotation if present, 'unknown' otherwise).
+    Labels: String
+    Title: String
+    Score: Int
+    Source: String
+    Documentation: String
+    Logo: String
+    Authors: String
+    Vulnerabilities: ImageVulnerabilitySummary
+}
+
+type ManifestSummary {
+    RepoName: String
+    Tag: String
     Digest: String
     ConfigDigest: String
     LastUpdated: Time
@@ -1021,15 +1124,8 @@ type ImageSummary {
     Size: String
     Platform: OsArch
     Vendor: String
-    Score: Int
     DownloadCount: Int
     Layers: [LayerSummary]
-    Description: String
-    Licenses: String  #  The value of the annotation if present, 'unknown' otherwise).
-    Labels: String
-    Title: String
-    Source: String
-    Documentation: String
     History: [LayerHistory]
     Vulnerabilities: ImageVulnerabilitySummary
     Authors: String
@@ -2101,46 +2197,36 @@ func (ec *executionContext) fieldContext_GlobalSearchResult_Images(ctx context.C
 				return ec.fieldContext_ImageSummary_RepoName(ctx, field)
 			case "Tag":
 				return ec.fieldContext_ImageSummary_Tag(ctx, field)
-			case "Digest":
-				return ec.fieldContext_ImageSummary_Digest(ctx, field)
-			case "ConfigDigest":
-				return ec.fieldContext_ImageSummary_ConfigDigest(ctx, field)
-			case "LastUpdated":
-				return ec.fieldContext_ImageSummary_LastUpdated(ctx, field)
-			case "IsSigned":
-				return ec.fieldContext_ImageSummary_IsSigned(ctx, field)
+			case "Manifests":
+				return ec.fieldContext_ImageSummary_Manifests(ctx, field)
 			case "Size":
 				return ec.fieldContext_ImageSummary_Size(ctx, field)
-			case "Platform":
-				return ec.fieldContext_ImageSummary_Platform(ctx, field)
-			case "Vendor":
-				return ec.fieldContext_ImageSummary_Vendor(ctx, field)
-			case "Score":
-				return ec.fieldContext_ImageSummary_Score(ctx, field)
 			case "DownloadCount":
 				return ec.fieldContext_ImageSummary_DownloadCount(ctx, field)
-			case "Layers":
-				return ec.fieldContext_ImageSummary_Layers(ctx, field)
+			case "LastUpdated":
+				return ec.fieldContext_ImageSummary_LastUpdated(ctx, field)
 			case "Description":
 				return ec.fieldContext_ImageSummary_Description(ctx, field)
+			case "IsSigned":
+				return ec.fieldContext_ImageSummary_IsSigned(ctx, field)
 			case "Licenses":
 				return ec.fieldContext_ImageSummary_Licenses(ctx, field)
 			case "Labels":
 				return ec.fieldContext_ImageSummary_Labels(ctx, field)
 			case "Title":
 				return ec.fieldContext_ImageSummary_Title(ctx, field)
+			case "Score":
+				return ec.fieldContext_ImageSummary_Score(ctx, field)
 			case "Source":
 				return ec.fieldContext_ImageSummary_Source(ctx, field)
 			case "Documentation":
 				return ec.fieldContext_ImageSummary_Documentation(ctx, field)
-			case "History":
-				return ec.fieldContext_ImageSummary_History(ctx, field)
-			case "Vulnerabilities":
-				return ec.fieldContext_ImageSummary_Vulnerabilities(ctx, field)
-			case "Authors":
-				return ec.fieldContext_ImageSummary_Authors(ctx, field)
 			case "Logo":
 				return ec.fieldContext_ImageSummary_Logo(ctx, field)
+			case "Authors":
+				return ec.fieldContext_ImageSummary_Authors(ctx, field)
+			case "Vulnerabilities":
+				return ec.fieldContext_ImageSummary_Vulnerabilities(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ImageSummary", field.Name)
 		},
@@ -2549,8 +2635,8 @@ func (ec *executionContext) fieldContext_ImageSummary_Tag(ctx context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _ImageSummary_Digest(ctx context.Context, field graphql.CollectedField, obj *ImageSummary) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ImageSummary_Digest(ctx, field)
+func (ec *executionContext) _ImageSummary_Manifests(ctx context.Context, field graphql.CollectedField, obj *ImageSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ImageSummary_Manifests(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2563,7 +2649,7 @@ func (ec *executionContext) _ImageSummary_Digest(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Digest, nil
+		return obj.Manifests, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2572,142 +2658,51 @@ func (ec *executionContext) _ImageSummary_Digest(ctx context.Context, field grap
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.([]*ManifestSummary)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOManifestSummary2ᚕᚖzotregistryᚗioᚋzotᚋpkgᚋextensionsᚋsearchᚋgql_generatedᚐManifestSummary(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_ImageSummary_Digest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ImageSummary_Manifests(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ImageSummary",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ImageSummary_ConfigDigest(ctx context.Context, field graphql.CollectedField, obj *ImageSummary) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ImageSummary_ConfigDigest(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ConfigDigest, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ImageSummary_ConfigDigest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ImageSummary",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ImageSummary_LastUpdated(ctx context.Context, field graphql.CollectedField, obj *ImageSummary) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ImageSummary_LastUpdated(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LastUpdated, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*time.Time)
-	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ImageSummary_LastUpdated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ImageSummary",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ImageSummary_IsSigned(ctx context.Context, field graphql.CollectedField, obj *ImageSummary) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ImageSummary_IsSigned(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.IsSigned, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*bool)
-	fc.Result = res
-	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ImageSummary_IsSigned(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ImageSummary",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
+			switch field.Name {
+			case "RepoName":
+				return ec.fieldContext_ManifestSummary_RepoName(ctx, field)
+			case "Tag":
+				return ec.fieldContext_ManifestSummary_Tag(ctx, field)
+			case "Digest":
+				return ec.fieldContext_ManifestSummary_Digest(ctx, field)
+			case "ConfigDigest":
+				return ec.fieldContext_ManifestSummary_ConfigDigest(ctx, field)
+			case "LastUpdated":
+				return ec.fieldContext_ManifestSummary_LastUpdated(ctx, field)
+			case "IsSigned":
+				return ec.fieldContext_ManifestSummary_IsSigned(ctx, field)
+			case "Size":
+				return ec.fieldContext_ManifestSummary_Size(ctx, field)
+			case "Platform":
+				return ec.fieldContext_ManifestSummary_Platform(ctx, field)
+			case "Vendor":
+				return ec.fieldContext_ManifestSummary_Vendor(ctx, field)
+			case "DownloadCount":
+				return ec.fieldContext_ManifestSummary_DownloadCount(ctx, field)
+			case "Layers":
+				return ec.fieldContext_ManifestSummary_Layers(ctx, field)
+			case "History":
+				return ec.fieldContext_ManifestSummary_History(ctx, field)
+			case "Vulnerabilities":
+				return ec.fieldContext_ManifestSummary_Vulnerabilities(ctx, field)
+			case "Authors":
+				return ec.fieldContext_ManifestSummary_Authors(ctx, field)
+			case "Logo":
+				return ec.fieldContext_ManifestSummary_Logo(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ManifestSummary", field.Name)
 		},
 	}
 	return fc, nil
@@ -2754,135 +2749,6 @@ func (ec *executionContext) fieldContext_ImageSummary_Size(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _ImageSummary_Platform(ctx context.Context, field graphql.CollectedField, obj *ImageSummary) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ImageSummary_Platform(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Platform, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*OsArch)
-	fc.Result = res
-	return ec.marshalOOsArch2ᚖzotregistryᚗioᚋzotᚋpkgᚋextensionsᚋsearchᚋgql_generatedᚐOsArch(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ImageSummary_Platform(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ImageSummary",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "Os":
-				return ec.fieldContext_OsArch_Os(ctx, field)
-			case "Arch":
-				return ec.fieldContext_OsArch_Arch(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type OsArch", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ImageSummary_Vendor(ctx context.Context, field graphql.CollectedField, obj *ImageSummary) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ImageSummary_Vendor(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Vendor, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ImageSummary_Vendor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ImageSummary",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ImageSummary_Score(ctx context.Context, field graphql.CollectedField, obj *ImageSummary) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ImageSummary_Score(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Score, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*int)
-	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ImageSummary_Score(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ImageSummary",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _ImageSummary_DownloadCount(ctx context.Context, field graphql.CollectedField, obj *ImageSummary) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ImageSummary_DownloadCount(ctx, field)
 	if err != nil {
@@ -2924,8 +2790,8 @@ func (ec *executionContext) fieldContext_ImageSummary_DownloadCount(ctx context.
 	return fc, nil
 }
 
-func (ec *executionContext) _ImageSummary_Layers(ctx context.Context, field graphql.CollectedField, obj *ImageSummary) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ImageSummary_Layers(ctx, field)
+func (ec *executionContext) _ImageSummary_LastUpdated(ctx context.Context, field graphql.CollectedField, obj *ImageSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ImageSummary_LastUpdated(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2938,7 +2804,7 @@ func (ec *executionContext) _ImageSummary_Layers(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Layers, nil
+		return obj.LastUpdated, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2947,27 +2813,19 @@ func (ec *executionContext) _ImageSummary_Layers(ctx context.Context, field grap
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*LayerSummary)
+	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalOLayerSummary2ᚕᚖzotregistryᚗioᚋzotᚋpkgᚋextensionsᚋsearchᚋgql_generatedᚐLayerSummary(ctx, field.Selections, res)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_ImageSummary_Layers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ImageSummary_LastUpdated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ImageSummary",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "Size":
-				return ec.fieldContext_LayerSummary_Size(ctx, field)
-			case "Digest":
-				return ec.fieldContext_LayerSummary_Digest(ctx, field)
-			case "Score":
-				return ec.fieldContext_LayerSummary_Score(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type LayerSummary", field.Name)
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3009,6 +2867,47 @@ func (ec *executionContext) fieldContext_ImageSummary_Description(ctx context.Co
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ImageSummary_IsSigned(ctx context.Context, field graphql.CollectedField, obj *ImageSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ImageSummary_IsSigned(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsSigned, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ImageSummary_IsSigned(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ImageSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3137,6 +3036,47 @@ func (ec *executionContext) fieldContext_ImageSummary_Title(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _ImageSummary_Score(ctx context.Context, field graphql.CollectedField, obj *ImageSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ImageSummary_Score(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Score, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ImageSummary_Score(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ImageSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ImageSummary_Source(ctx context.Context, field graphql.CollectedField, obj *ImageSummary) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ImageSummary_Source(ctx, field)
 	if err != nil {
@@ -3219,8 +3159,8 @@ func (ec *executionContext) fieldContext_ImageSummary_Documentation(ctx context.
 	return fc, nil
 }
 
-func (ec *executionContext) _ImageSummary_History(ctx context.Context, field graphql.CollectedField, obj *ImageSummary) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ImageSummary_History(ctx, field)
+func (ec *executionContext) _ImageSummary_Logo(ctx context.Context, field graphql.CollectedField, obj *ImageSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ImageSummary_Logo(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3233,7 +3173,7 @@ func (ec *executionContext) _ImageSummary_History(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.History, nil
+		return obj.Logo, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3242,25 +3182,60 @@ func (ec *executionContext) _ImageSummary_History(ctx context.Context, field gra
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*LayerHistory)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalOLayerHistory2ᚕᚖzotregistryᚗioᚋzotᚋpkgᚋextensionsᚋsearchᚋgql_generatedᚐLayerHistory(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_ImageSummary_History(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ImageSummary_Logo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ImageSummary",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "Layer":
-				return ec.fieldContext_LayerHistory_Layer(ctx, field)
-			case "HistoryDescription":
-				return ec.fieldContext_LayerHistory_HistoryDescription(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type LayerHistory", field.Name)
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ImageSummary_Authors(ctx context.Context, field graphql.CollectedField, obj *ImageSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ImageSummary_Authors(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Authors, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ImageSummary_Authors(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ImageSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3308,88 +3283,6 @@ func (ec *executionContext) fieldContext_ImageSummary_Vulnerabilities(ctx contex
 				return ec.fieldContext_ImageVulnerabilitySummary_Count(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ImageVulnerabilitySummary", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ImageSummary_Authors(ctx context.Context, field graphql.CollectedField, obj *ImageSummary) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ImageSummary_Authors(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Authors, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ImageSummary_Authors(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ImageSummary",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ImageSummary_Logo(ctx context.Context, field graphql.CollectedField, obj *ImageSummary) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ImageSummary_Logo(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Logo, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ImageSummary_Logo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ImageSummary",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3697,6 +3590,647 @@ func (ec *executionContext) fieldContext_LayerSummary_Score(ctx context.Context,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ManifestSummary_RepoName(ctx context.Context, field graphql.CollectedField, obj *ManifestSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ManifestSummary_RepoName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RepoName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ManifestSummary_RepoName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ManifestSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ManifestSummary_Tag(ctx context.Context, field graphql.CollectedField, obj *ManifestSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ManifestSummary_Tag(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Tag, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ManifestSummary_Tag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ManifestSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ManifestSummary_Digest(ctx context.Context, field graphql.CollectedField, obj *ManifestSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ManifestSummary_Digest(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Digest, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ManifestSummary_Digest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ManifestSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ManifestSummary_ConfigDigest(ctx context.Context, field graphql.CollectedField, obj *ManifestSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ManifestSummary_ConfigDigest(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ConfigDigest, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ManifestSummary_ConfigDigest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ManifestSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ManifestSummary_LastUpdated(ctx context.Context, field graphql.CollectedField, obj *ManifestSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ManifestSummary_LastUpdated(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastUpdated, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ManifestSummary_LastUpdated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ManifestSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ManifestSummary_IsSigned(ctx context.Context, field graphql.CollectedField, obj *ManifestSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ManifestSummary_IsSigned(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsSigned, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ManifestSummary_IsSigned(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ManifestSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ManifestSummary_Size(ctx context.Context, field graphql.CollectedField, obj *ManifestSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ManifestSummary_Size(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Size, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ManifestSummary_Size(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ManifestSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ManifestSummary_Platform(ctx context.Context, field graphql.CollectedField, obj *ManifestSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ManifestSummary_Platform(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Platform, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*OsArch)
+	fc.Result = res
+	return ec.marshalOOsArch2ᚖzotregistryᚗioᚋzotᚋpkgᚋextensionsᚋsearchᚋgql_generatedᚐOsArch(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ManifestSummary_Platform(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ManifestSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Os":
+				return ec.fieldContext_OsArch_Os(ctx, field)
+			case "Arch":
+				return ec.fieldContext_OsArch_Arch(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OsArch", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ManifestSummary_Vendor(ctx context.Context, field graphql.CollectedField, obj *ManifestSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ManifestSummary_Vendor(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Vendor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ManifestSummary_Vendor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ManifestSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ManifestSummary_DownloadCount(ctx context.Context, field graphql.CollectedField, obj *ManifestSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ManifestSummary_DownloadCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DownloadCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ManifestSummary_DownloadCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ManifestSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ManifestSummary_Layers(ctx context.Context, field graphql.CollectedField, obj *ManifestSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ManifestSummary_Layers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Layers, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*LayerSummary)
+	fc.Result = res
+	return ec.marshalOLayerSummary2ᚕᚖzotregistryᚗioᚋzotᚋpkgᚋextensionsᚋsearchᚋgql_generatedᚐLayerSummary(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ManifestSummary_Layers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ManifestSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Size":
+				return ec.fieldContext_LayerSummary_Size(ctx, field)
+			case "Digest":
+				return ec.fieldContext_LayerSummary_Digest(ctx, field)
+			case "Score":
+				return ec.fieldContext_LayerSummary_Score(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LayerSummary", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ManifestSummary_History(ctx context.Context, field graphql.CollectedField, obj *ManifestSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ManifestSummary_History(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.History, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*LayerHistory)
+	fc.Result = res
+	return ec.marshalOLayerHistory2ᚕᚖzotregistryᚗioᚋzotᚋpkgᚋextensionsᚋsearchᚋgql_generatedᚐLayerHistory(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ManifestSummary_History(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ManifestSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Layer":
+				return ec.fieldContext_LayerHistory_Layer(ctx, field)
+			case "HistoryDescription":
+				return ec.fieldContext_LayerHistory_HistoryDescription(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LayerHistory", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ManifestSummary_Vulnerabilities(ctx context.Context, field graphql.CollectedField, obj *ManifestSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ManifestSummary_Vulnerabilities(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Vulnerabilities, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ImageVulnerabilitySummary)
+	fc.Result = res
+	return ec.marshalOImageVulnerabilitySummary2ᚖzotregistryᚗioᚋzotᚋpkgᚋextensionsᚋsearchᚋgql_generatedᚐImageVulnerabilitySummary(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ManifestSummary_Vulnerabilities(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ManifestSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "MaxSeverity":
+				return ec.fieldContext_ImageVulnerabilitySummary_MaxSeverity(ctx, field)
+			case "Count":
+				return ec.fieldContext_ImageVulnerabilitySummary_Count(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ImageVulnerabilitySummary", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ManifestSummary_Authors(ctx context.Context, field graphql.CollectedField, obj *ManifestSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ManifestSummary_Authors(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Authors, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ManifestSummary_Authors(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ManifestSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ManifestSummary_Logo(ctx context.Context, field graphql.CollectedField, obj *ManifestSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ManifestSummary_Logo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Logo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ManifestSummary_Logo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ManifestSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4085,46 +4619,36 @@ func (ec *executionContext) fieldContext_PaginatedImagesResult_Results(ctx conte
 				return ec.fieldContext_ImageSummary_RepoName(ctx, field)
 			case "Tag":
 				return ec.fieldContext_ImageSummary_Tag(ctx, field)
-			case "Digest":
-				return ec.fieldContext_ImageSummary_Digest(ctx, field)
-			case "ConfigDigest":
-				return ec.fieldContext_ImageSummary_ConfigDigest(ctx, field)
-			case "LastUpdated":
-				return ec.fieldContext_ImageSummary_LastUpdated(ctx, field)
-			case "IsSigned":
-				return ec.fieldContext_ImageSummary_IsSigned(ctx, field)
+			case "Manifests":
+				return ec.fieldContext_ImageSummary_Manifests(ctx, field)
 			case "Size":
 				return ec.fieldContext_ImageSummary_Size(ctx, field)
-			case "Platform":
-				return ec.fieldContext_ImageSummary_Platform(ctx, field)
-			case "Vendor":
-				return ec.fieldContext_ImageSummary_Vendor(ctx, field)
-			case "Score":
-				return ec.fieldContext_ImageSummary_Score(ctx, field)
 			case "DownloadCount":
 				return ec.fieldContext_ImageSummary_DownloadCount(ctx, field)
-			case "Layers":
-				return ec.fieldContext_ImageSummary_Layers(ctx, field)
+			case "LastUpdated":
+				return ec.fieldContext_ImageSummary_LastUpdated(ctx, field)
 			case "Description":
 				return ec.fieldContext_ImageSummary_Description(ctx, field)
+			case "IsSigned":
+				return ec.fieldContext_ImageSummary_IsSigned(ctx, field)
 			case "Licenses":
 				return ec.fieldContext_ImageSummary_Licenses(ctx, field)
 			case "Labels":
 				return ec.fieldContext_ImageSummary_Labels(ctx, field)
 			case "Title":
 				return ec.fieldContext_ImageSummary_Title(ctx, field)
+			case "Score":
+				return ec.fieldContext_ImageSummary_Score(ctx, field)
 			case "Source":
 				return ec.fieldContext_ImageSummary_Source(ctx, field)
 			case "Documentation":
 				return ec.fieldContext_ImageSummary_Documentation(ctx, field)
-			case "History":
-				return ec.fieldContext_ImageSummary_History(ctx, field)
-			case "Vulnerabilities":
-				return ec.fieldContext_ImageSummary_Vulnerabilities(ctx, field)
-			case "Authors":
-				return ec.fieldContext_ImageSummary_Authors(ctx, field)
 			case "Logo":
 				return ec.fieldContext_ImageSummary_Logo(ctx, field)
+			case "Authors":
+				return ec.fieldContext_ImageSummary_Authors(ctx, field)
+			case "Vulnerabilities":
+				return ec.fieldContext_ImageSummary_Vulnerabilities(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ImageSummary", field.Name)
 		},
@@ -4350,46 +4874,36 @@ func (ec *executionContext) fieldContext_Query_ImageListForCVE(ctx context.Conte
 				return ec.fieldContext_ImageSummary_RepoName(ctx, field)
 			case "Tag":
 				return ec.fieldContext_ImageSummary_Tag(ctx, field)
-			case "Digest":
-				return ec.fieldContext_ImageSummary_Digest(ctx, field)
-			case "ConfigDigest":
-				return ec.fieldContext_ImageSummary_ConfigDigest(ctx, field)
-			case "LastUpdated":
-				return ec.fieldContext_ImageSummary_LastUpdated(ctx, field)
-			case "IsSigned":
-				return ec.fieldContext_ImageSummary_IsSigned(ctx, field)
+			case "Manifests":
+				return ec.fieldContext_ImageSummary_Manifests(ctx, field)
 			case "Size":
 				return ec.fieldContext_ImageSummary_Size(ctx, field)
-			case "Platform":
-				return ec.fieldContext_ImageSummary_Platform(ctx, field)
-			case "Vendor":
-				return ec.fieldContext_ImageSummary_Vendor(ctx, field)
-			case "Score":
-				return ec.fieldContext_ImageSummary_Score(ctx, field)
 			case "DownloadCount":
 				return ec.fieldContext_ImageSummary_DownloadCount(ctx, field)
-			case "Layers":
-				return ec.fieldContext_ImageSummary_Layers(ctx, field)
+			case "LastUpdated":
+				return ec.fieldContext_ImageSummary_LastUpdated(ctx, field)
 			case "Description":
 				return ec.fieldContext_ImageSummary_Description(ctx, field)
+			case "IsSigned":
+				return ec.fieldContext_ImageSummary_IsSigned(ctx, field)
 			case "Licenses":
 				return ec.fieldContext_ImageSummary_Licenses(ctx, field)
 			case "Labels":
 				return ec.fieldContext_ImageSummary_Labels(ctx, field)
 			case "Title":
 				return ec.fieldContext_ImageSummary_Title(ctx, field)
+			case "Score":
+				return ec.fieldContext_ImageSummary_Score(ctx, field)
 			case "Source":
 				return ec.fieldContext_ImageSummary_Source(ctx, field)
 			case "Documentation":
 				return ec.fieldContext_ImageSummary_Documentation(ctx, field)
-			case "History":
-				return ec.fieldContext_ImageSummary_History(ctx, field)
-			case "Vulnerabilities":
-				return ec.fieldContext_ImageSummary_Vulnerabilities(ctx, field)
-			case "Authors":
-				return ec.fieldContext_ImageSummary_Authors(ctx, field)
 			case "Logo":
 				return ec.fieldContext_ImageSummary_Logo(ctx, field)
+			case "Authors":
+				return ec.fieldContext_ImageSummary_Authors(ctx, field)
+			case "Vulnerabilities":
+				return ec.fieldContext_ImageSummary_Vulnerabilities(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ImageSummary", field.Name)
 		},
@@ -4448,46 +4962,36 @@ func (ec *executionContext) fieldContext_Query_ImageListWithCVEFixed(ctx context
 				return ec.fieldContext_ImageSummary_RepoName(ctx, field)
 			case "Tag":
 				return ec.fieldContext_ImageSummary_Tag(ctx, field)
-			case "Digest":
-				return ec.fieldContext_ImageSummary_Digest(ctx, field)
-			case "ConfigDigest":
-				return ec.fieldContext_ImageSummary_ConfigDigest(ctx, field)
-			case "LastUpdated":
-				return ec.fieldContext_ImageSummary_LastUpdated(ctx, field)
-			case "IsSigned":
-				return ec.fieldContext_ImageSummary_IsSigned(ctx, field)
+			case "Manifests":
+				return ec.fieldContext_ImageSummary_Manifests(ctx, field)
 			case "Size":
 				return ec.fieldContext_ImageSummary_Size(ctx, field)
-			case "Platform":
-				return ec.fieldContext_ImageSummary_Platform(ctx, field)
-			case "Vendor":
-				return ec.fieldContext_ImageSummary_Vendor(ctx, field)
-			case "Score":
-				return ec.fieldContext_ImageSummary_Score(ctx, field)
 			case "DownloadCount":
 				return ec.fieldContext_ImageSummary_DownloadCount(ctx, field)
-			case "Layers":
-				return ec.fieldContext_ImageSummary_Layers(ctx, field)
+			case "LastUpdated":
+				return ec.fieldContext_ImageSummary_LastUpdated(ctx, field)
 			case "Description":
 				return ec.fieldContext_ImageSummary_Description(ctx, field)
+			case "IsSigned":
+				return ec.fieldContext_ImageSummary_IsSigned(ctx, field)
 			case "Licenses":
 				return ec.fieldContext_ImageSummary_Licenses(ctx, field)
 			case "Labels":
 				return ec.fieldContext_ImageSummary_Labels(ctx, field)
 			case "Title":
 				return ec.fieldContext_ImageSummary_Title(ctx, field)
+			case "Score":
+				return ec.fieldContext_ImageSummary_Score(ctx, field)
 			case "Source":
 				return ec.fieldContext_ImageSummary_Source(ctx, field)
 			case "Documentation":
 				return ec.fieldContext_ImageSummary_Documentation(ctx, field)
-			case "History":
-				return ec.fieldContext_ImageSummary_History(ctx, field)
-			case "Vulnerabilities":
-				return ec.fieldContext_ImageSummary_Vulnerabilities(ctx, field)
-			case "Authors":
-				return ec.fieldContext_ImageSummary_Authors(ctx, field)
 			case "Logo":
 				return ec.fieldContext_ImageSummary_Logo(ctx, field)
+			case "Authors":
+				return ec.fieldContext_ImageSummary_Authors(ctx, field)
+			case "Vulnerabilities":
+				return ec.fieldContext_ImageSummary_Vulnerabilities(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ImageSummary", field.Name)
 		},
@@ -4546,46 +5050,36 @@ func (ec *executionContext) fieldContext_Query_ImageListForDigest(ctx context.Co
 				return ec.fieldContext_ImageSummary_RepoName(ctx, field)
 			case "Tag":
 				return ec.fieldContext_ImageSummary_Tag(ctx, field)
-			case "Digest":
-				return ec.fieldContext_ImageSummary_Digest(ctx, field)
-			case "ConfigDigest":
-				return ec.fieldContext_ImageSummary_ConfigDigest(ctx, field)
-			case "LastUpdated":
-				return ec.fieldContext_ImageSummary_LastUpdated(ctx, field)
-			case "IsSigned":
-				return ec.fieldContext_ImageSummary_IsSigned(ctx, field)
+			case "Manifests":
+				return ec.fieldContext_ImageSummary_Manifests(ctx, field)
 			case "Size":
 				return ec.fieldContext_ImageSummary_Size(ctx, field)
-			case "Platform":
-				return ec.fieldContext_ImageSummary_Platform(ctx, field)
-			case "Vendor":
-				return ec.fieldContext_ImageSummary_Vendor(ctx, field)
-			case "Score":
-				return ec.fieldContext_ImageSummary_Score(ctx, field)
 			case "DownloadCount":
 				return ec.fieldContext_ImageSummary_DownloadCount(ctx, field)
-			case "Layers":
-				return ec.fieldContext_ImageSummary_Layers(ctx, field)
+			case "LastUpdated":
+				return ec.fieldContext_ImageSummary_LastUpdated(ctx, field)
 			case "Description":
 				return ec.fieldContext_ImageSummary_Description(ctx, field)
+			case "IsSigned":
+				return ec.fieldContext_ImageSummary_IsSigned(ctx, field)
 			case "Licenses":
 				return ec.fieldContext_ImageSummary_Licenses(ctx, field)
 			case "Labels":
 				return ec.fieldContext_ImageSummary_Labels(ctx, field)
 			case "Title":
 				return ec.fieldContext_ImageSummary_Title(ctx, field)
+			case "Score":
+				return ec.fieldContext_ImageSummary_Score(ctx, field)
 			case "Source":
 				return ec.fieldContext_ImageSummary_Source(ctx, field)
 			case "Documentation":
 				return ec.fieldContext_ImageSummary_Documentation(ctx, field)
-			case "History":
-				return ec.fieldContext_ImageSummary_History(ctx, field)
-			case "Vulnerabilities":
-				return ec.fieldContext_ImageSummary_Vulnerabilities(ctx, field)
-			case "Authors":
-				return ec.fieldContext_ImageSummary_Authors(ctx, field)
 			case "Logo":
 				return ec.fieldContext_ImageSummary_Logo(ctx, field)
+			case "Authors":
+				return ec.fieldContext_ImageSummary_Authors(ctx, field)
+			case "Vulnerabilities":
+				return ec.fieldContext_ImageSummary_Vulnerabilities(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ImageSummary", field.Name)
 		},
@@ -4705,46 +5199,36 @@ func (ec *executionContext) fieldContext_Query_ImageList(ctx context.Context, fi
 				return ec.fieldContext_ImageSummary_RepoName(ctx, field)
 			case "Tag":
 				return ec.fieldContext_ImageSummary_Tag(ctx, field)
-			case "Digest":
-				return ec.fieldContext_ImageSummary_Digest(ctx, field)
-			case "ConfigDigest":
-				return ec.fieldContext_ImageSummary_ConfigDigest(ctx, field)
-			case "LastUpdated":
-				return ec.fieldContext_ImageSummary_LastUpdated(ctx, field)
-			case "IsSigned":
-				return ec.fieldContext_ImageSummary_IsSigned(ctx, field)
+			case "Manifests":
+				return ec.fieldContext_ImageSummary_Manifests(ctx, field)
 			case "Size":
 				return ec.fieldContext_ImageSummary_Size(ctx, field)
-			case "Platform":
-				return ec.fieldContext_ImageSummary_Platform(ctx, field)
-			case "Vendor":
-				return ec.fieldContext_ImageSummary_Vendor(ctx, field)
-			case "Score":
-				return ec.fieldContext_ImageSummary_Score(ctx, field)
 			case "DownloadCount":
 				return ec.fieldContext_ImageSummary_DownloadCount(ctx, field)
-			case "Layers":
-				return ec.fieldContext_ImageSummary_Layers(ctx, field)
+			case "LastUpdated":
+				return ec.fieldContext_ImageSummary_LastUpdated(ctx, field)
 			case "Description":
 				return ec.fieldContext_ImageSummary_Description(ctx, field)
+			case "IsSigned":
+				return ec.fieldContext_ImageSummary_IsSigned(ctx, field)
 			case "Licenses":
 				return ec.fieldContext_ImageSummary_Licenses(ctx, field)
 			case "Labels":
 				return ec.fieldContext_ImageSummary_Labels(ctx, field)
 			case "Title":
 				return ec.fieldContext_ImageSummary_Title(ctx, field)
+			case "Score":
+				return ec.fieldContext_ImageSummary_Score(ctx, field)
 			case "Source":
 				return ec.fieldContext_ImageSummary_Source(ctx, field)
 			case "Documentation":
 				return ec.fieldContext_ImageSummary_Documentation(ctx, field)
-			case "History":
-				return ec.fieldContext_ImageSummary_History(ctx, field)
-			case "Vulnerabilities":
-				return ec.fieldContext_ImageSummary_Vulnerabilities(ctx, field)
-			case "Authors":
-				return ec.fieldContext_ImageSummary_Authors(ctx, field)
 			case "Logo":
 				return ec.fieldContext_ImageSummary_Logo(ctx, field)
+			case "Authors":
+				return ec.fieldContext_ImageSummary_Authors(ctx, field)
+			case "Vulnerabilities":
+				return ec.fieldContext_ImageSummary_Vulnerabilities(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ImageSummary", field.Name)
 		},
@@ -5051,46 +5535,36 @@ func (ec *executionContext) fieldContext_Query_Image(ctx context.Context, field 
 				return ec.fieldContext_ImageSummary_RepoName(ctx, field)
 			case "Tag":
 				return ec.fieldContext_ImageSummary_Tag(ctx, field)
-			case "Digest":
-				return ec.fieldContext_ImageSummary_Digest(ctx, field)
-			case "ConfigDigest":
-				return ec.fieldContext_ImageSummary_ConfigDigest(ctx, field)
-			case "LastUpdated":
-				return ec.fieldContext_ImageSummary_LastUpdated(ctx, field)
-			case "IsSigned":
-				return ec.fieldContext_ImageSummary_IsSigned(ctx, field)
+			case "Manifests":
+				return ec.fieldContext_ImageSummary_Manifests(ctx, field)
 			case "Size":
 				return ec.fieldContext_ImageSummary_Size(ctx, field)
-			case "Platform":
-				return ec.fieldContext_ImageSummary_Platform(ctx, field)
-			case "Vendor":
-				return ec.fieldContext_ImageSummary_Vendor(ctx, field)
-			case "Score":
-				return ec.fieldContext_ImageSummary_Score(ctx, field)
 			case "DownloadCount":
 				return ec.fieldContext_ImageSummary_DownloadCount(ctx, field)
-			case "Layers":
-				return ec.fieldContext_ImageSummary_Layers(ctx, field)
+			case "LastUpdated":
+				return ec.fieldContext_ImageSummary_LastUpdated(ctx, field)
 			case "Description":
 				return ec.fieldContext_ImageSummary_Description(ctx, field)
+			case "IsSigned":
+				return ec.fieldContext_ImageSummary_IsSigned(ctx, field)
 			case "Licenses":
 				return ec.fieldContext_ImageSummary_Licenses(ctx, field)
 			case "Labels":
 				return ec.fieldContext_ImageSummary_Labels(ctx, field)
 			case "Title":
 				return ec.fieldContext_ImageSummary_Title(ctx, field)
+			case "Score":
+				return ec.fieldContext_ImageSummary_Score(ctx, field)
 			case "Source":
 				return ec.fieldContext_ImageSummary_Source(ctx, field)
 			case "Documentation":
 				return ec.fieldContext_ImageSummary_Documentation(ctx, field)
-			case "History":
-				return ec.fieldContext_ImageSummary_History(ctx, field)
-			case "Vulnerabilities":
-				return ec.fieldContext_ImageSummary_Vulnerabilities(ctx, field)
-			case "Authors":
-				return ec.fieldContext_ImageSummary_Authors(ctx, field)
 			case "Logo":
 				return ec.fieldContext_ImageSummary_Logo(ctx, field)
+			case "Authors":
+				return ec.fieldContext_ImageSummary_Authors(ctx, field)
+			case "Vulnerabilities":
+				return ec.fieldContext_ImageSummary_Vulnerabilities(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ImageSummary", field.Name)
 		},
@@ -5559,46 +6033,36 @@ func (ec *executionContext) fieldContext_RepoInfo_Images(ctx context.Context, fi
 				return ec.fieldContext_ImageSummary_RepoName(ctx, field)
 			case "Tag":
 				return ec.fieldContext_ImageSummary_Tag(ctx, field)
-			case "Digest":
-				return ec.fieldContext_ImageSummary_Digest(ctx, field)
-			case "ConfigDigest":
-				return ec.fieldContext_ImageSummary_ConfigDigest(ctx, field)
-			case "LastUpdated":
-				return ec.fieldContext_ImageSummary_LastUpdated(ctx, field)
-			case "IsSigned":
-				return ec.fieldContext_ImageSummary_IsSigned(ctx, field)
+			case "Manifests":
+				return ec.fieldContext_ImageSummary_Manifests(ctx, field)
 			case "Size":
 				return ec.fieldContext_ImageSummary_Size(ctx, field)
-			case "Platform":
-				return ec.fieldContext_ImageSummary_Platform(ctx, field)
-			case "Vendor":
-				return ec.fieldContext_ImageSummary_Vendor(ctx, field)
-			case "Score":
-				return ec.fieldContext_ImageSummary_Score(ctx, field)
 			case "DownloadCount":
 				return ec.fieldContext_ImageSummary_DownloadCount(ctx, field)
-			case "Layers":
-				return ec.fieldContext_ImageSummary_Layers(ctx, field)
+			case "LastUpdated":
+				return ec.fieldContext_ImageSummary_LastUpdated(ctx, field)
 			case "Description":
 				return ec.fieldContext_ImageSummary_Description(ctx, field)
+			case "IsSigned":
+				return ec.fieldContext_ImageSummary_IsSigned(ctx, field)
 			case "Licenses":
 				return ec.fieldContext_ImageSummary_Licenses(ctx, field)
 			case "Labels":
 				return ec.fieldContext_ImageSummary_Labels(ctx, field)
 			case "Title":
 				return ec.fieldContext_ImageSummary_Title(ctx, field)
+			case "Score":
+				return ec.fieldContext_ImageSummary_Score(ctx, field)
 			case "Source":
 				return ec.fieldContext_ImageSummary_Source(ctx, field)
 			case "Documentation":
 				return ec.fieldContext_ImageSummary_Documentation(ctx, field)
-			case "History":
-				return ec.fieldContext_ImageSummary_History(ctx, field)
-			case "Vulnerabilities":
-				return ec.fieldContext_ImageSummary_Vulnerabilities(ctx, field)
-			case "Authors":
-				return ec.fieldContext_ImageSummary_Authors(ctx, field)
 			case "Logo":
 				return ec.fieldContext_ImageSummary_Logo(ctx, field)
+			case "Authors":
+				return ec.fieldContext_ImageSummary_Authors(ctx, field)
+			case "Vulnerabilities":
+				return ec.fieldContext_ImageSummary_Vulnerabilities(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ImageSummary", field.Name)
 		},
@@ -5963,46 +6427,36 @@ func (ec *executionContext) fieldContext_RepoSummary_NewestImage(ctx context.Con
 				return ec.fieldContext_ImageSummary_RepoName(ctx, field)
 			case "Tag":
 				return ec.fieldContext_ImageSummary_Tag(ctx, field)
-			case "Digest":
-				return ec.fieldContext_ImageSummary_Digest(ctx, field)
-			case "ConfigDigest":
-				return ec.fieldContext_ImageSummary_ConfigDigest(ctx, field)
-			case "LastUpdated":
-				return ec.fieldContext_ImageSummary_LastUpdated(ctx, field)
-			case "IsSigned":
-				return ec.fieldContext_ImageSummary_IsSigned(ctx, field)
+			case "Manifests":
+				return ec.fieldContext_ImageSummary_Manifests(ctx, field)
 			case "Size":
 				return ec.fieldContext_ImageSummary_Size(ctx, field)
-			case "Platform":
-				return ec.fieldContext_ImageSummary_Platform(ctx, field)
-			case "Vendor":
-				return ec.fieldContext_ImageSummary_Vendor(ctx, field)
-			case "Score":
-				return ec.fieldContext_ImageSummary_Score(ctx, field)
 			case "DownloadCount":
 				return ec.fieldContext_ImageSummary_DownloadCount(ctx, field)
-			case "Layers":
-				return ec.fieldContext_ImageSummary_Layers(ctx, field)
+			case "LastUpdated":
+				return ec.fieldContext_ImageSummary_LastUpdated(ctx, field)
 			case "Description":
 				return ec.fieldContext_ImageSummary_Description(ctx, field)
+			case "IsSigned":
+				return ec.fieldContext_ImageSummary_IsSigned(ctx, field)
 			case "Licenses":
 				return ec.fieldContext_ImageSummary_Licenses(ctx, field)
 			case "Labels":
 				return ec.fieldContext_ImageSummary_Labels(ctx, field)
 			case "Title":
 				return ec.fieldContext_ImageSummary_Title(ctx, field)
+			case "Score":
+				return ec.fieldContext_ImageSummary_Score(ctx, field)
 			case "Source":
 				return ec.fieldContext_ImageSummary_Source(ctx, field)
 			case "Documentation":
 				return ec.fieldContext_ImageSummary_Documentation(ctx, field)
-			case "History":
-				return ec.fieldContext_ImageSummary_History(ctx, field)
-			case "Vulnerabilities":
-				return ec.fieldContext_ImageSummary_Vulnerabilities(ctx, field)
-			case "Authors":
-				return ec.fieldContext_ImageSummary_Authors(ctx, field)
 			case "Logo":
 				return ec.fieldContext_ImageSummary_Logo(ctx, field)
+			case "Authors":
+				return ec.fieldContext_ImageSummary_Authors(ctx, field)
+			case "Vulnerabilities":
+				return ec.fieldContext_ImageSummary_Vulnerabilities(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ImageSummary", field.Name)
 		},
@@ -8242,49 +8696,29 @@ func (ec *executionContext) _ImageSummary(ctx context.Context, sel ast.Selection
 
 			out.Values[i] = ec._ImageSummary_Tag(ctx, field, obj)
 
-		case "Digest":
+		case "Manifests":
 
-			out.Values[i] = ec._ImageSummary_Digest(ctx, field, obj)
-
-		case "ConfigDigest":
-
-			out.Values[i] = ec._ImageSummary_ConfigDigest(ctx, field, obj)
-
-		case "LastUpdated":
-
-			out.Values[i] = ec._ImageSummary_LastUpdated(ctx, field, obj)
-
-		case "IsSigned":
-
-			out.Values[i] = ec._ImageSummary_IsSigned(ctx, field, obj)
+			out.Values[i] = ec._ImageSummary_Manifests(ctx, field, obj)
 
 		case "Size":
 
 			out.Values[i] = ec._ImageSummary_Size(ctx, field, obj)
 
-		case "Platform":
-
-			out.Values[i] = ec._ImageSummary_Platform(ctx, field, obj)
-
-		case "Vendor":
-
-			out.Values[i] = ec._ImageSummary_Vendor(ctx, field, obj)
-
-		case "Score":
-
-			out.Values[i] = ec._ImageSummary_Score(ctx, field, obj)
-
 		case "DownloadCount":
 
 			out.Values[i] = ec._ImageSummary_DownloadCount(ctx, field, obj)
 
-		case "Layers":
+		case "LastUpdated":
 
-			out.Values[i] = ec._ImageSummary_Layers(ctx, field, obj)
+			out.Values[i] = ec._ImageSummary_LastUpdated(ctx, field, obj)
 
 		case "Description":
 
 			out.Values[i] = ec._ImageSummary_Description(ctx, field, obj)
+
+		case "IsSigned":
+
+			out.Values[i] = ec._ImageSummary_IsSigned(ctx, field, obj)
 
 		case "Licenses":
 
@@ -8298,6 +8732,10 @@ func (ec *executionContext) _ImageSummary(ctx context.Context, sel ast.Selection
 
 			out.Values[i] = ec._ImageSummary_Title(ctx, field, obj)
 
+		case "Score":
+
+			out.Values[i] = ec._ImageSummary_Score(ctx, field, obj)
+
 		case "Source":
 
 			out.Values[i] = ec._ImageSummary_Source(ctx, field, obj)
@@ -8306,21 +8744,17 @@ func (ec *executionContext) _ImageSummary(ctx context.Context, sel ast.Selection
 
 			out.Values[i] = ec._ImageSummary_Documentation(ctx, field, obj)
 
-		case "History":
+		case "Logo":
 
-			out.Values[i] = ec._ImageSummary_History(ctx, field, obj)
-
-		case "Vulnerabilities":
-
-			out.Values[i] = ec._ImageSummary_Vulnerabilities(ctx, field, obj)
+			out.Values[i] = ec._ImageSummary_Logo(ctx, field, obj)
 
 		case "Authors":
 
 			out.Values[i] = ec._ImageSummary_Authors(ctx, field, obj)
 
-		case "Logo":
+		case "Vulnerabilities":
 
-			out.Values[i] = ec._ImageSummary_Logo(ctx, field, obj)
+			out.Values[i] = ec._ImageSummary_Vulnerabilities(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -8412,6 +8846,87 @@ func (ec *executionContext) _LayerSummary(ctx context.Context, sel ast.Selection
 		case "Score":
 
 			out.Values[i] = ec._LayerSummary_Score(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var manifestSummaryImplementors = []string{"ManifestSummary"}
+
+func (ec *executionContext) _ManifestSummary(ctx context.Context, sel ast.SelectionSet, obj *ManifestSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, manifestSummaryImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ManifestSummary")
+		case "RepoName":
+
+			out.Values[i] = ec._ManifestSummary_RepoName(ctx, field, obj)
+
+		case "Tag":
+
+			out.Values[i] = ec._ManifestSummary_Tag(ctx, field, obj)
+
+		case "Digest":
+
+			out.Values[i] = ec._ManifestSummary_Digest(ctx, field, obj)
+
+		case "ConfigDigest":
+
+			out.Values[i] = ec._ManifestSummary_ConfigDigest(ctx, field, obj)
+
+		case "LastUpdated":
+
+			out.Values[i] = ec._ManifestSummary_LastUpdated(ctx, field, obj)
+
+		case "IsSigned":
+
+			out.Values[i] = ec._ManifestSummary_IsSigned(ctx, field, obj)
+
+		case "Size":
+
+			out.Values[i] = ec._ManifestSummary_Size(ctx, field, obj)
+
+		case "Platform":
+
+			out.Values[i] = ec._ManifestSummary_Platform(ctx, field, obj)
+
+		case "Vendor":
+
+			out.Values[i] = ec._ManifestSummary_Vendor(ctx, field, obj)
+
+		case "DownloadCount":
+
+			out.Values[i] = ec._ManifestSummary_DownloadCount(ctx, field, obj)
+
+		case "Layers":
+
+			out.Values[i] = ec._ManifestSummary_Layers(ctx, field, obj)
+
+		case "History":
+
+			out.Values[i] = ec._ManifestSummary_History(ctx, field, obj)
+
+		case "Vulnerabilities":
+
+			out.Values[i] = ec._ManifestSummary_Vulnerabilities(ctx, field, obj)
+
+		case "Authors":
+
+			out.Values[i] = ec._ManifestSummary_Authors(ctx, field, obj)
+
+		case "Logo":
+
+			out.Values[i] = ec._ManifestSummary_Logo(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -10204,6 +10719,54 @@ func (ec *executionContext) marshalOLayerSummary2ᚖzotregistryᚗioᚋzotᚋpkg
 		return graphql.Null
 	}
 	return ec._LayerSummary(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOManifestSummary2ᚕᚖzotregistryᚗioᚋzotᚋpkgᚋextensionsᚋsearchᚋgql_generatedᚐManifestSummary(ctx context.Context, sel ast.SelectionSet, v []*ManifestSummary) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOManifestSummary2ᚖzotregistryᚗioᚋzotᚋpkgᚋextensionsᚋsearchᚋgql_generatedᚐManifestSummary(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOManifestSummary2ᚖzotregistryᚗioᚋzotᚋpkgᚋextensionsᚋsearchᚋgql_generatedᚐManifestSummary(ctx context.Context, sel ast.SelectionSet, v *ManifestSummary) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ManifestSummary(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOOsArch2ᚕᚖzotregistryᚗioᚋzotᚋpkgᚋextensionsᚋsearchᚋgql_generatedᚐOsArch(ctx context.Context, sel ast.SelectionSet, v []*OsArch) graphql.Marshaler {

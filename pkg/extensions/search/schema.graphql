@@ -57,6 +57,26 @@ Contains details about the image
 type ImageSummary {
     RepoName: String
     Tag: String
+    Manifests: [ManifestSummary]
+    Size: String
+    DownloadCount: Int
+    LastUpdated: Time
+    Description: String
+    IsSigned: Boolean
+    Licenses: String  #  The value of the annotation if present, 'unknown' otherwise).
+    Labels: String
+    Title: String
+    Score: Int
+    Source: String
+    Documentation: String
+    Logo: String
+    Authors: String
+    Vulnerabilities: ImageVulnerabilitySummary
+}
+
+type ManifestSummary {
+    RepoName: String
+    Tag: String
     Digest: String
     ConfigDigest: String
     LastUpdated: Time
@@ -64,15 +84,8 @@ type ImageSummary {
     Size: String
     Platform: OsArch
     Vendor: String
-    Score: Int
     DownloadCount: Int
     Layers: [LayerSummary]
-    Description: String
-    Licenses: String  #  The value of the annotation if present, 'unknown' otherwise).
-    Labels: String
-    Title: String
-    Source: String
-    Documentation: String
     History: [LayerHistory]
     Vulnerabilities: ImageVulnerabilitySummary
     Authors: String

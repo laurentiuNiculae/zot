@@ -173,23 +173,35 @@ func getTags() ([]common.TagInfo, []common.TagInfo) {
 	tags := make([]common.TagInfo, 0)
 
 	firstTag := common.TagInfo{
-		Name:      "1.0.0",
-		Digest:    "sha256:eca04f027f414362596f2632746d8a178362170b9ac9af772011fedcc3877ebb",
+		Name: "1.0.0",
+		Descriptor: common.Descriptor{
+			Digest:    "sha256:eca04f027f414362596f2632746d8a178362170b9ac9af772011fedcc3877ebb",
+			MediaType: ispec.MediaTypeImageManifest,
+		},
 		Timestamp: time.Now(),
 	}
 	secondTag := common.TagInfo{
-		Name:      "1.0.1",
-		Digest:    "sha256:eca04f027f414362596f2632746d8a179362170b9ac9af772011fedcc3877ebb",
+		Name: "1.0.1",
+		Descriptor: common.Descriptor{
+			Digest:    "sha256:eca04f027f414362596f2632746d8a179362170b9ac9af772011fedcc3877ebb",
+			MediaType: ispec.MediaTypeImageManifest,
+		},
 		Timestamp: time.Now(),
 	}
 	thirdTag := common.TagInfo{
-		Name:      "1.0.2",
-		Digest:    "sha256:eca04f027f414362596f2632746d8a170362170b9ac9af772011fedcc3877ebb",
+		Name: "1.0.2",
+		Descriptor: common.Descriptor{
+			Digest:    "sha256:eca04f027f414362596f2632746d8a170362170b9ac9af772011fedcc3877ebb",
+			MediaType: ispec.MediaTypeImageManifest,
+		},
 		Timestamp: time.Now(),
 	}
 	fourthTag := common.TagInfo{
-		Name:      "1.0.3",
-		Digest:    "sha256:eca04f027f414362596f2632746d8a171362170b9ac9af772011fedcc3877ebb",
+		Name: "1.0.3",
+		Descriptor: common.Descriptor{
+			Digest:    "sha256:eca04f027f414362596f2632746d8a171362170b9ac9af772011fedcc3877ebb",
+			MediaType: ispec.MediaTypeImageManifest,
+		},
 		Timestamp: time.Now(),
 	}
 
@@ -263,45 +275,47 @@ func verifyImageSummaryFields(t *testing.T,
 	So(actualImageSummary.Tag, ShouldEqual, expectedImageSummary.Tag)
 	So(actualImageSummary.LastUpdated, ShouldEqual, expectedImageSummary.LastUpdated)
 	So(actualImageSummary.Size, ShouldEqual, expectedImageSummary.Size)
-	So(actualImageSummary.IsSigned, ShouldEqual, expectedImageSummary.IsSigned)
-	So(actualImageSummary.Vendor, ShouldEqual, expectedImageSummary.Vendor)
-	So(actualImageSummary.Platform.Os, ShouldEqual, expectedImageSummary.Platform.Os)
-	So(actualImageSummary.Platform.Arch, ShouldEqual, expectedImageSummary.Platform.Arch)
+	So(actualImageSummary.Manifests[0].IsSigned, ShouldEqual, expectedImageSummary.Manifests[0].IsSigned)
+	So(actualImageSummary.Manifests[0].Vendor, ShouldEqual, expectedImageSummary.Manifests[0].Vendor)
+	So(actualImageSummary.Manifests[0].Platform.Os, ShouldEqual, expectedImageSummary.Manifests[0].Platform.Os)
+	So(actualImageSummary.Manifests[0].Platform.Arch, ShouldEqual, expectedImageSummary.Manifests[0].Platform.Arch)
 	So(actualImageSummary.Title, ShouldEqual, expectedImageSummary.Title)
 	So(actualImageSummary.Description, ShouldEqual, expectedImageSummary.Description)
 	So(actualImageSummary.Source, ShouldEqual, expectedImageSummary.Source)
 	So(actualImageSummary.Documentation, ShouldEqual, expectedImageSummary.Documentation)
 	So(actualImageSummary.Licenses, ShouldEqual, expectedImageSummary.Licenses)
-	So(len(actualImageSummary.History), ShouldEqual, len(expectedImageSummary.History))
+	So(len(actualImageSummary.Manifests[0].History), ShouldEqual, len(expectedImageSummary.Manifests[0].History))
 
-	for index, history := range actualImageSummary.History {
+	expectedHistories := expectedImageSummary.Manifests[0].History
+
+	for index, history := range actualImageSummary.Manifests[0].History {
 		// Digest could be empty string if the history entry is not associated with a layer
-		So(history.Layer.Digest, ShouldEqual, expectedImageSummary.History[index].Layer.Digest)
-		So(history.Layer.Size, ShouldEqual, expectedImageSummary.History[index].Layer.Size)
+		So(history.Layer.Digest, ShouldEqual, expectedHistories[index].Layer.Digest)
+		So(history.Layer.Size, ShouldEqual, expectedHistories[index].Layer.Size)
 		So(
 			history.HistoryDescription.Author,
 			ShouldEqual,
-			expectedImageSummary.History[index].HistoryDescription.Author,
+			expectedHistories[index].HistoryDescription.Author,
 		)
 		So(
 			history.HistoryDescription.Created,
 			ShouldEqual,
-			expectedImageSummary.History[index].HistoryDescription.Created,
+			expectedHistories[index].HistoryDescription.Created,
 		)
 		So(
 			history.HistoryDescription.CreatedBy,
 			ShouldEqual,
-			expectedImageSummary.History[index].HistoryDescription.CreatedBy,
+			expectedHistories[index].HistoryDescription.CreatedBy,
 		)
 		So(
 			history.HistoryDescription.EmptyLayer,
 			ShouldEqual,
-			expectedImageSummary.History[index].HistoryDescription.EmptyLayer,
+			expectedHistories[index].HistoryDescription.EmptyLayer,
 		)
 		So(
 			history.HistoryDescription.Comment,
 			ShouldEqual,
-			expectedImageSummary.History[index].HistoryDescription.Comment,
+			expectedHistories[index].HistoryDescription.Comment,
 		)
 	}
 }
@@ -346,10 +360,10 @@ func uploadNewRepoTag(tag string, repoName string, baseURL string, layers [][]by
 
 	err = UploadImage(
 		Image{
-			Manifest: manifest,
-			Config:   config,
-			Layers:   layers,
-			Tag:      tag,
+			Manifest:  manifest,
+			Config:    config,
+			Layers:    layers,
+			Reference: tag,
 		},
 		baseURL,
 		repoName,
@@ -783,7 +797,7 @@ func TestGetReferrersGQL(t *testing.T) {
 				Manifest: manifest,
 				Config:   config,
 				Layers:   layers,
-				Tag:      "1.0",
+				Reference:      "1.0",
 			},
 			baseURL,
 			repo)
@@ -908,10 +922,10 @@ func TestExpandedRepoInfo(t *testing.T) {
 
 			err = WriteImageToFileSystem(
 				Image{
-					Manifest: manifest,
-					Config:   config,
-					Layers:   layers,
-					Tag:      fmt.Sprintf("%d.0", i),
+					Manifest:  manifest,
+					Config:    config,
+					Layers:    layers,
+					Reference: fmt.Sprintf("%d.0", i),
 				},
 				repo1,
 				storeController)
@@ -945,14 +959,35 @@ func TestExpandedRepoInfo(t *testing.T) {
 		defer stopServer(ctlr)
 		WaitTillServerReady(baseURL)
 
-		query := "{ExpandedRepoInfo(repo:\"test1\"){Summary%20{Name%20LastUpdated%20Size%20Platforms%20{Os%20Arch}%20Vendors%20Score}%20Images%20{Digest%20IsSigned%20Tag%20Layers%20{Size%20Digest}}}}" //nolint: lll
+		query := `{
+				ExpandedRepoInfo(repo:"test1"){
+					Summary {
+						Name LastUpdated Size
+						Platforms {Os Arch} 
+						Vendors
+					} 
+					Images {
+						Tag
+						Manifests {
+							Digest
+							IsSigned
+							Layers {Size Digest}
+						}
+						IsSigned
+					}
+				}
+			}`
 
-		resp, err := resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + query)
+		resp, err := resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
 		So(resp, ShouldNotBeNil)
 		So(err, ShouldBeNil)
+		responseStruct := &ExpandedRepoInfoResp{}
+
+		err = json.Unmarshal(resp.Body(), responseStruct)
+
 		So(resp.StatusCode(), ShouldEqual, 200)
 
-		responseStruct := &ExpandedRepoInfoResp{}
+		responseStruct = &ExpandedRepoInfoResp{}
 
 		err = json.Unmarshal(resp.Body(), responseStruct)
 		So(err, ShouldBeNil)
@@ -1002,9 +1037,15 @@ func TestExpandedRepoInfo(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(resp.StatusCode(), ShouldEqual, 422)
 
-		query := "{ExpandedRepoInfo(repo:\"zot-cve-test\"){Summary%20{Name%20LastUpdated%20Size%20Platforms%20{Os%20Arch}%20Vendors%20Score}}}" //nolint: lll
+		query := `{
+			ExpandedRepoInfo(repo:"zot-cve-test"){
+				Summary {
+					Name LastUpdated Size 
+					}
+				}
+			}`
 
-		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + query)
+		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
 		So(resp, ShouldNotBeNil)
 		So(err, ShouldBeNil)
 		So(resp.StatusCode(), ShouldEqual, 200)
@@ -1016,9 +1057,21 @@ func TestExpandedRepoInfo(t *testing.T) {
 		So(responseStruct.ExpandedRepoInfo.RepoInfo.Summary, ShouldNotBeEmpty)
 		So(responseStruct.ExpandedRepoInfo.RepoInfo.Summary.Name, ShouldEqual, "zot-cve-test")
 
-		query = "{ExpandedRepoInfo(repo:\"zot-cve-test\"){Images%20{Digest%20IsSigned%20Tag%20Layers%20{Size%20Digest}}}}"
+		query = `{
+			ExpandedRepoInfo(repo:"zot-cve-test"){
+				Images {
+					Tag
+					IsSigned
+					Manifests {
+						Digest 
+						IsSigned
+						Layers {Size Digest}
+						}
+					}
+				}
+			}`
 
-		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + query)
+		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
 		So(resp, ShouldNotBeNil)
 		So(err, ShouldBeNil)
 		So(resp.StatusCode(), ShouldEqual, 200)
@@ -1028,14 +1081,14 @@ func TestExpandedRepoInfo(t *testing.T) {
 		err = json.Unmarshal(resp.Body(), responseStruct)
 		So(err, ShouldBeNil)
 		So(len(responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries), ShouldNotEqual, 0)
-		So(len(responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries[0].Layers), ShouldNotEqual, 0)
+		So(len(responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries[0].Manifests[0].Layers), ShouldNotEqual, 0)
 
 		_, testManifestDigest, _, err := testStorage.GetImageManifest("zot-cve-test", "0.0.1")
 		So(err, ShouldBeNil)
 
 		found := false
 		for _, m := range responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries {
-			if m.Digest == testManifestDigest.String() {
+			if m.Manifests[0].Digest == testManifestDigest.String() {
 				found = true
 				So(m.IsSigned, ShouldEqual, false)
 			}
@@ -1045,7 +1098,7 @@ func TestExpandedRepoInfo(t *testing.T) {
 		err = SignImageUsingCosign("zot-cve-test:0.0.1", port)
 		So(err, ShouldBeNil)
 
-		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + query)
+		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
 		So(resp, ShouldNotBeNil)
 		So(err, ShouldBeNil)
 		So(resp.StatusCode(), ShouldEqual, 200)
@@ -1053,29 +1106,49 @@ func TestExpandedRepoInfo(t *testing.T) {
 		err = json.Unmarshal(resp.Body(), responseStruct)
 		So(err, ShouldBeNil)
 		So(len(responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries), ShouldNotEqual, 0)
-		So(len(responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries[0].Layers), ShouldNotEqual, 0)
+		So(len(responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries[0].Manifests[0].Layers), ShouldNotEqual, 0)
 
 		_, testManifestDigest, _, err = testStorage.GetImageManifest("zot-cve-test", "0.0.1")
 		So(err, ShouldBeNil)
 
 		found = false
 		for _, m := range responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries {
-			if m.Digest == testManifestDigest.String() {
+			if m.Manifests[0].Digest == testManifestDigest.String() {
 				found = true
 				So(m.IsSigned, ShouldEqual, true)
+				So(m.Manifests[0].IsSigned, ShouldEqual, true)
 			}
 		}
 		So(found, ShouldEqual, true)
 
-		query = "{ExpandedRepoInfo(repo:\"\"){Images%20{Digest%20Tag%20IsSigned%20Layers%20{Size%20Digest}}}}"
+		query = `{
+			ExpandedRepoInfo(repo:""){
+				Images {
+					Tag
+					}
+				}
+			}`
 
-		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + query)
+		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
 		So(resp, ShouldNotBeNil)
 		So(err, ShouldBeNil)
 		So(resp.StatusCode(), ShouldEqual, 200)
 
-		query = "{ExpandedRepoInfo(repo:\"zot-test\"){Images%20{Digest%20Tag%20IsSigned%20Layers%20{Size%20Digest}}}}"
-		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + query)
+		query = `{
+			ExpandedRepoInfo(repo:"zot-test"){
+				Images {
+					RepoName
+					Tag IsSigned 
+					Manifests{
+						RepoName
+						Digest
+						Tag
+						Layers {Size Digest}
+						}
+					}
+				}
+			}`
+		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
 		So(resp, ShouldNotBeNil)
 		So(err, ShouldBeNil)
 		So(resp.StatusCode(), ShouldEqual, 200)
@@ -1083,14 +1156,14 @@ func TestExpandedRepoInfo(t *testing.T) {
 		err = json.Unmarshal(resp.Body(), responseStruct)
 		So(err, ShouldBeNil)
 		So(len(responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries), ShouldNotEqual, 0)
-		So(len(responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries[0].Layers), ShouldNotEqual, 0)
+		So(len(responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries[0].Manifests[0].Layers), ShouldNotEqual, 0)
 
 		_, testManifestDigest, _, err = testStorage.GetImageManifest("zot-test", "0.0.1")
 		So(err, ShouldBeNil)
 
 		found = false
 		for _, m := range responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries {
-			if m.Digest == testManifestDigest.String() {
+			if m.Manifests[0].Digest == testManifestDigest.String() {
 				found = true
 				So(m.IsSigned, ShouldEqual, false)
 			}
@@ -1100,7 +1173,7 @@ func TestExpandedRepoInfo(t *testing.T) {
 		err = SignImageUsingCosign("zot-test:0.0.1", port)
 		So(err, ShouldBeNil)
 
-		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "/query?query=" + query)
+		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "/query?query=" + url.QueryEscape(query))
 		So(resp, ShouldNotBeNil)
 		So(err, ShouldBeNil)
 		So(resp.StatusCode(), ShouldEqual, 200)
@@ -1108,14 +1181,14 @@ func TestExpandedRepoInfo(t *testing.T) {
 		err = json.Unmarshal(resp.Body(), responseStruct)
 		So(err, ShouldBeNil)
 		So(len(responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries), ShouldNotEqual, 0)
-		So(len(responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries[0].Layers), ShouldNotEqual, 0)
+		So(len(responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries[0].Manifests[0].Layers), ShouldNotEqual, 0)
 
 		_, testManifestDigest, _, err = testStorage.GetImageManifest("zot-test", "0.0.1")
 		So(err, ShouldBeNil)
 
 		found = false
 		for _, m := range responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries {
-			if m.Digest == testManifestDigest.String() {
+			if m.Manifests[0].Digest == testManifestDigest.String() {
 				found = true
 				So(m.IsSigned, ShouldEqual, true)
 			}
@@ -1128,7 +1201,7 @@ func TestExpandedRepoInfo(t *testing.T) {
 		err = os.Remove(path.Join(rootDir, "zot-test/blobs/sha256", manifestDigest.Encoded()))
 		So(err, ShouldBeNil)
 
-		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + query)
+		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
 		So(resp, ShouldNotBeNil)
 		So(err, ShouldBeNil)
 		So(resp.StatusCode(), ShouldEqual, 200)
@@ -1183,8 +1256,19 @@ func TestExpandedRepoInfo(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		responseStruct := &ExpandedRepoInfoResp{}
-		query := "{ExpandedRepoInfo(repo:\"test-repo\"){Images%20{RepoName%20Digest%20Tag%20LastUpdated%20Layers%20{Size%20Digest}}}}" //nolint: lll
-		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + query)
+		query := `{
+			ExpandedRepoInfo(repo:"test-repo"){
+				Images {
+					RepoName 
+					Tag 
+					Manifests {
+						Digest 
+						Layers {Size Digest}
+						}
+					}
+				}
+			}`
+		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
 		So(resp, ShouldNotBeNil)
 		So(err, ShouldBeNil)
 		So(resp.StatusCode(), ShouldEqual, 200)
@@ -1192,7 +1276,7 @@ func TestExpandedRepoInfo(t *testing.T) {
 		err = json.Unmarshal(resp.Body(), responseStruct)
 		So(err, ShouldBeNil)
 		So(len(responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries), ShouldNotEqual, 0)
-		So(len(responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries[0].Layers), ShouldNotEqual, 0)
+		So(len(responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries[0].Manifests[0].Layers), ShouldNotEqual, 0)
 
 		So(responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries[0].Tag, ShouldEqual, "3.0")
 		So(responseStruct.ExpandedRepoInfo.RepoInfo.ImageSummaries[1].Tag, ShouldEqual, "2.0")
@@ -1343,29 +1427,9 @@ func TestDerivedImageList(t *testing.T) {
 
 	ctlr := api.NewController(conf)
 
-	go func() {
-		// this blocks
-		if err := ctlr.Run(context.Background()); err != nil {
-			return
-		}
-	}()
-
-	// wait till ready
-	for {
-		_, err := resty.R().Get(baseURL)
-		if err == nil {
-			break
-		}
-
-		time.Sleep(100 * time.Millisecond)
-	}
-
-	// shut down server
-
-	defer func() {
-		ctx := context.Background()
-		_ = ctlr.Server.Shutdown(ctx)
-	}()
+	go startServer(ctlr)
+	defer stopServer(ctlr)
+	WaitTillServerReady(baseURL)
 
 	Convey("Test dependency list for image working", t, func() {
 		// create test images
@@ -1424,10 +1488,10 @@ func TestDerivedImageList(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest,
-				Config:   config,
-				Layers:   layers,
-				Tag:      "latest",
+				Manifest:  manifest,
+				Config:    config,
+				Layers:    layers,
+				Reference: "latest",
 			},
 			baseURL,
 			repoName,
@@ -1467,10 +1531,10 @@ func TestDerivedImageList(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest,
-				Config:   config,
-				Layers:   layers,
-				Tag:      "latest",
+				Manifest:  manifest,
+				Config:    config,
+				Layers:    layers,
+				Reference: "latest",
 			},
 			baseURL,
 			repoName,
@@ -1510,10 +1574,10 @@ func TestDerivedImageList(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest,
-				Config:   config,
-				Layers:   layers,
-				Tag:      "latest",
+				Manifest:  manifest,
+				Config:    config,
+				Layers:    layers,
+				Reference: "latest",
 			},
 			baseURL,
 			repoName,
@@ -1572,10 +1636,10 @@ func TestDerivedImageList(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest,
-				Config:   config,
-				Layers:   layers,
-				Tag:      "latest",
+				Manifest:  manifest,
+				Config:    config,
+				Layers:    layers,
+				Reference: "latest",
 			},
 			baseURL,
 			repoName,
@@ -1629,10 +1693,10 @@ func TestDerivedImageList(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest,
-				Config:   config,
-				Layers:   layers,
-				Tag:      "latest",
+				Manifest:  manifest,
+				Config:    config,
+				Layers:    layers,
+				Reference: "latest",
 			},
 			baseURL,
 			repoName,
@@ -1644,12 +1708,16 @@ func TestDerivedImageList(t *testing.T) {
 				{
 					DerivedImageList(image:"test-repo:latest"){
 						Results{
-							RepoName,
-							Tag,
-							Digest,
-							ConfigDigest,
-							LastUpdated,
-							IsSigned,
+							RepoName
+							Tag
+							Manifests {
+								Digest
+								ConfigDigest
+								LastUpdated
+								IsSigned
+								Size
+							}
+							IsSigned
 							Size
 						}
 					}
@@ -1670,12 +1738,16 @@ func TestDerivedImageList(t *testing.T) {
 				{
 					DerivedImageList(image:"test-repo:latest", requestedPage:{limit: 1, offset: 0, sortBy:ALPHABETIC_ASC}){
 						Results{
-							RepoName,
-							Tag,
-							Digest,
-							ConfigDigest,
-							LastUpdated,
-							IsSigned,
+							RepoName
+							Tag
+							Manifests {
+								Digest
+								ConfigDigest
+								LastUpdated
+								IsSigned
+								Size
+							}
+							IsSigned
 							Size
 						}
 					}
@@ -1772,12 +1844,16 @@ func TestDerivedImageListNoRepos(t *testing.T) {
 			{
 				DerivedImageList(image:"test-image"){
 					Results{
-						RepoName,
-						Tag,
-						Digest,
-						ConfigDigest,
-						LastUpdated,
-						IsSigned,
+						RepoName
+						Tag
+						Manifests {
+							Digest
+							ConfigDigest
+							LastUpdated
+							IsSigned
+							Size
+						}
+						IsSigned
 						Size
 					}
 				}
@@ -1847,29 +1923,9 @@ func TestBaseImageList(t *testing.T) {
 
 	ctlr := api.NewController(conf)
 
-	go func() {
-		// this blocks
-		if err := ctlr.Run(context.Background()); err != nil {
-			return
-		}
-	}()
-
-	// wait till ready
-	for {
-		_, err := resty.R().Get(baseURL)
-		if err == nil {
-			break
-		}
-
-		time.Sleep(100 * time.Millisecond)
-	}
-
-	// shut down server
-
-	defer func() {
-		ctx := context.Background()
-		_ = ctlr.Server.Shutdown(ctx)
-	}()
+	go startServer(ctlr)
+	defer stopServer(ctlr)
+	WaitTillServerReady(baseURL)
 
 	Convey("Test base image list for image working", t, func() {
 		// create test images
@@ -1934,10 +1990,10 @@ func TestBaseImageList(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest,
-				Config:   config,
-				Layers:   layers,
-				Tag:      "latest",
+				Manifest:  manifest,
+				Config:    config,
+				Layers:    layers,
+				Reference: "latest",
 			},
 			baseURL,
 			repoName,
@@ -1982,10 +2038,10 @@ func TestBaseImageList(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest,
-				Config:   config,
-				Layers:   layers,
-				Tag:      "latest",
+				Manifest:  manifest,
+				Config:    config,
+				Layers:    layers,
+				Reference: "latest",
 			},
 			baseURL,
 			repoName,
@@ -2025,10 +2081,10 @@ func TestBaseImageList(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest,
-				Config:   config,
-				Layers:   layers,
-				Tag:      "latest",
+				Manifest:  manifest,
+				Config:    config,
+				Layers:    layers,
+				Reference: "latest",
 			},
 			baseURL,
 			repoName,
@@ -2062,10 +2118,47 @@ func TestBaseImageList(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest,
-				Config:   config,
-				Layers:   layers,
-				Tag:      "latest",
+				Manifest:  manifest,
+				Config:    config,
+				Layers:    layers,
+				Reference: "latest",
+			},
+			baseURL,
+			repoName,
+		)
+		So(err, ShouldBeNil)
+
+		// create image with one layer, which is also present in the given image
+		layers = [][]byte{
+			{10, 11, 10, 11},
+		}
+
+		manifest = ispec.Manifest{
+			Versioned: specs.Versioned{
+				SchemaVersion: 2,
+			},
+			Config: ispec.Descriptor{
+				MediaType: "application/vnd.oci.image.config.v1+json",
+				Digest:    configDigest,
+				Size:      int64(len(configBlob)),
+			},
+			Layers: []ispec.Descriptor{
+				{
+					MediaType: "application/vnd.oci.image.layer.v1.tar",
+					Digest:    godigest.FromBytes(layers[0]),
+					Size:      int64(len(layers[0])),
+				},
+			},
+		}
+
+		repoName = "one-layer"
+
+		err = UploadImage(
+			Image{
+				Manifest:  manifest,
+				Config:    config,
+				Layers:    layers,
+				Reference: "latest",
 			},
 			baseURL,
 			repoName,
@@ -2105,10 +2198,10 @@ func TestBaseImageList(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest,
-				Config:   config,
-				Layers:   layers,
-				Tag:      "latest",
+				Manifest:  manifest,
+				Config:    config,
+				Layers:    layers,
+				Reference: "latest",
 			},
 			baseURL,
 			repoName,
@@ -2166,10 +2259,10 @@ func TestBaseImageList(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest,
-				Config:   config,
-				Layers:   layers,
-				Tag:      "latest",
+				Manifest:  manifest,
+				Config:    config,
+				Layers:    layers,
+				Reference: "latest",
 			},
 			baseURL,
 			repoName,
@@ -2209,10 +2302,10 @@ func TestBaseImageList(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest,
-				Config:   config,
-				Layers:   layers,
-				Tag:      "latest",
+				Manifest:  manifest,
+				Config:    config,
+				Layers:    layers,
+				Reference: "latest",
 			},
 			baseURL,
 			repoName,
@@ -2224,12 +2317,16 @@ func TestBaseImageList(t *testing.T) {
 				{
 					BaseImageList(image:"test-repo:latest"){
 						Results{
-							RepoName,
-							Tag,
-							Digest,
-							ConfigDigest,
-							LastUpdated,
-							IsSigned,
+							RepoName
+							Tag
+							Manifests {
+								Digest
+								ConfigDigest
+								LastUpdated
+								IsSigned
+								Size
+							}
+							IsSigned
 							Size
 						}
 					}
@@ -2253,12 +2350,16 @@ func TestBaseImageList(t *testing.T) {
 				{
 					BaseImageList(image:"test-repo:latest", requestedPage:{limit: 1, offset: 0, sortBy:RELEVANCE}){
 						Results{
-							RepoName,
-							Tag,
-							Digest,
-							ConfigDigest,
-							LastUpdated,
-							IsSigned,
+							RepoName
+							Tag
+							Manifests {
+								Digest
+								ConfigDigest
+								LastUpdated
+								IsSigned
+								Size
+							}
+							IsSigned
 							Size
 						}
 					}
@@ -2358,12 +2459,16 @@ func TestBaseImageListNoRepos(t *testing.T) {
 			{
 				BaseImageList(image:"test-image"){
 					Results{
-						RepoName,
-						Tag,
-						Digest,
-						ConfigDigest,
-						LastUpdated,
-						IsSigned,
+						RepoName
+						Tag
+						Manifests {
+							Digest
+							ConfigDigest
+							LastUpdated
+							IsSigned
+							Size
+						}
+						IsSigned
 						Size
 					}
 				}
@@ -2434,10 +2539,10 @@ func TestGlobalSearchImageAuthor(t *testing.T) {
 		manifest.Annotations["org.opencontainers.image.authors"] = "author name"
 		err = UploadImage(
 			Image{
-				Config:   cfg,
-				Layers:   layers,
-				Manifest: manifest,
-				Tag:      "latest",
+				Config:    cfg,
+				Layers:    layers,
+				Manifest:  manifest,
+				Reference: "latest",
 			}, baseURL, "repowithauthor")
 
 		So(err, ShouldBeNil)
@@ -2446,8 +2551,7 @@ func TestGlobalSearchImageAuthor(t *testing.T) {
 			{
 				GlobalSearch(query:"repowithauthor:latest"){
 					Images {
-						RepoName Tag LastUpdated Size IsSigned Vendor Score
-						Platform { Os Arch }
+						RepoName Tag LastUpdated Size IsSigned
 						Authors
 					}
 				}
@@ -2472,8 +2576,7 @@ func TestGlobalSearchImageAuthor(t *testing.T) {
 					Platforms { Os Arch }
 					Vendors Score
 					NewestImage {
-						RepoName Tag LastUpdated Size IsSigned Vendor Score
-						Platform { Os Arch }
+						RepoName Tag LastUpdated Size IsSigned
 						Authors
 					}
 				}
@@ -2499,10 +2602,10 @@ func TestGlobalSearchImageAuthor(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Config:   cfg,
-				Layers:   layers,
-				Manifest: manifest,
-				Tag:      "latest",
+				Config:    cfg,
+				Layers:    layers,
+				Manifest:  manifest,
+				Reference: "latest",
 			}, baseURL, "repowithauthorconfig")
 
 		So(err, ShouldBeNil)
@@ -2511,8 +2614,7 @@ func TestGlobalSearchImageAuthor(t *testing.T) {
 			{
 				GlobalSearch(query:"repowithauthorconfig:latest"){
 					Images {
-						RepoName Tag LastUpdated Size IsSigned Vendor Score
-						Platform { Os Arch }
+						RepoName Tag LastUpdated Size IsSigned
 						Authors
 					}
 				}
@@ -2537,8 +2639,7 @@ func TestGlobalSearchImageAuthor(t *testing.T) {
 					Platforms { Os Arch }
 					Vendors Score
 					NewestImage {
-						RepoName Tag LastUpdated Size IsSigned Vendor Score
-						Platform { Os Arch }
+						RepoName Tag LastUpdated Size IsSigned
 						Authors
 					}
 				}
@@ -2620,10 +2721,10 @@ func TestGlobalSearch(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest1,
-				Config:   config1,
-				Layers:   layers1,
-				Tag:      "1.0.1",
+				Manifest:  manifest1,
+				Config:    config1,
+				Layers:    layers1,
+				Reference: "1.0.1",
 			},
 			baseURL,
 			"repo1",
@@ -2662,10 +2763,10 @@ func TestGlobalSearch(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest2,
-				Config:   config2,
-				Layers:   layers2,
-				Tag:      "1.0.2",
+				Manifest:  manifest2,
+				Config:    config2,
+				Layers:    layers2,
+				Reference: "1.0.2",
 			},
 			baseURL,
 			"repo1",
@@ -2687,10 +2788,10 @@ func TestGlobalSearch(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest3,
-				Config:   config3,
-				Layers:   layers3,
-				Tag:      "1.0.0",
+				Manifest:  manifest3,
+				Config:    config3,
+				Layers:    layers3,
+				Reference: "1.0.0",
 			},
 			baseURL,
 			"repo2",
@@ -2719,26 +2820,36 @@ func TestGlobalSearch(t *testing.T) {
 			{
 				GlobalSearch(query:"repo"){
 					Images {
-						RepoName Tag LastUpdated Size IsSigned Vendor Score
-						Platform { Os Arch }
-						Vulnerabilities { Count MaxSeverity }
-						History {
-							Layer { Size Digest }
-							HistoryDescription { Author Comment Created CreatedBy EmptyLayer }
+						RepoName Tag LastUpdated Size IsSigned
+						Manifests {
+							Vendor
+							LastUpdated
+							Size
+							IsSigned
+							Platform { Os Arch }
+							History {
+								Layer { Size Digest }
+								HistoryDescription { Author Comment Created CreatedBy EmptyLayer }
+							}
+							Vulnerabilities { Count MaxSeverity }
 						}
+						Vulnerabilities { Count MaxSeverity }
 					}
 					Repos {
 						Name LastUpdated Size
 						Platforms { Os Arch }
 						Vendors Score
 						NewestImage {
-							RepoName Tag LastUpdated Size IsSigned Vendor Score
-							Platform { Os Arch }
-							Vulnerabilities { Count MaxSeverity }
-							History {
-								Layer { Size Digest }
-								HistoryDescription { Author Comment Created CreatedBy EmptyLayer }
+							RepoName Tag LastUpdated Size IsSigned
+							Manifests{
+								LastUpdated Size IsSigned Vendor
+								Platform { Os Arch }
+								History {
+									Layer { Size Digest }
+									HistoryDescription { Author Comment Created CreatedBy EmptyLayer }
+								}
 							}
+							Vulnerabilities { Count MaxSeverity }
 						}
 					}
 					Layers { Digest Size }
@@ -2802,26 +2913,32 @@ func TestGlobalSearch(t *testing.T) {
 		{
 			GlobalSearch(query:"repo1:1.0.1"){
 				Images {
-					RepoName Tag LastUpdated Size IsSigned Vendor Score
-					Platform { Os Arch }
-					Vulnerabilities { Count MaxSeverity }
-					History {
-						Layer { Size Digest }
-						HistoryDescription { Author Comment Created CreatedBy EmptyLayer }
+					RepoName Tag LastUpdated Size IsSigned 
+					Manifests {
+						LastUpdated Size IsSigned Vendor
+						Platform { Os Arch }
+						History {
+							Layer { Size Digest }
+							HistoryDescription { Author Comment Created CreatedBy EmptyLayer }
+						}
 					}
+					Vulnerabilities { Count MaxSeverity }
 				}
 				Repos {
 					Name LastUpdated Size
 					Platforms { Os Arch }
 					Vendors Score
 					NewestImage {
-						RepoName Tag LastUpdated Size IsSigned Vendor Score
-						Platform { Os Arch }
-						Vulnerabilities { Count MaxSeverity }
-						History {
-							Layer { Size Digest }
-							HistoryDescription { Author Comment Created CreatedBy EmptyLayer }
+						RepoName Tag LastUpdated Size IsSigned
+						Manifests {
+							LastUpdated Size IsSigned Vendor
+							Platform { Os Arch }
+							History {
+								Layer { Size Digest }
+								HistoryDescription { Author Comment Created CreatedBy EmptyLayer }
+							}
 						}
+						Vulnerabilities { Count MaxSeverity }
 					}
 				}
 				Layers { Digest Size }
@@ -2933,10 +3050,10 @@ func TestGlobalSearch(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest1,
-				Config:   config1,
-				Layers:   layers1,
-				Tag:      "1.0.1",
+				Manifest:  manifest1,
+				Config:    config1,
+				Layers:    layers1,
+				Reference: "1.0.1",
 			},
 			baseURL,
 			"repo1",
@@ -2958,10 +3075,10 @@ func TestGlobalSearch(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest2,
-				Config:   config2,
-				Layers:   layers2,
-				Tag:      "1.0.2",
+				Manifest:  manifest2,
+				Config:    config2,
+				Layers:    layers2,
+				Reference: "1.0.2",
 			},
 			baseURL,
 			"repo1",
@@ -2983,10 +3100,10 @@ func TestGlobalSearch(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest3,
-				Config:   config3,
-				Layers:   layers3,
-				Tag:      "1.0.0",
+				Manifest:  manifest3,
+				Config:    config3,
+				Layers:    layers3,
+				Reference: "1.0.0",
 			},
 			baseURL,
 			"repo2",
@@ -3015,31 +3132,38 @@ func TestGlobalSearch(t *testing.T) {
 			{
 				GlobalSearch(query:"repo"){
 					Images {
-						RepoName Tag LastUpdated Size IsSigned Vendor Score
-						Platform { Os Arch }
-						Vulnerabilities { Count MaxSeverity }
-						History {
-							Layer { Size Digest }
-							HistoryDescription { Author Comment Created CreatedBy EmptyLayer }
+						RepoName Tag LastUpdated Size IsSigned 
+						Manifests {
+							LastUpdated Size IsSigned Vendor
+							Platform { Os Arch }
+							History {
+								Layer { Size Digest }
+								HistoryDescription { Author Comment Created CreatedBy EmptyLayer }
+							}
 						}
+						Vulnerabilities { Count MaxSeverity }
 					}
 					Repos {
 						Name LastUpdated Size
 						Platforms { Os Arch }
 						Vendors Score
 						NewestImage {
-							RepoName Tag LastUpdated Size IsSigned Vendor Score
-							Platform { Os Arch }
-							Vulnerabilities { Count MaxSeverity }
-							History {
-								Layer { Size Digest }
-								HistoryDescription { Author Comment Created CreatedBy EmptyLayer }
+							RepoName Tag LastUpdated Size IsSigned
+							Manifests {
+								LastUpdated Size IsSigned Vendor
+								Platform { Os Arch }
+								History {
+									Layer { Size Digest }
+									HistoryDescription { Author Comment Created CreatedBy EmptyLayer }
+								}
 							}
+							Vulnerabilities { Count MaxSeverity }
 						}
 					}
 					Layers { Digest Size }
 				}
 			}`
+
 		resp, err := resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
 		So(resp, ShouldNotBeNil)
 		So(err, ShouldBeNil)
@@ -3098,26 +3222,32 @@ func TestGlobalSearch(t *testing.T) {
 		{
 			GlobalSearch(query:"repo1:1.0.1"){
 				Images {
-					RepoName Tag LastUpdated Size IsSigned Vendor Score
-					Platform { Os Arch }
-					Vulnerabilities { Count MaxSeverity }
-					History {
-						Layer { Size Digest }
-						HistoryDescription { Author Comment Created CreatedBy EmptyLayer }
+					RepoName Tag LastUpdated Size IsSigned 
+					Manifests {
+						LastUpdated Size IsSigned Vendor
+						Platform { Os Arch }
+						History {
+							Layer { Size Digest }
+							HistoryDescription { Author Comment Created CreatedBy EmptyLayer }
+						}
 					}
+					Vulnerabilities { Count MaxSeverity }
 				}
 				Repos {
 					Name LastUpdated Size
 					Platforms { Os Arch }
 					Vendors Score
 					NewestImage {
-						RepoName Tag LastUpdated Size IsSigned Vendor Score
-						Platform { Os Arch }
-						Vulnerabilities { Count MaxSeverity }
-						History {
-							Layer { Size Digest }
-							HistoryDescription { Author Comment Created CreatedBy EmptyLayer }
+						RepoName Tag LastUpdated Size IsSigned
+						Manifests {
+							LastUpdated Size IsSigned Vendor
+							Platform { Os Arch }
+							History {
+								Layer { Size Digest }
+								HistoryDescription { Author Comment Created CreatedBy EmptyLayer }
+							}
 						}
+						Vulnerabilities { Count MaxSeverity }
 					}
 				}
 				Layers { Digest Size }
@@ -3176,7 +3306,7 @@ func TestCleaningFilteringParamsGlobalSearch(t *testing.T) {
 		defer stopServer(ctlr)
 		WaitTillServerReady(baseURL)
 
-		config, layers, manifest, err := GetImageWithConfig(ispec.Image{
+		image, err := GetImageWithConfig(ispec.Image{
 			Platform: ispec.Platform{
 				OS:           "windows",
 				Architecture: "amd64",
@@ -3185,18 +3315,13 @@ func TestCleaningFilteringParamsGlobalSearch(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		err = UploadImage(
-			Image{
-				Manifest: manifest,
-				Config:   config,
-				Layers:   layers,
-				Tag:      "0.0.1",
-			},
+			image,
 			baseURL,
 			"repo1",
 		)
 		So(err, ShouldBeNil)
 
-		config, layers, manifest, err = GetImageWithConfig(ispec.Image{
+		image, err = GetImageWithConfig(ispec.Image{
 			Platform: ispec.Platform{
 				OS:           "linux",
 				Architecture: "amd64",
@@ -3205,12 +3330,7 @@ func TestCleaningFilteringParamsGlobalSearch(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		err = UploadImage(
-			Image{
-				Manifest: manifest,
-				Config:   config,
-				Layers:   layers,
-				Tag:      "0.0.1",
-			},
+			image,
 			baseURL,
 			"repo2",
 		)
@@ -3263,10 +3383,10 @@ func TestGlobalSearchFiltering(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Config:   config,
-				Layers:   layers,
-				Manifest: manifest,
-				Tag:      "test",
+				Config:    config,
+				Layers:    layers,
+				Manifest:  manifest,
+				Reference: "test",
 			},
 			baseURL,
 			"unsigned-repo",
@@ -3278,10 +3398,10 @@ func TestGlobalSearchFiltering(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Config:   config,
-				Layers:   layers,
-				Manifest: manifest,
-				Tag:      "test",
+				Config:    config,
+				Layers:    layers,
+				Manifest:  manifest,
+				Reference: "test",
 			},
 			baseURL,
 			"signed-repo",
@@ -3456,17 +3576,19 @@ func TestImageList(t *testing.T) {
 		Convey("without pagination, valid response", func() {
 			query := fmt.Sprintf(`{
 				ImageList(repo:"%s"){
-					History{
-						HistoryDescription{
-							Author
-							Comment
-							Created
-							CreatedBy
-							EmptyLayer
-						},
-						Layer{
-							Digest
-							Size
+					Manifests {
+						History{
+							HistoryDescription{
+								Author
+								Comment
+								Created
+								CreatedBy
+								EmptyLayer
+							},
+							Layer{
+								Digest
+								Size
+							}
 						}
 					}
 				}
@@ -3482,13 +3604,95 @@ func TestImageList(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			So(len(responseStruct.ImageList.SummaryList), ShouldEqual, len(tags))
-			So(len(responseStruct.ImageList.SummaryList[0].History), ShouldEqual, len(imageConfigInfo.History))
+			So(len(responseStruct.ImageList.SummaryList[0].Manifests[0].History), ShouldEqual, len(imageConfigInfo.History))
 		})
 
-		Convey("Pagination with valid params", func() {
-			limit := 1
+		Convey("Test ImageSummary retuned by ImageList when getting tags timestamp info fails", t, func() {
+			invalid := "test"
+			tempDir := t.TempDir()
+			port := GetFreePort()
+			baseURL := GetBaseURL(port)
+
+			conf := config.New()
+			conf.HTTP.Port = port
+			conf.Storage.RootDirectory = tempDir
+			defaultVal := true
+			conf.Extensions = &extconf.ExtensionConfig{
+				Search: &extconf.SearchConfig{BaseConfig: extconf.BaseConfig{Enable: &defaultVal}},
+			}
+
+			conf.Extensions.Search.CVE = nil
+
+			ctlr := api.NewController(conf)
+
+			go startServer(ctlr)
+			defer stopServer(ctlr)
+			WaitTillServerReady(baseURL)
+
+			config := ispec.Image{
+				Platform: ispec.Platform{
+					Architecture: "amd64",
+					OS:           "linux",
+				},
+				RootFS: ispec.RootFS{
+					Type:    "layers",
+					DiffIDs: []godigest.Digest{},
+				},
+				Author:  "ZotUser",
+				History: []ispec.History{},
+			}
+
+			configBlob, err := json.Marshal(config)
+			So(err, ShouldBeNil)
+
+			configDigest := godigest.FromBytes(configBlob)
+			layerDigest := godigest.FromString(invalid)
+			layerblob := []byte(invalid)
+			schemaVersion := 2
+			ispecManifest := ispec.Manifest{
+				Versioned: specs.Versioned{
+					SchemaVersion: schemaVersion,
+				},
+				Config: ispec.Descriptor{
+					MediaType: "application/vnd.oci.image.config.v1+json",
+					Digest:    configDigest,
+					Size:      int64(len(configBlob)),
+				},
+				Layers: []ispec.Descriptor{ // just 1 layer in manifest
+					{
+						MediaType: "application/vnd.oci.image.layer.v1.tar",
+						Digest:    layerDigest,
+						Size:      int64(len(layerblob)),
+					},
+				},
+				Annotations: map[string]string{
+					ispec.AnnotationRefName: "1.0",
+				},
+			}
+
+			err = UploadImage(
+				Image{
+					Manifest: ispecManifest,
+					Config:   config,
+					Layers: [][]byte{
+						layerblob,
+					},
+					Reference: "0.0.1",
+				},
+				baseURL,
+				invalid,
+			)
+			So(err, ShouldBeNil)
+
+			configPath := path.Join(conf.Storage.RootDirectory, invalid, "blobs",
+				configDigest.Algorithm().String(), configDigest.Encoded())
+
+			err = os.Remove(configPath)
+			So(err, ShouldBeNil)
+
 			query := fmt.Sprintf(`{
-				ImageList(repo:"%s", requestedPage:{limit: %d, offset: 0, sortBy:RELEVANCE}){
+			ImageList(repo:"%s"){
+				Manifests {
 					History{
 						HistoryDescription{
 							Author
@@ -3500,6 +3704,41 @@ func TestImageList(t *testing.T) {
 						Layer{
 							Digest
 							Size
+						}
+					}
+				}
+			}
+		}`, invalid)
+
+			resp, err := resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
+			So(err, ShouldBeNil)
+			So(resp.StatusCode(), ShouldEqual, 200)
+			So(resp, ShouldNotBeNil)
+
+			var responseStruct ImageListResponse
+			err = json.Unmarshal(resp.Body(), &responseStruct)
+			So(err, ShouldBeNil)
+
+			So(len(responseStruct.ImageList.SummaryList), ShouldBeZeroValue)
+		})
+
+		Convey("Pagination with valid params", func() {
+			limit := 1
+			query := fmt.Sprintf(`{
+				ImageList(repo:"%s", requestedPage:{limit: %d, offset: 0, sortBy:RELEVANCE}){
+					Manifests {
+						History{
+							HistoryDescription{
+								Author
+								Comment
+								Created
+								CreatedBy
+								EmptyLayer
+							},
+							Layer{
+								Digest
+								Size
+							}
 						}
 					}
 				}
@@ -3545,10 +3784,10 @@ func TestGlobalSearchPagination(t *testing.T) {
 
 			err = UploadImage(
 				Image{
-					Manifest: manifest,
-					Config:   config,
-					Layers:   layers,
-					Tag:      "0.0.1",
+					Manifest:  manifest,
+					Config:    config,
+					Layers:    layers,
+					Reference: "0.0.1",
 				},
 				baseURL,
 				fmt.Sprintf("repo%d", i),
@@ -3797,7 +4036,7 @@ func TestBuildImageInfo(t *testing.T) {
 				Layers: [][]byte{
 					layerblob,
 				},
-				Tag: "0.0.1",
+				Reference: "0.0.1",
 			},
 			baseURL,
 			invalid,
@@ -3812,7 +4051,7 @@ func TestBuildImageInfo(t *testing.T) {
 		imageSummary := convert.BuildImageInfo(invalid, invalid, manifestDigest, ispecManifest,
 			imageConfig, isSigned)
 
-		So(len(imageSummary.Layers), ShouldEqual, len(ispecManifest.Layers))
+		So(len(imageSummary.Manifests[0].Layers), ShouldEqual, len(ispecManifest.Layers))
 		imageSummaryLayerSize, err := strconv.Atoi(*imageSummary.Size)
 		So(err, ShouldBeNil)
 		So(imageSummaryLayerSize, ShouldEqual, manifestLayersSize)
@@ -3863,10 +4102,10 @@ func TestRepoDBWhenSigningImages(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest1,
-				Config:   config1,
-				Layers:   layers1,
-				Tag:      "1.0.1",
+				Manifest:  manifest1,
+				Config:    config1,
+				Layers:    layers1,
+				Reference: "1.0.1",
 			},
 			baseURL,
 			"repo1",
@@ -3875,10 +4114,10 @@ func TestRepoDBWhenSigningImages(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest1,
-				Config:   config1,
-				Layers:   layers1,
-				Tag:      "2.0.2",
+				Manifest:  manifest1,
+				Config:    config1,
+				Layers:    layers1,
+				Reference: "2.0.2",
 			},
 			baseURL,
 			"repo1",
@@ -3894,8 +4133,11 @@ func TestRepoDBWhenSigningImages(t *testing.T) {
 		{
 			GlobalSearch(query:"repo1:1.0"){
 				Images {
-					RepoName Tag LastUpdated Size IsSigned Vendor Score
-					Platform { Os Arch }
+					RepoName Tag LastUpdated Size IsSigned
+					Manifests{
+						LastUpdated Size IsSigned Vendor
+						
+					}
 				}
 			}
 		}`
@@ -3904,8 +4146,8 @@ func TestRepoDBWhenSigningImages(t *testing.T) {
 		{
 			GlobalSearch(query:"repo1:2.0"){
 				Images {
-					RepoName Tag LastUpdated Size IsSigned Vendor Score
-					Platform { Os Arch }
+					RepoName Tag LastUpdated Size IsSigned
+					Manifests { LastUpdated Size IsSigned Vendor Platform { Os Arch } }
 				}
 			}
 		}`
@@ -4058,10 +4300,10 @@ func TestRepoDBWhenPushingImages(t *testing.T) {
 
 			err = UploadImage(
 				Image{
-					Manifest: manifest1,
-					Config:   config1,
-					Layers:   layers1,
-					Tag:      "1.0.1",
+					Manifest:  manifest1,
+					Config:    config1,
+					Layers:    layers1,
+					Reference: "1.0.1",
 				},
 				baseURL,
 				"repo1",
@@ -4092,15 +4334,416 @@ func TestRepoDBWhenPushingImages(t *testing.T) {
 
 			err = UploadImage(
 				Image{
-					Manifest: manifest1,
-					Config:   config1,
-					Layers:   layers1,
-					Tag:      "1.0.1",
+					Manifest:  manifest1,
+					Config:    config1,
+					Layers:    layers1,
+					Reference: "1.0.1",
 				},
 				baseURL,
 				"repo1",
 			)
 			So(err, ShouldBeNil)
+		})
+	})
+}
+
+func TestRepoDBIndexOperations(t *testing.T) {
+	Convey("Idex Operations", t, func() {
+		dir := t.TempDir()
+
+		port := GetFreePort()
+		baseURL := GetBaseURL(port)
+		conf := config.New()
+		conf.HTTP.Port = port
+		conf.Storage.RootDirectory = dir
+		conf.Storage.GC = false
+		defaultVal := true
+		conf.Extensions = &extconf.ExtensionConfig{
+			Search: &extconf.SearchConfig{BaseConfig: extconf.BaseConfig{Enable: &defaultVal}},
+		}
+
+		ctlr := api.NewController(conf)
+
+		go startServer(ctlr)
+		defer stopServer(ctlr)
+		WaitTillServerReady(baseURL)
+
+		Convey("Push test index", func() {
+			repo := "repo"
+
+			multiarchImage, err := GetRandomMultiarchImage("tag1")
+			So(err, ShouldBeNil)
+
+			indexBlob, err := json.Marshal(multiarchImage.Index)
+			So(err, ShouldBeNil)
+
+			indexDigest := godigest.FromBytes(indexBlob)
+
+			err = UploadMultiarchImage(multiarchImage, baseURL, repo)
+			So(err, ShouldBeNil)
+
+			query := `
+			{
+				GlobalSearch(query:"repo:tag1"){
+					Images {
+						RepoName Tag DownloadCount
+						IsSigned
+						Manifests {
+							Digest
+							ConfigDigest
+							Platform {Os Arch}
+							Layers {Size Digest}
+							LastUpdated
+							IsSigned
+							Size
+						}
+					}
+				}
+			}`
+
+			resp, err := resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
+			So(resp, ShouldNotBeNil)
+			So(err, ShouldBeNil)
+			So(resp.StatusCode(), ShouldEqual, http.StatusOK)
+
+			responseStruct := &GlobalSearchResultResp{}
+
+			err = json.Unmarshal(resp.Body(), responseStruct)
+			So(err, ShouldBeNil)
+
+			responseImages := responseStruct.GlobalSearchResult.GlobalSearch.Images
+			So(responseImages, ShouldNotBeEmpty)
+			responseImage := responseImages[0]
+			So(len(responseImage.Manifests), ShouldEqual, 3)
+
+			err = SignImageUsingCosign("repo:tag1", port)
+			So(err, ShouldBeNil)
+
+			resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
+			So(resp, ShouldNotBeNil)
+			So(err, ShouldBeNil)
+			So(resp.StatusCode(), ShouldEqual, http.StatusOK)
+
+			responseStruct = &GlobalSearchResultResp{}
+
+			err = json.Unmarshal(resp.Body(), responseStruct)
+			So(err, ShouldBeNil)
+
+			responseImages = responseStruct.GlobalSearchResult.GlobalSearch.Images
+			So(responseImages, ShouldNotBeEmpty)
+			responseImage = responseImages[0]
+
+			So(responseImage.IsSigned, ShouldBeTrue)
+
+			// remove signature
+			cosignTag := "sha256-" + indexDigest.Encoded() + ".sig"
+			resp, err = resty.R().Delete(baseURL + "/v2/" + "repo" + "/manifests/" + cosignTag)
+
+			resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
+			So(resp, ShouldNotBeNil)
+			So(err, ShouldBeNil)
+			So(resp.StatusCode(), ShouldEqual, http.StatusOK)
+
+			responseStruct = &GlobalSearchResultResp{}
+
+			err = json.Unmarshal(resp.Body(), responseStruct)
+			So(err, ShouldBeNil)
+
+			responseImages = responseStruct.GlobalSearchResult.GlobalSearch.Images
+			So(responseImages, ShouldNotBeEmpty)
+			responseImage = responseImages[0]
+
+			So(responseImage.IsSigned, ShouldBeFalse)
+		})
+
+		Convey("Index base images", func() {
+			// ---------------- BASE IMAGE -------------------
+			imageAMD64, err := GetImageWithComponents(
+				ispec.Image{
+					Platform: ispec.Platform{
+						OS:           "linux",
+						Architecture: "amd64",
+					},
+				},
+				[][]byte{
+					{10, 20, 30},
+					{11, 21, 31},
+				})
+			So(err, ShouldBeNil)
+
+			imageSomeArch, err := GetImageWithComponents(
+				ispec.Image{
+					Platform: ispec.Platform{
+						OS:           "linux",
+						Architecture: "someArch",
+					},
+				}, [][]byte{
+					{18, 28, 38},
+					{12, 22, 32},
+				})
+			So(err, ShouldBeNil)
+
+			multiImage := GetMultiarchImageForImages("latest", []Image{
+				imageAMD64,
+				imageSomeArch,
+			})
+			err = UploadMultiarchImage(multiImage, baseURL, "test-repo")
+			So(err, ShouldBeNil)
+			// ---------------- BASE IMAGE -------------------
+
+			//  ---------------- SAME LAYERS -------------------
+			image1, err := GetImageWithComponents(
+				imageSomeArch.Config,
+				[][]byte{
+					{0, 0, 2},
+				},
+			)
+
+			image2, err := GetImageWithComponents(
+				imageAMD64.Config,
+				append(imageAMD64.Layers),
+			)
+			multiImage = GetMultiarchImageForImages("index-one-arch-same-layers", []Image{
+				image1, image2,
+			})
+			//  ---------------- SAME LAYERS -------------------
+
+			//  ---------------- LESS LAYERS -------------------
+			image1, err = GetImageWithComponents(
+				imageSomeArch.Config,
+				[][]byte{
+					{3, 2, 2},
+					{5, 2, 5},
+				},
+			)
+
+			image2, err = GetImageWithComponents(
+				imageAMD64.Config,
+				[][]byte{imageAMD64.Layers[0]},
+			)
+			multiImage = GetMultiarchImageForImages("index-one-arch-less-layers", []Image{
+				image1, image2,
+			})
+			err = UploadMultiarchImage(multiImage, baseURL, "index-one-arch-less-layers")
+			So(err, ShouldBeNil)
+			//  ---------------- LESS LAYERS -------------------
+
+			//  ---------------- LESS LAYERS FALSE -------------------
+			image1, err = GetImageWithComponents(
+				imageSomeArch.Config,
+				[][]byte{
+					{3, 2, 2},
+					{5, 2, 5},
+				},
+			)
+			auxLayer := imageAMD64.Layers[0]
+			auxLayer[0] = 20
+
+			image2, err = GetImageWithComponents(
+				imageAMD64.Config,
+				[][]byte{auxLayer},
+			)
+			multiImage = GetMultiarchImageForImages("index-one-arch-less-layers-false", []Image{
+				image1, image2,
+			})
+			err = UploadMultiarchImage(multiImage, baseURL, "index-one-arch-less-layers-false")
+			So(err, ShouldBeNil)
+			//  ---------------- LESS LAYERS FALSE -------------------
+
+			//  ---------------- MORE LAYERS -------------------
+			image1, err = GetImageWithComponents(
+				imageSomeArch.Config,
+				[][]byte{
+					{0, 0, 2},
+					{3, 0, 2},
+				},
+			)
+
+			image2, err = GetImageWithComponents(
+				imageAMD64.Config,
+				append(imageAMD64.Layers, []byte{1, 3, 55}),
+			)
+			multiImage = GetMultiarchImageForImages("index-one-arch-more-layers", []Image{
+				image1, image2,
+			})
+
+			err = UploadMultiarchImage(multiImage, baseURL, "index-one-arch-more-layers")
+			So(err, ShouldBeNil)
+			//  ---------------- MORE LAYERS -------------------
+
+			query := `
+				{
+					BaseImageList(image:"test-repo:latest"){
+						Results{
+							RepoName
+							Tag
+							Manifests {
+								Digest
+								ConfigDigest
+								LastUpdated
+								IsSigned
+								Size
+							}
+							IsSigned
+							Size
+						}
+					}
+				}`
+
+			resp, err := resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
+			So(resp, ShouldNotBeNil)
+
+			So(strings.Contains(string(resp.Body()), "index-one-arch-less-layers"), ShouldBeTrue)
+			So(strings.Contains(string(resp.Body()), "index-one-arch-same-layers"), ShouldBeFalse)
+			So(strings.Contains(string(resp.Body()), "index-one-arch-less-layers-false"), ShouldBeFalse)
+			So(strings.Contains(string(resp.Body()), "index-one-arch-more-layers"), ShouldBeFalse)
+			So(strings.Contains(string(resp.Body()), "test-repo"), ShouldBeFalse)
+		})
+
+		Convey("Index derived images", func() {
+			// ---------------- BASE IMAGE -------------------
+			imageAMD64, err := GetImageWithComponents(
+				ispec.Image{
+					Platform: ispec.Platform{
+						OS:           "linux",
+						Architecture: "amd64",
+					},
+				},
+				[][]byte{
+					{10, 20, 30},
+					{11, 21, 31},
+				})
+			So(err, ShouldBeNil)
+
+			imageSomeArch, err := GetImageWithComponents(
+				ispec.Image{
+					Platform: ispec.Platform{
+						OS:           "linux",
+						Architecture: "someArch",
+					},
+				}, [][]byte{
+					{18, 28, 38},
+					{12, 22, 32},
+				})
+			So(err, ShouldBeNil)
+
+			multiImage := GetMultiarchImageForImages("latest", []Image{
+				imageAMD64,
+				imageSomeArch,
+			})
+			err = UploadMultiarchImage(multiImage, baseURL, "test-repo")
+			So(err, ShouldBeNil)
+			// ---------------- BASE IMAGE -------------------
+
+			//  ---------------- SAME LAYERS -------------------
+			image1, err := GetImageWithComponents(
+				imageSomeArch.Config,
+				[][]byte{
+					{0, 0, 2},
+				},
+			)
+
+			image2, err := GetImageWithComponents(
+				imageAMD64.Config,
+				append(imageAMD64.Layers),
+			)
+			multiImage = GetMultiarchImageForImages("index-one-arch-same-layers", []Image{
+				image1, image2,
+			})
+			//  ---------------- SAME LAYERS -------------------
+
+			//  ---------------- LESS LAYERS -------------------
+			image1, err = GetImageWithComponents(
+				imageSomeArch.Config,
+				[][]byte{
+					{3, 2, 2},
+					{5, 2, 5},
+				},
+			)
+
+			image2, err = GetImageWithComponents(
+				imageAMD64.Config,
+				[][]byte{imageAMD64.Layers[0]},
+			)
+			multiImage = GetMultiarchImageForImages("index-one-arch-less-layers", []Image{
+				image1, image2,
+			})
+			err = UploadMultiarchImage(multiImage, baseURL, "index-one-arch-less-layers")
+			So(err, ShouldBeNil)
+			//  ---------------- LESS LAYERS -------------------
+
+			//  ---------------- LESS LAYERS FALSE -------------------
+			image1, err = GetImageWithComponents(
+				imageSomeArch.Config,
+				[][]byte{
+					{3, 2, 2},
+					{5, 2, 5},
+				},
+			)
+
+			image2, err = GetImageWithComponents(
+				imageAMD64.Config,
+				[][]byte{{99, 100, 102}},
+			)
+			multiImage = GetMultiarchImageForImages("index-one-arch-less-layers-false", []Image{
+				image1, image2,
+			})
+			err = UploadMultiarchImage(multiImage, baseURL, "index-one-arch-less-layers-false")
+			So(err, ShouldBeNil)
+			//  ---------------- LESS LAYERS FALSE -------------------
+
+			//  ---------------- MORE LAYERS -------------------
+			image1, err = GetImageWithComponents(
+				imageSomeArch.Config,
+				[][]byte{
+					{0, 0, 2},
+					{3, 0, 2},
+				},
+			)
+
+			image2, err = GetImageWithComponents(
+				imageAMD64.Config,
+				[][]byte{
+					imageAMD64.Layers[0],
+					imageAMD64.Layers[1],
+					{1, 3, 55},
+				},
+			)
+			multiImage = GetMultiarchImageForImages("index-one-arch-more-layers", []Image{
+				image2,
+			})
+
+			err = UploadMultiarchImage(multiImage, baseURL, "index-one-arch-more-layers")
+			So(err, ShouldBeNil)
+			//  ---------------- MORE LAYERS -------------------
+
+			query := `
+				{
+					DerivedImageList(image:"test-repo:latest"){
+						Results{
+							RepoName
+							Tag
+							Manifests {
+								Digest
+								ConfigDigest
+								LastUpdated
+								IsSigned
+								Size
+							}
+							IsSigned
+							Size
+						}
+					}
+				}`
+
+			resp, err := resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
+			So(resp, ShouldNotBeNil)
+
+			So(strings.Contains(string(resp.Body()), "index-one-arch-less-layers"), ShouldBeFalse)
+			So(strings.Contains(string(resp.Body()), "index-one-arch-same-layers"), ShouldBeFalse)
+			So(strings.Contains(string(resp.Body()), "index-one-arch-less-layers-false"), ShouldBeFalse)
+			So(strings.Contains(string(resp.Body()), "index-one-arch-more-layers"), ShouldBeTrue)
+			So(strings.Contains(string(resp.Body()), "test-repo"), ShouldBeFalse)
 		})
 	})
 }
@@ -4130,10 +4773,10 @@ func TestRepoDBWhenReadingImages(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest1,
-				Config:   config1,
-				Layers:   layers1,
-				Tag:      "1.0.1",
+				Manifest:  manifest1,
+				Config:    config1,
+				Layers:    layers1,
+				Reference: "1.0.1",
 			},
 			baseURL,
 			"repo1",
@@ -4229,10 +4872,10 @@ func TestRepoDBWhenDeletingImages(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest1,
-				Config:   config1,
-				Layers:   layers1,
-				Tag:      "1.0.1",
+				Manifest:  manifest1,
+				Config:    config1,
+				Layers:    layers1,
+				Reference: "1.0.1",
 			},
 			baseURL,
 			"repo1",
@@ -4254,10 +4897,10 @@ func TestRepoDBWhenDeletingImages(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest2,
-				Config:   config2,
-				Layers:   layers2,
-				Tag:      "1.0.2",
+				Manifest:  manifest2,
+				Config:    config2,
+				Layers:    layers2,
+				Reference: "1.0.2",
 			},
 			baseURL,
 			"repo1",
@@ -4268,18 +4911,21 @@ func TestRepoDBWhenDeletingImages(t *testing.T) {
 		{
 			GlobalSearch(query:"repo1:1.0"){
 				Images {
-					RepoName Tag LastUpdated Size IsSigned Vendor Score
-					Platform { Os Arch }
+					RepoName Tag LastUpdated Size IsSigned
+					Manifests{
+						Platform { Os Arch }
+						LastUpdated Size IsSigned Vendor
+					}
 				}
 				Repos {
 					Name LastUpdated Size
 					Platforms { Os Arch }
 					Vendors Score
 					NewestImage {
-						RepoName Tag LastUpdated Size IsSigned Vendor Score
-						Platform {
-							Os
-							Arch
+						RepoName Tag LastUpdated Size IsSigned
+						Manifests{
+							Platform { Os Arch }
+							LastUpdated Size IsSigned Vendor
 						}
 					}
 				}
@@ -4331,8 +4977,11 @@ func TestRepoDBWhenDeletingImages(t *testing.T) {
 			{
 				GlobalSearch(query:"repo1:1.0.1"){
 					Images {
-						RepoName Tag LastUpdated Size IsSigned Vendor Score
-						Platform { Os Arch }
+						RepoName Tag LastUpdated Size IsSigned
+						Manifests{
+							Platform { Os Arch }
+							LastUpdated Size IsSigned Vendor
+						}
 					}
 				}
 			}`
@@ -4404,8 +5053,11 @@ func TestRepoDBWhenDeletingImages(t *testing.T) {
 			{
 				GlobalSearch(query:"repo1:1.0.1"){
 					Images {
-						RepoName Tag LastUpdated Size IsSigned Vendor Score
-						Platform { Os Arch }
+						RepoName Tag LastUpdated Size IsSigned 					
+						Manifests{
+							Platform { Os Arch }
+							LastUpdated Size IsSigned Vendor
+						}
 					}
 				}
 			}`
@@ -4818,10 +5470,10 @@ func TestSearchSize(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest,
-				Config:   config,
-				Layers:   layers,
-				Tag:      "latest",
+				Manifest:  manifest,
+				Config:    config,
+				Layers:    layers,
+				Reference: "latest",
 			},
 			baseURL,
 			repoName,
@@ -4831,19 +5483,27 @@ func TestSearchSize(t *testing.T) {
 		query := `
 		{
 			GlobalSearch(query:"testrepo:"){
-				Images { RepoName Tag LastUpdated Size Score }
-				Repos {
-					Name LastUpdated Size Vendors Score
-					Platforms {
-						Os
-						Arch
+				Images { 
+					RepoName Tag LastUpdated Size 
+					Manifests{
+						Platform { Os Arch }
+						LastUpdated Size IsSigned Vendor
 					}
 				}
-				Layers { Digest Size }
+				Repos {
+					Name LastUpdated Size 
+					NewestImage {
+						Manifests{
+							Platform { Os Arch }
+							LastUpdated Size IsSigned Vendor
+						}
+					}
+				}
 			}
 		}`
 		resp, err := resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
 		So(err, ShouldBeNil)
+		So(resp.StatusCode(), ShouldEqual, http.StatusOK)
 		So(configSize+layersSize+manifestSize, ShouldNotBeZeroValue)
 
 		responseStruct := &GlobalSearchResultResp{}
@@ -4860,19 +5520,27 @@ func TestSearchSize(t *testing.T) {
 		query = `
 		{
 			GlobalSearch(query:"testrepo"){
-				Images { RepoName Tag LastUpdated Size Score }
-				Repos {
-					Name LastUpdated Size Vendors Score
-						Platforms {
-							Os
-							Arch
-						}
+				Images { 
+					RepoName Tag LastUpdated Size 
+					Manifests{
+						Platform { Os Arch }
+						LastUpdated Size IsSigned Vendor
+					}
 				}
-				Layers { Digest Size }
+				Repos {
+					Name LastUpdated Size 
+					NewestImage {
+						Manifests{
+							Platform { Os Arch }
+							LastUpdated Size IsSigned Vendor
+						}
+					}
+				}
 			}
 		}`
 		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
 		So(err, ShouldBeNil)
+		So(resp.StatusCode(), ShouldEqual, http.StatusOK)
 		So(configSize+layersSize+manifestSize, ShouldNotBeZeroValue)
 
 		responseStruct = &GlobalSearchResultResp{}
@@ -4887,10 +5555,10 @@ func TestSearchSize(t *testing.T) {
 		// add the same image with different tag
 		err = UploadImage(
 			Image{
-				Manifest: manifest,
-				Config:   config,
-				Layers:   layers,
-				Tag:      "10.2.14",
+				Manifest:  manifest,
+				Config:    config,
+				Layers:    layers,
+				Reference: "10.2.14",
 			},
 			baseURL,
 			repoName,
@@ -4901,13 +5569,21 @@ func TestSearchSize(t *testing.T) {
 		query = `
 		{
 			GlobalSearch(query:"testrepo:"){
-				Images { RepoName Tag LastUpdated Size Score }
+				Images { 
+					RepoName Tag LastUpdated Size 
+					Manifests{
+						Platform { Os Arch }
+						LastUpdated Size IsSigned Vendor
+					}
+				}
 				Repos {
-					Name LastUpdated Size Vendors Score
-					  Platforms {
-						Os
-						Arch
-					  }
+					Name LastUpdated Size 
+					NewestImage {
+						Manifests{
+							Platform { Os Arch }
+							LastUpdated Size IsSigned Vendor
+						}
+					}
 				}
 				Layers { Digest Size }
 			}
@@ -4915,6 +5591,7 @@ func TestSearchSize(t *testing.T) {
 
 		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
 		So(err, ShouldBeNil)
+		So(resp.StatusCode(), ShouldEqual, http.StatusOK)
 		So(configSize+layersSize+manifestSize, ShouldNotBeZeroValue)
 
 		responseStruct = &GlobalSearchResultResp{}
@@ -4927,13 +5604,21 @@ func TestSearchSize(t *testing.T) {
 		query = `
 		{
 			GlobalSearch(query:"testrepo"){
-				Images { RepoName Tag LastUpdated Size Score }
+				Images {
+					RepoName Tag LastUpdated Size 
+					Manifests{
+						Platform { Os Arch }
+						LastUpdated Size IsSigned Vendor
+					} 
+				}
 				Repos {
-					Name LastUpdated Size Vendors Score
-					  Platforms {
-						Os
-						Arch
-					  }
+					Name LastUpdated Size 
+					NewestImage {
+						Manifests{
+							Platform { Os Arch }
+							LastUpdated Size IsSigned Vendor
+						}
+					}
 				}
 				Layers { Digest Size }
 			}
@@ -4941,6 +5626,7 @@ func TestSearchSize(t *testing.T) {
 
 		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
 		So(err, ShouldBeNil)
+		So(resp.StatusCode(), ShouldEqual, http.StatusOK)
 		So(configSize+layersSize+manifestSize, ShouldNotBeZeroValue)
 
 		responseStruct = &GlobalSearchResultResp{}
@@ -4976,18 +5662,24 @@ func TestImageSummary(t *testing.T) {
 				Image(image:"%s:%s"){
 					RepoName
 					Tag
-					Digest
-					ConfigDigest
+					Manifests {
+						Digest
+						ConfigDigest
+						LastUpdated
+						IsSigned
+						Size
+						Platform { Os Arch }
+						Layers { Digest Size }
+						Vulnerabilities { Count MaxSeverity }
+						History {
+							HistoryDescription { Created }
+							Layer { Digest Size }
+						}
+					}
 					LastUpdated
 					IsSigned
 					Size
-					Platform { Os Arch }
-					Layers { Digest Size }
 					Vulnerabilities { Count MaxSeverity }
-					History {
-						HistoryDescription { Created }
-						Layer { Digest Size }
-					}
 				}
 			}`
 
@@ -5029,10 +5721,10 @@ func TestImageSummary(t *testing.T) {
 		tagTarget := "latest"
 		err = UploadImage(
 			Image{
-				Manifest: manifest,
-				Config:   config,
-				Layers:   layers,
-				Tag:      tagTarget,
+				Manifest:  manifest,
+				Config:    config,
+				Layers:    layers,
+				Reference: tagTarget,
 			},
 			baseURL,
 			repoName,
@@ -5085,17 +5777,17 @@ func TestImageSummary(t *testing.T) {
 		imgSummary := imgSummaryResponse.SingleImageSummary.ImageSummary
 		So(imgSummary.RepoName, ShouldContainSubstring, repoName)
 		So(imgSummary.Tag, ShouldContainSubstring, tagTarget)
-		So(imgSummary.ConfigDigest, ShouldContainSubstring, configDigest.Encoded())
-		So(imgSummary.Digest, ShouldContainSubstring, manifestDigest.Encoded())
-		So(len(imgSummary.Layers), ShouldEqual, 1)
-		So(imgSummary.Layers[0].Digest, ShouldContainSubstring,
+		So(imgSummary.Manifests[0].ConfigDigest, ShouldContainSubstring, configDigest.Encoded())
+		So(imgSummary.Manifests[0].Digest, ShouldContainSubstring, manifestDigest.Encoded())
+		So(len(imgSummary.Manifests[0].Layers), ShouldEqual, 1)
+		So(imgSummary.Manifests[0].Layers[0].Digest, ShouldContainSubstring,
 			godigest.FromBytes(layers[0]).Encoded())
 		So(imgSummary.LastUpdated, ShouldEqual, createdTime)
 		So(imgSummary.IsSigned, ShouldEqual, false)
-		So(imgSummary.Platform.Os, ShouldEqual, "linux")
-		So(imgSummary.Platform.Arch, ShouldEqual, "amd64")
-		So(len(imgSummary.History), ShouldEqual, 1)
-		So(imgSummary.History[0].HistoryDescription.Created, ShouldEqual, createdTime)
+		So(imgSummary.Manifests[0].Platform.Os, ShouldEqual, "linux")
+		So(imgSummary.Manifests[0].Platform.Arch, ShouldEqual, "amd64")
+		So(len(imgSummary.Manifests[0].History), ShouldEqual, 1)
+		So(imgSummary.Manifests[0].History[0].HistoryDescription.Created, ShouldEqual, createdTime)
 		// No vulnerabilities should be detected since trivy is disabled
 		So(imgSummary.Vulnerabilities.Count, ShouldEqual, 0)
 		So(imgSummary.Vulnerabilities.MaxSeverity, ShouldEqual, "")
@@ -5168,18 +5860,24 @@ func TestImageSummary(t *testing.T) {
 				Image(image:"%s:%s"){
 					RepoName
 					Tag
-					Digest
-					ConfigDigest
+					Manifests {
+						Digest
+						ConfigDigest
+						LastUpdated
+						IsSigned
+						Size
+						Platform { Os Arch }
+						Layers { Digest Size }
+						Vulnerabilities { Count MaxSeverity }
+						History {
+							HistoryDescription { Created }
+							Layer { Digest Size }
+						}
+					}
 					LastUpdated
 					IsSigned
 					Size
-					Platform { Os Arch }
-					Layers { Digest Size }
 					Vulnerabilities { Count MaxSeverity }
-					History {
-						HistoryDescription { Created }
-						Layer { Digest Size }
-					}
 				}
 			}`
 
@@ -5207,10 +5905,10 @@ func TestImageSummary(t *testing.T) {
 		tagTarget := "latest"
 		err = UploadImage(
 			Image{
-				Manifest: manifest,
-				Config:   config,
-				Layers:   layers,
-				Tag:      tagTarget,
+				Manifest:  manifest,
+				Config:    config,
+				Layers:    layers,
+				Reference: tagTarget,
 			},
 			baseURL,
 			repoName,
@@ -5243,17 +5941,17 @@ func TestImageSummary(t *testing.T) {
 		imgSummary := imgSummaryResponse.SingleImageSummary.ImageSummary
 		So(imgSummary.RepoName, ShouldContainSubstring, repoName)
 		So(imgSummary.Tag, ShouldContainSubstring, tagTarget)
-		So(imgSummary.ConfigDigest, ShouldContainSubstring, configDigest.Encoded())
-		So(imgSummary.Digest, ShouldContainSubstring, manifestDigest.Encoded())
-		So(len(imgSummary.Layers), ShouldEqual, 1)
-		So(imgSummary.Layers[0].Digest, ShouldContainSubstring,
+		So(imgSummary.Manifests[0].ConfigDigest, ShouldContainSubstring, configDigest.Encoded())
+		So(imgSummary.Manifests[0].Digest, ShouldContainSubstring, manifestDigest.Encoded())
+		So(len(imgSummary.Manifests[0].Layers), ShouldEqual, 1)
+		So(imgSummary.Manifests[0].Layers[0].Digest, ShouldContainSubstring,
 			godigest.FromBytes(layers[0]).Encoded())
 		So(imgSummary.LastUpdated, ShouldEqual, createdTime)
 		So(imgSummary.IsSigned, ShouldEqual, false)
-		So(imgSummary.Platform.Os, ShouldEqual, "linux")
-		So(imgSummary.Platform.Arch, ShouldEqual, "amd64")
-		So(len(imgSummary.History), ShouldEqual, 1)
-		So(imgSummary.History[0].HistoryDescription.Created, ShouldEqual, createdTime)
+		So(imgSummary.Manifests[0].Platform.Os, ShouldEqual, "linux")
+		So(imgSummary.Manifests[0].Platform.Arch, ShouldEqual, "amd64")
+		So(len(imgSummary.Manifests[0].History), ShouldEqual, 1)
+		So(imgSummary.Manifests[0].History[0].HistoryDescription.Created, ShouldEqual, createdTime)
 		So(imgSummary.Vulnerabilities.Count, ShouldEqual, 0)
 		// There are 0 vulnerabilities this data used in tests
 		So(imgSummary.Vulnerabilities.MaxSeverity, ShouldEqual, "NONE")
