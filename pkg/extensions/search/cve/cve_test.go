@@ -868,15 +868,17 @@ func TestCVEStruct(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		manifestBlob11, err := json.Marshal(ispec.Manifest{
+			Config: ispec.Descriptor{
+				MediaType: ispec.MediaTypeImageConfig,
+				Size:      0,
+				Digest:    godigest.FromBytes(configBlob11),
+			},
 			Layers: []ispec.Descriptor{
 				{
 					MediaType: ispec.MediaTypeImageLayerGzip,
 					Size:      0,
 					Digest:    godigest.NewDigestFromEncoded(godigest.SHA256, "digest"),
 				},
-			},
-			Config: ispec.Descriptor{
-				Digest: godigest.FromBytes(configBlob11),
 			},
 		})
 		So(err, ShouldBeNil)
@@ -902,15 +904,17 @@ func TestCVEStruct(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		manifestBlob12, err := json.Marshal(ispec.Manifest{
+			Config: ispec.Descriptor{
+				MediaType: ispec.MediaTypeImageConfig,
+				Size:      0,
+				Digest:    godigest.FromBytes(configBlob12),
+			},
 			Layers: []ispec.Descriptor{
 				{
 					MediaType: ispec.MediaTypeImageLayerGzip,
 					Size:      0,
 					Digest:    godigest.NewDigestFromEncoded(godigest.SHA256, "digest"),
 				},
-			},
-			Config: ispec.Descriptor{
-				Digest: godigest.FromBytes(configBlob12),
 			},
 		})
 		So(err, ShouldBeNil)
@@ -936,15 +940,17 @@ func TestCVEStruct(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		manifestBlob13, err := json.Marshal(ispec.Manifest{
+			Config: ispec.Descriptor{
+				MediaType: ispec.MediaTypeImageConfig,
+				Size:      0,
+				Digest:    godigest.FromBytes(configBlob13),
+			},
 			Layers: []ispec.Descriptor{
 				{
 					MediaType: ispec.MediaTypeImageLayerGzip,
 					Size:      0,
 					Digest:    godigest.NewDigestFromEncoded(godigest.SHA256, "digest"),
 				},
-			},
-			Config: ispec.Descriptor{
-				Digest: godigest.FromBytes(configBlob13),
 			},
 		})
 		So(err, ShouldBeNil)
@@ -968,15 +974,17 @@ func TestCVEStruct(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		manifestBlob14, err := json.Marshal(ispec.Manifest{
+			Config: ispec.Descriptor{
+				MediaType: ispec.MediaTypeImageConfig,
+				Size:      0,
+				Digest:    godigest.FromBytes(configBlob14),
+			},
 			Layers: []ispec.Descriptor{
 				{
 					MediaType: ispec.MediaTypeImageLayerGzip,
 					Size:      0,
 					Digest:    godigest.NewDigestFromEncoded(godigest.SHA256, "digest"),
 				},
-			},
-			Config: ispec.Descriptor{
-				Digest: godigest.FromBytes(configBlob14),
 			},
 		})
 		So(err, ShouldBeNil)
@@ -1001,15 +1009,17 @@ func TestCVEStruct(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		manifestBlob61, err := json.Marshal(ispec.Manifest{
+			Config: ispec.Descriptor{
+				MediaType: ispec.MediaTypeImageConfig,
+				Size:      0,
+				Digest:    godigest.FromBytes(configBlob61),
+			},
 			Layers: []ispec.Descriptor{
 				{
 					MediaType: ispec.MediaTypeImageLayerGzip,
 					Size:      0,
 					Digest:    godigest.NewDigestFromEncoded(godigest.SHA256, "digest"),
 				},
-			},
-			Config: ispec.Descriptor{
-				Digest: godigest.FromBytes(configBlob61),
 			},
 		})
 		So(err, ShouldBeNil)
@@ -1034,15 +1044,17 @@ func TestCVEStruct(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		manifestBlob21, err := json.Marshal(ispec.Manifest{
+			Config: ispec.Descriptor{
+				MediaType: ispec.MediaTypeImageConfig,
+				Size:      0,
+				Digest:    godigest.FromBytes(configBlob21),
+			},
 			Layers: []ispec.Descriptor{
 				{
 					MediaType: ispec.MediaTypeImageLayerNonDistributableGzip,
 					Size:      0,
 					Digest:    godigest.NewDigestFromEncoded(godigest.SHA256, "digest"),
 				},
-			},
-			Config: ispec.Descriptor{
-				Digest: godigest.FromBytes(configBlob21),
 			},
 		})
 		So(err, ShouldBeNil)
@@ -1382,55 +1394,49 @@ func TestCVEStruct(t *testing.T) {
 		t.Log("Test GetImageListForCVE")
 
 		// Image is found
-		imageInfoByCveList, err := cveInfo.GetImageListForCVE("repo1", "CVE1")
+		tagList, err = cveInfo.GetImageListForCVE("repo1", "CVE1")
 		So(err, ShouldBeNil)
-		So(len(imageInfoByCveList), ShouldEqual, 3)
+		So(len(tagList), ShouldEqual, 3)
 		expectedTags = []string{"0.1.0", "1.0.0", "1.0.1"}
-		So(expectedTags, ShouldContain, imageInfoByCveList[0].Tag)
-		So(expectedTags, ShouldContain, imageInfoByCveList[1].Tag)
-		So(expectedTags, ShouldContain, imageInfoByCveList[2].Tag)
+		So(expectedTags, ShouldContain, tagList[0].Name)
+		So(expectedTags, ShouldContain, tagList[1].Name)
+		So(expectedTags, ShouldContain, tagList[2].Name)
 
-		imageInfoByCveList, err = cveInfo.GetImageListForCVE("repo1", "CVE2")
+		tagList, err = cveInfo.GetImageListForCVE("repo1", "CVE2")
 		So(err, ShouldBeNil)
-		So(len(imageInfoByCveList), ShouldEqual, 1)
-		So(imageInfoByCveList[0].Tag, ShouldEqual, "1.0.0")
+		So(len(tagList), ShouldEqual, 1)
+		So(tagList[0].Name, ShouldEqual, "1.0.0")
 
-		imageInfoByCveList, err = cveInfo.GetImageListForCVE("repo1", "CVE3")
+		tagList, err = cveInfo.GetImageListForCVE("repo1", "CVE3")
 		So(err, ShouldBeNil)
-		So(len(imageInfoByCveList), ShouldEqual, 3)
+		So(len(tagList), ShouldEqual, 3)
 		expectedTags = []string{"1.0.0", "1.0.1", "1.1.0"}
-		So(expectedTags, ShouldContain, imageInfoByCveList[0].Tag)
-		So(expectedTags, ShouldContain, imageInfoByCveList[1].Tag)
-		So(expectedTags, ShouldContain, imageInfoByCveList[2].Tag)
+		So(expectedTags, ShouldContain, tagList[0].Name)
+		So(expectedTags, ShouldContain, tagList[1].Name)
+		So(expectedTags, ShouldContain, tagList[2].Name)
 
 		// Image/repo doesn't have the CVE at all
-		imageInfoByCveList, err = cveInfo.GetImageListForCVE("repo6", "CVE1")
+		tagList, err = cveInfo.GetImageListForCVE("repo6", "CVE1")
 		So(err, ShouldBeNil)
-		So(len(imageInfoByCveList), ShouldEqual, 0)
+		So(len(tagList), ShouldEqual, 0)
 
 		// Image is not scannable
-		imageInfoByCveList, err = cveInfo.GetImageListForCVE("repo2", "CVE100")
+		tagList, err = cveInfo.GetImageListForCVE("repo2", "CVE100")
 		// Image is not considered affected with CVE as scan is not possible
 		// but do not return an error
 		So(err, ShouldBeNil)
-		So(len(imageInfoByCveList), ShouldEqual, 0)
+		So(len(tagList), ShouldEqual, 0)
 
 		// Tag is not found, but we should not error
-		imageInfoByCveList, err = cveInfo.GetImageListForCVE("repo3", "CVE101")
+		tagList, err = cveInfo.GetImageListForCVE("repo3", "CVE101")
 		So(err, ShouldBeNil)
-		So(len(imageInfoByCveList), ShouldEqual, 0)
-
-		// Manifest is not found, assume it is affetected by the CVE
-		// But we don't have enough of it's data to actually return it
-		imageInfoByCveList, err = cveInfo.GetImageListForCVE("repo5", "CVE101")
-		So(err, ShouldEqual, zerr.ErrManifestMetaNotFound)
-		So(len(imageInfoByCveList), ShouldEqual, 0)
+		So(len(tagList), ShouldEqual, 0)
 
 		// Repo is not found, assume it is affetected by the CVE
 		// But we don't have enough of it's data to actually return it
-		imageInfoByCveList, err = cveInfo.GetImageListForCVE("repo100", "CVE100")
+		tagList, err = cveInfo.GetImageListForCVE("repo100", "CVE100")
 		So(err, ShouldEqual, zerr.ErrRepoMetaNotFound)
-		So(len(imageInfoByCveList), ShouldEqual, 0)
+		So(len(tagList), ShouldEqual, 0)
 
 		t.Log("Test errors while scanning")
 
@@ -1458,10 +1464,10 @@ func TestCVEStruct(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(len(tagList), ShouldEqual, 0)
 
-		imageInfoByCveList, err = cveInfo.GetImageListForCVE("repo1", "CVE1")
+		tagList, err = cveInfo.GetImageListForCVE("repo1", "CVE1")
 		// Image is not considered affected with CVE as scan is not possible
 		// but do not return an error
 		So(err, ShouldBeNil)
-		So(len(imageInfoByCveList), ShouldEqual, 0)
+		So(len(tagList), ShouldEqual, 0)
 	})
 }

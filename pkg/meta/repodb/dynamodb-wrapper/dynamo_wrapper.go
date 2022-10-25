@@ -838,6 +838,10 @@ func (dwr DBWrapper) SearchTags(ctx context.Context, searchText string, filter r
 				manifestMetadataMap[descriptor.Digest] = manifestMeta
 			}
 
+			if len(matchedTags) == 0 {
+				continue
+			}
+
 			repoMeta.Tags = matchedTags
 
 			pageFinder.Add(repodb.DetailedRepoMeta{

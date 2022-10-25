@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -15,11 +16,12 @@ import (
 
 	"zotregistry.io/zot/pkg/extensions/search/common"
 	cveinfo "zotregistry.io/zot/pkg/extensions/search/cve"
+	cvemodel "zotregistry.io/zot/pkg/extensions/search/cve/model"
 	"zotregistry.io/zot/pkg/extensions/search/gql_generated"
 	"zotregistry.io/zot/pkg/log"
 	"zotregistry.io/zot/pkg/meta/repodb"
+	bolt "zotregistry.io/zot/pkg/meta/repodb/boltdb-wrapper"
 	localCtx "zotregistry.io/zot/pkg/requestcontext"
-	"zotregistry.io/zot/pkg/storage"
 	"zotregistry.io/zot/pkg/test/mocks"
 )
 
@@ -1173,302 +1175,687 @@ func TestExtractImageDetails(t *testing.T) {
 	})
 }
 
-func TestQueryResolverErrors(t *testing.T) {
-	Convey("Errors", t, func() {
-		log := log.NewLogger("debug", "")
-		ctx := context.Background()
+func TestCVEResolvers(t *testing.T) { //nolint:gocyclo
+	repoDB, err := bolt.NewBoltDBWrapper(bolt.DBParameters{
+		RootDir: t.TempDir(),
+	})
+	if err != nil {
+		panic(err)
+	}
 
-		Convey("ImageListForCve olu.GetRepositories() errors", func() {
-			resolverConfig := NewResolver(
-				log,
-				storage.StoreController{
-					DefaultStore: mocks.MockedImageStore{
-						GetRepositoriesFn: func() ([]string, error) {
-							return nil, ErrTestError
-						},
-					},
-				},
-				mocks.RepoDBMock{},
-				mocks.CveInfoMock{},
-			)
+	// Create repodb data for scannable image with vulnerabilities
+	// Create manifets metadata first
+	timeStamp1 := time.Date(2008, 1, 1, 12, 0, 0, 0, time.UTC)
 
-			qr := queryResolver{
-				resolverConfig,
+	configBlob1, err := json.Marshal(ispec.Image{
+		Created: &timeStamp1,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	manifestBlob1, err := json.Marshal(ispec.Manifest{
+		Config: ispec.Descriptor{
+			MediaType: ispec.MediaTypeImageConfig,
+			Size:      0,
+			Digest:    godigest.FromBytes(configBlob1),
+		},
+		Layers: []ispec.Descriptor{
+			{
+				MediaType: ispec.MediaTypeImageLayerGzip,
+				Size:      0,
+				Digest:    godigest.NewDigestFromEncoded(godigest.SHA256, "digest"),
+			},
+		},
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	repoMeta1 := repodb.ManifestData{
+		ManifestBlob: manifestBlob1,
+		ConfigBlob:   configBlob1,
+	}
+
+	digest1 := godigest.FromBytes(manifestBlob1)
+
+	err = repoDB.SetManifestData(digest1, repoMeta1)
+	if err != nil {
+		panic(err)
+	}
+
+	timeStamp2 := time.Date(2009, 1, 1, 12, 0, 0, 0, time.UTC)
+
+	configBlob2, err := json.Marshal(ispec.Image{
+		Created: &timeStamp2,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	manifestBlob2, err := json.Marshal(ispec.Manifest{
+		Config: ispec.Descriptor{
+			MediaType: ispec.MediaTypeImageConfig,
+			Size:      0,
+			Digest:    godigest.FromBytes(configBlob2),
+		},
+		Layers: []ispec.Descriptor{
+			{
+				MediaType: ispec.MediaTypeImageLayerGzip,
+				Size:      0,
+				Digest:    godigest.NewDigestFromEncoded(godigest.SHA256, "digest"),
+			},
+		},
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	repoMeta2 := repodb.ManifestData{
+		ManifestBlob: manifestBlob2,
+		ConfigBlob:   configBlob2,
+	}
+
+	digest2 := godigest.FromBytes(manifestBlob2)
+
+	err = repoDB.SetManifestData(digest2, repoMeta2)
+	if err != nil {
+		panic(err)
+	}
+
+	timeStamp3 := time.Date(2010, 1, 1, 12, 0, 0, 0, time.UTC)
+
+	configBlob3, err := json.Marshal(ispec.Image{
+		Created: &timeStamp3,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	manifestBlob3, err := json.Marshal(ispec.Manifest{
+		Config: ispec.Descriptor{
+			MediaType: ispec.MediaTypeImageConfig,
+			Size:      0,
+			Digest:    godigest.FromBytes(configBlob3),
+		},
+		Layers: []ispec.Descriptor{
+			{
+				MediaType: ispec.MediaTypeImageLayerGzip,
+				Size:      0,
+				Digest:    godigest.NewDigestFromEncoded(godigest.SHA256, "digest"),
+			},
+		},
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	repoMeta3 := repodb.ManifestData{
+		ManifestBlob: manifestBlob3,
+		ConfigBlob:   configBlob3,
+	}
+
+	digest3 := godigest.FromBytes(manifestBlob3)
+
+	err = repoDB.SetManifestData(digest3, repoMeta3)
+	if err != nil {
+		panic(err)
+	}
+
+	// Create the repo metadata using previously defined manifests
+	tagsMap := map[string]godigest.Digest{}
+	tagsMap["repo1:1.0.0"] = digest1
+	tagsMap["repo1:1.0.1"] = digest2
+	tagsMap["repo1:1.1.0"] = digest3
+	tagsMap["repo1:latest"] = digest3
+	tagsMap["repo2:2.0.0"] = digest1
+	tagsMap["repo2:2.0.1"] = digest2
+	tagsMap["repo2:2.1.0"] = digest3
+	tagsMap["repo2:latest"] = digest3
+	tagsMap["repo3:3.0.1"] = digest2
+	tagsMap["repo3:3.1.0"] = digest3
+	tagsMap["repo3:latest"] = digest3
+
+	for image, digest := range tagsMap {
+		repo, tag := common.GetImageDirAndTag(image)
+
+		err := repoDB.SetRepoTag(repo, tag, digest, ispec.MediaTypeImageManifest)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	// Create the repo metadata using previously defined manifests
+
+	// RepoDB loaded with initial data, mock the scanner
+	severities := map[string]int{
+		"UNKNOWN":  0,
+		"LOW":      1,
+		"MEDIUM":   2,
+		"HIGH":     3,
+		"CRITICAL": 4,
+	}
+
+	// Setup test CVE data in mock scanner
+	scanner := mocks.CveScannerMock{
+		ScanImageFn: func(image string) (map[string]cvemodel.CVE, error) {
+			digest, ok := tagsMap[image]
+			if !ok {
+				return map[string]cvemodel.CVE{}, nil
 			}
 
-			_, err := qr.ImageListForCve(ctx, "id")
-			So(err, ShouldNotBeNil)
-		})
-
-		Convey("ImageListForCve cveInfo.GetImageListForCVE() errors", func() {
-			resolverConfig := NewResolver(
-				log,
-				storage.StoreController{
-					DefaultStore: mocks.MockedImageStore{
-						GetRepositoriesFn: func() ([]string, error) {
-							return []string{"repo"}, nil
-						},
+			if digest.String() == digest1.String() {
+				return map[string]cvemodel.CVE{
+					"CVE1": {
+						ID:          "CVE1",
+						Severity:    "HIGH",
+						Title:       "Title CVE1",
+						Description: "Description CVE1",
 					},
-				},
-				mocks.RepoDBMock{},
-				mocks.CveInfoMock{
-					GetImageListForCVEFn: func(repo, cveID string) ([]cveinfo.ImageInfoByCVE, error) {
-						return nil, ErrTestError
+					"CVE2": {
+						ID:          "CVE2",
+						Severity:    "MEDIM",
+						Title:       "Title CVE2",
+						Description: "Description CVE2",
 					},
-				},
-			)
-
-			qr := queryResolver{
-				resolverConfig,
+					"CVE3": {
+						ID:          "CVE3",
+						Severity:    "LOW",
+						Title:       "Title CVE3",
+						Description: "Description CVE3",
+					},
+				}, nil
 			}
 
-			_, err := qr.ImageListForCve(ctx, "a")
-			So(err, ShouldNotBeNil)
-		})
-
-		Convey("ImageListForCve olu.GetImageConfigInfo() errors", func() {
-			resolverConfig := NewResolver(
-				log,
-				storage.StoreController{
-					DefaultStore: mocks.MockedImageStore{
-						GetRepositoriesFn: func() ([]string, error) {
-							return []string{"repo"}, nil
-						},
-						GetBlobContentFn: func(repo string, digest godigest.Digest) ([]byte, error) {
-							return nil, ErrTestError
-						},
+			if digest.String() == digest2.String() {
+				return map[string]cvemodel.CVE{
+					"CVE2": {
+						ID:          "CVE2",
+						Severity:    "MEDIUM",
+						Title:       "Title CVE2",
+						Description: "Description CVE2",
 					},
-				},
-				mocks.RepoDBMock{},
-				mocks.CveInfoMock{
-					GetImageListForCVEFn: func(repo, cveID string) ([]cveinfo.ImageInfoByCVE, error) {
-						return []cveinfo.ImageInfoByCVE{{}}, nil
+					"CVE3": {
+						ID:          "CVE3",
+						Severity:    "LOW",
+						Title:       "Title CVE3",
+						Description: "Description CVE3",
 					},
-				},
-			)
-
-			qr := queryResolver{
-				resolverConfig,
+				}, nil
 			}
 
-			_, err := qr.ImageListForCve(ctx, "a")
-			So(err, ShouldNotBeNil)
-		})
-
-		Convey("RepoListWithNewestImage repoListWithNewestImage errors", func() {
-			resolverConfig := NewResolver(
-				log,
-				storage.StoreController{
-					DefaultStore: mocks.MockedImageStore{},
-				},
-				mocks.RepoDBMock{
-					SearchReposFn: func(ctx context.Context, searchText string, filter repodb.Filter,
-						requestedPage repodb.PageInput,
-					) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, error) {
-						return nil, nil, ErrTestError
+			if digest.String() == digest3.String() {
+				return map[string]cvemodel.CVE{
+					"CVE3": {
+						ID:          "CVE3",
+						Severity:    "LOW",
+						Title:       "Title CVE3",
+						Description: "Description CVE3",
 					},
-				},
-				mocks.CveInfoMock{},
-			)
-
-			qr := queryResolver{
-				resolverConfig,
+				}, nil
 			}
 
-			_, err := qr.RepoListWithNewestImage(ctx, &gql_generated.PageInput{})
-			So(err, ShouldNotBeNil)
-		})
+			// By default the image has no vulnerabilities
+			return map[string]cvemodel.CVE{}, nil
+		},
+		CompareSeveritiesFn: func(severity1, severity2 string) int {
+			return severities[severity2] - severities[severity1]
+		},
+	}
 
-		Convey("ImageListWithCVEFixed olu.GetImageBlobManifest() errors", func() {
-			resolverConfig := NewResolver(
-				log,
-				storage.StoreController{
-					DefaultStore: mocks.MockedImageStore{
-						GetBlobContentFn: func(repo string, digest godigest.Digest) ([]byte, error) {
-							return nil, ErrTestError
-						},
-					},
-				},
-				mocks.RepoDBMock{},
-				mocks.CveInfoMock{
-					GetImageListWithCVEFixedFn: func(repo, cveID string) ([]common.TagInfo, error) {
-						return []common.TagInfo{{}}, nil
-					},
-				},
-			)
+	log := log.NewLogger("debug", "")
 
-			qr := queryResolver{
-				resolverConfig,
+	cveInfo := &cveinfo.BaseCveInfo{
+		Log:     log,
+		Scanner: scanner,
+		RepoDB:  repoDB,
+	}
+
+	Convey("Get CVE list for image ", t, func() {
+		Convey("Unpaginated request to get all CVEs in an image", func() {
+			// CVE pagination will be implemented later
+
+			responseContext := graphql.WithResponseContext(context.Background(), graphql.DefaultErrorPresenter,
+				graphql.DefaultRecover)
+
+			cveResult, err := getCVEListForImage(responseContext, "repo1:1.0.0", cveInfo, log)
+			So(err, ShouldBeNil)
+			So(*cveResult.Tag, ShouldEqual, "1.0.0")
+
+			expectedCves := []string{"CVE1", "CVE2", "CVE3"}
+			So(len(cveResult.CVEList), ShouldEqual, len(expectedCves))
+
+			for _, cve := range cveResult.CVEList {
+				So(expectedCves, ShouldContain, *cve.ID)
 			}
 
-			_, err := qr.ImageListWithCVEFixed(ctx, "a", "d")
-			So(err, ShouldNotBeNil)
-		})
+			cveResult, err = getCVEListForImage(responseContext, "repo1:1.0.1", cveInfo, log)
+			So(err, ShouldBeNil)
+			So(*cveResult.Tag, ShouldEqual, "1.0.1")
 
-		Convey("ImageListWithCVEFixed olu.GetImageConfigInfo() errors", func() {
-			getBlobContentCallCounter := 0
+			expectedCves = []string{"CVE2", "CVE3"}
+			So(len(cveResult.CVEList), ShouldEqual, len(expectedCves))
 
-			resolverConfig := NewResolver(
-				log,
-				storage.StoreController{
-					DefaultStore: mocks.MockedImageStore{
-						GetBlobContentFn: func(repo string, digest godigest.Digest) ([]byte, error) {
-							if getBlobContentCallCounter == 1 {
-								getBlobContentCallCounter++
-
-								return nil, ErrTestError
-							}
-							getBlobContentCallCounter++
-
-							return []byte("{}"), nil
-						},
-					},
-				},
-				mocks.RepoDBMock{},
-				mocks.CveInfoMock{
-					GetImageListWithCVEFixedFn: func(repo, cveID string) ([]common.TagInfo, error) {
-						return []common.TagInfo{{}}, nil
-					},
-				},
-			)
-
-			qr := queryResolver{
-				resolverConfig,
+			for _, cve := range cveResult.CVEList {
+				So(expectedCves, ShouldContain, *cve.ID)
 			}
 
-			_, err := qr.ImageListWithCVEFixed(ctx, "a", "d")
-			So(err, ShouldNotBeNil)
-		})
+			cveResult, err = getCVEListForImage(responseContext, "repo1:1.1.0", cveInfo, log)
+			So(err, ShouldBeNil)
+			So(*cveResult.Tag, ShouldEqual, "1.1.0")
 
-		Convey("RepoListWithNewestImage repoListWithNewestImage() errors", func() {
-			resolverConfig := NewResolver(
-				log,
-				storage.StoreController{},
-				mocks.RepoDBMock{
-					SearchReposFn: func(ctx context.Context, searchText string,
-						filter repodb.Filter, requestedPage repodb.PageInput,
-					) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, error) {
-						return nil, nil, ErrTestError
-					},
-				},
-				mocks.CveInfoMock{},
-			)
+			expectedCves = []string{"CVE3"}
+			So(len(cveResult.CVEList), ShouldEqual, len(expectedCves))
 
-			qr := queryResolver{
-				resolverConfig,
+			for _, cve := range cveResult.CVEList {
+				So(expectedCves, ShouldContain, *cve.ID)
 			}
-
-			_, err := qr.RepoListWithNewestImage(ctx, &gql_generated.PageInput{})
-			So(err, ShouldNotBeNil)
-		})
-
-		Convey("ImageList getImageList() errors", func() {
-			resolverConfig := NewResolver(
-				log,
-				storage.StoreController{
-					DefaultStore: mocks.MockedImageStore{
-						GetRepositoriesFn: func() ([]string, error) {
-							return nil, ErrTestError
-						},
-					},
-				},
-				mocks.RepoDBMock{},
-				mocks.CveInfoMock{},
-			)
-
-			qr := queryResolver{
-				resolverConfig,
-			}
-
-			_, err := qr.ImageList(ctx, "repo")
-			So(err, ShouldNotBeNil)
-		})
-
-		Convey("ImageList subpaths getImageList() errors", func() {
-			resolverConfig := NewResolver(
-				log,
-				storage.StoreController{
-					DefaultStore: mocks.MockedImageStore{
-						GetRepositoriesFn: func() ([]string, error) {
-							return []string{"sub1/repo"}, nil
-						},
-					},
-					SubStore: map[string]storage.ImageStore{
-						"/sub1": mocks.MockedImageStore{
-							GetRepositoriesFn: func() ([]string, error) {
-								return nil, ErrTestError
-							},
-						},
-					},
-				},
-				mocks.RepoDBMock{},
-				mocks.CveInfoMock{},
-			)
-
-			qr := queryResolver{
-				resolverConfig,
-			}
-
-			_, err := qr.ImageList(ctx, "repo")
-			So(err, ShouldNotBeNil)
-		})
-
-		Convey("DerivedImageList ExpandedRepoInfo() errors", func() {
-			resolverConfig := NewResolver(
-				log,
-				storage.StoreController{
-					DefaultStore: mocks.MockedImageStore{
-						GetRepositoriesFn: func() ([]string, error) {
-							return []string{"sub1/repo"}, nil
-						},
-						GetImageManifestFn: func(repo, reference string) ([]byte, godigest.Digest, string, error) {
-							return []byte("{}"), "digest", "str", nil
-						},
-					},
-				},
-				mocks.RepoDBMock{
-					GetRepoMetaFn: func(repo string) (repodb.RepoMetadata, error) {
-						return repodb.RepoMetadata{}, ErrTestError
-					},
-				},
-				mocks.CveInfoMock{},
-			)
-
-			qr := queryResolver{
-				resolverConfig,
-			}
-
-			_, err := qr.DerivedImageList(ctx, "repo:tag")
-			So(err, ShouldNotBeNil)
-		})
-
-		Convey("BaseImageList ExpandedRepoInfo() errors", func() {
-			resolverConfig := NewResolver(
-				log,
-				storage.StoreController{
-					DefaultStore: mocks.MockedImageStore{
-						GetRepositoriesFn: func() ([]string, error) {
-							return []string{"sub1/repo"}, nil
-						},
-						GetImageManifestFn: func(repo, reference string) ([]byte, godigest.Digest, string, error) {
-							return []byte("{}"), "digest", "str", nil
-						},
-					},
-				},
-				mocks.RepoDBMock{
-					GetRepoMetaFn: func(repo string) (repodb.RepoMetadata, error) {
-						return repodb.RepoMetadata{}, ErrTestError
-					},
-				},
-				mocks.CveInfoMock{},
-			)
-
-			qr := queryResolver{
-				resolverConfig,
-			}
-
-			_, err := qr.BaseImageList(ctx, "repo:tag")
-			So(err, ShouldNotBeNil)
 		})
 	})
+
+	Convey("Get a list of images affected by a particular CVE ", t, func() {
+		Convey("Unpaginated request", func() {
+			responseContext := graphql.WithResponseContext(context.Background(), graphql.DefaultErrorPresenter,
+				graphql.DefaultRecover)
+
+			images, err := getImageListForCVE(responseContext, "CVE1", cveInfo, nil, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages := []string{
+				"repo1:1.0.0",
+				"repo2:2.0.0",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			images, err = getImageListForCVE(responseContext, "CVE2", cveInfo, nil, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages = []string{
+				"repo1:1.0.0", "repo1:1.0.1",
+				"repo2:2.0.0", "repo2:2.0.1",
+				"repo3:3.0.1",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			images, err = getImageListForCVE(responseContext, "CVE3", cveInfo, nil, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages = []string{
+				"repo1:1.0.0", "repo1:1.0.1", "repo1:1.1.0", "repo1:latest",
+				"repo2:2.0.0", "repo2:2.0.1", "repo2:2.1.0", "repo2:latest",
+				"repo3:3.0.1", "repo3:3.1.0", "repo3:latest",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+		})
+
+		Convey("Paginated requests", func() {
+			responseContext := graphql.WithResponseContext(context.Background(), graphql.DefaultErrorPresenter,
+				graphql.DefaultRecover,
+			)
+
+			pageInput := getPageInput(1, 0)
+
+			images, err := getImageListForCVE(responseContext, "CVE1", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages := []string{
+				"repo1:1.0.0",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			pageInput = getPageInput(1, 1)
+
+			images, err = getImageListForCVE(responseContext, "CVE1", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages = []string{
+				"repo2:2.0.0",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			pageInput = getPageInput(1, 2)
+
+			images, err = getImageListForCVE(responseContext, "CVE1", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+			So(len(images), ShouldEqual, 0)
+
+			pageInput = getPageInput(1, 5)
+
+			images, err = getImageListForCVE(responseContext, "CVE1", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+			So(len(images), ShouldEqual, 0)
+
+			pageInput = getPageInput(2, 0)
+
+			images, err = getImageListForCVE(responseContext, "CVE1", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages = []string{
+				"repo1:1.0.0",
+				"repo2:2.0.0",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			pageInput = getPageInput(5, 0)
+
+			images, err = getImageListForCVE(responseContext, "CVE1", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages = []string{
+				"repo1:1.0.0",
+				"repo2:2.0.0",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			pageInput = getPageInput(5, 1)
+
+			images, err = getImageListForCVE(responseContext, "CVE1", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages = []string{
+				"repo2:2.0.0",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			pageInput = getPageInput(5, 2)
+
+			images, err = getImageListForCVE(responseContext, "CVE1", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+			So(len(images), ShouldEqual, 0)
+
+			pageInput = getPageInput(5, 5)
+
+			images, err = getImageListForCVE(responseContext, "CVE1", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+			So(len(images), ShouldEqual, 0)
+
+			pageInput = getPageInput(5, 0)
+
+			images, err = getImageListForCVE(responseContext, "CVE2", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages = []string{
+				"repo1:1.0.0", "repo1:1.0.1",
+				"repo2:2.0.0", "repo2:2.0.1",
+				"repo3:3.0.1",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			pageInput = getPageInput(5, 3)
+
+			images, err = getImageListForCVE(responseContext, "CVE2", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages = []string{
+				"repo2:2.0.1",
+				"repo3:3.0.1",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			pageInput = getPageInput(5, 0)
+
+			images, err = getImageListForCVE(responseContext, "CVE3", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages = []string{
+				"repo1:1.0.0", "repo1:1.0.1", "repo1:1.1.0", "repo1:latest",
+				"repo2:2.0.0",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			pageInput = getPageInput(5, 5)
+
+			images, err = getImageListForCVE(responseContext, "CVE3", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages = []string{
+				"repo2:2.0.1", "repo2:2.1.0", "repo2:latest",
+				"repo3:3.0.1", "repo3:3.1.0",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			pageInput = getPageInput(5, 10)
+
+			images, err = getImageListForCVE(responseContext, "CVE3", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages = []string{
+				"repo3:latest",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+		})
+	})
+
+	Convey("Get a list of images where a particular CVE is fixed", t, func() {
+		Convey("Unpaginated request", func() {
+			responseContext := graphql.WithResponseContext(context.Background(), graphql.DefaultErrorPresenter,
+				graphql.DefaultRecover)
+
+			images, err := getImageListWithCVEFixed(responseContext, "CVE1", "repo1", cveInfo, nil, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages := []string{
+				"repo1:1.0.1", "repo1:1.1.0", "repo1:latest",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			images, err = getImageListWithCVEFixed(responseContext, "CVE2", "repo1", cveInfo, nil, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages = []string{
+				"repo1:1.1.0", "repo1:latest",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			images, err = getImageListWithCVEFixed(responseContext, "CVE3", "repo1", cveInfo, nil, repoDB, log)
+			So(err, ShouldBeNil)
+			So(len(images), ShouldEqual, 0)
+		})
+
+		Convey("Paginated requests", func() {
+			responseContext := graphql.WithResponseContext(context.Background(), graphql.DefaultErrorPresenter,
+				graphql.DefaultRecover,
+			)
+
+			pageInput := getPageInput(1, 0)
+
+			images, err := getImageListWithCVEFixed(responseContext, "CVE1", "repo1", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages := []string{
+				"repo1:1.0.1",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			pageInput = getPageInput(1, 1)
+
+			images, err = getImageListWithCVEFixed(responseContext, "CVE1", "repo1", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages = []string{
+				"repo1:1.1.0",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			pageInput = getPageInput(1, 2)
+
+			images, err = getImageListWithCVEFixed(responseContext, "CVE1", "repo1", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages = []string{
+				"repo1:latest",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			pageInput = getPageInput(1, 3)
+
+			images, err = getImageListWithCVEFixed(responseContext, "CVE1", "repo1", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+			So(len(images), ShouldEqual, 0)
+
+			pageInput = getPageInput(1, 10)
+
+			images, err = getImageListWithCVEFixed(responseContext, "CVE1", "repo1", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+			So(len(images), ShouldEqual, 0)
+
+			pageInput = getPageInput(2, 0)
+
+			images, err = getImageListWithCVEFixed(responseContext, "CVE1", "repo1", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages = []string{
+				"repo1:1.0.1", "repo1:1.1.0",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			pageInput = getPageInput(2, 1)
+
+			images, err = getImageListWithCVEFixed(responseContext, "CVE1", "repo1", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages = []string{
+				"repo1:1.1.0", "repo1:latest",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			pageInput = getPageInput(2, 2)
+
+			images, err = getImageListWithCVEFixed(responseContext, "CVE1", "repo1", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages = []string{
+				"repo1:latest",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			pageInput = getPageInput(5, 0)
+
+			images, err = getImageListWithCVEFixed(responseContext, "CVE1", "repo1", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages = []string{
+				"repo1:1.0.1", "repo1:1.1.0", "repo1:latest",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			pageInput = getPageInput(5, 0)
+
+			images, err = getImageListWithCVEFixed(responseContext, "CVE2", "repo1", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+
+			expectedImages = []string{
+				"repo1:1.1.0", "repo1:latest",
+			}
+			So(len(images), ShouldEqual, len(expectedImages))
+
+			for _, image := range images {
+				So(fmt.Sprintf("%s:%s", *image.RepoName, *image.Tag), ShouldBeIn, expectedImages)
+			}
+
+			pageInput = getPageInput(5, 2)
+
+			images, err = getImageListWithCVEFixed(responseContext, "CVE2", "repo1", cveInfo, pageInput, repoDB, log)
+			So(err, ShouldBeNil)
+			So(len(images), ShouldEqual, 0)
+		})
+	})
+}
+
+func getPageInput(limit int, offset int) *gql_generated.PageInput {
+	sortCriteria := gql_generated.SortCriteriaAlphabeticAsc
+
+	return &gql_generated.PageInput{
+		Limit:  &limit,
+		Offset: &offset,
+		SortBy: &sortCriteria,
+	}
 }
