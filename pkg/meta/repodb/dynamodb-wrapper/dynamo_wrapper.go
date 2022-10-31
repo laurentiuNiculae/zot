@@ -403,20 +403,21 @@ func (dwr DBWrapper) GetMultipleRepoMeta(ctx context.Context,
 		}
 	}
 
-	foundRepos := pageFinder.Page()
+	foundRepos, _ := pageFinder.Page()
 
 	return foundRepos, err
 }
 
 func (dwr DBWrapper) SearchRepos(ctx context.Context, searchText string, filter repodb.Filter,
 	requestedPage repodb.PageInput,
-) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, error) {
+) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
 	var (
 		foundManifestMetadataMap = make(map[string]repodb.ManifestMetadata)
 		manifestMetadataMap      = make(map[string]repodb.ManifestMetadata)
 
 		repoMetaAttributeIterator AttributesIterator
 		pageFinder                repodb.PageFinder
+		pageInfo                  repodb.PageInfo
 	)
 
 	repoMetaAttributeIterator = NewBaseDynamoAttributesIterator(
@@ -425,7 +426,7 @@ func (dwr DBWrapper) SearchRepos(ctx context.Context, searchText string, filter 
 
 	pageFinder, err := repodb.NewBaseRepoPageFinder(requestedPage.Limit, requestedPage.Offset, requestedPage.SortBy)
 	if err != nil {
-		return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, err
+		return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, pageInfo, err
 	}
 
 	repoMetaAttribute, err := repoMetaAttributeIterator.First(ctx)
@@ -433,14 +434,14 @@ func (dwr DBWrapper) SearchRepos(ctx context.Context, searchText string, filter 
 	for ; repoMetaAttribute != nil; repoMetaAttribute, err = repoMetaAttributeIterator.Next(ctx) {
 		if err != nil {
 			// log
-			return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, err
+			return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, pageInfo, err
 		}
 
 		var repoMeta repodb.RepoMetadata
 
 		err := attributevalue.Unmarshal(repoMetaAttribute, &repoMeta)
 		if err != nil {
-			return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, err
+			return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, pageInfo, err
 		}
 
 		if ok, err := localCtx.RepoIsUserAvailable(ctx, repoMeta.Name); !ok || err != nil {
@@ -466,7 +467,7 @@ func (dwr DBWrapper) SearchRepos(ctx context.Context, searchText string, filter 
 				if !manifestDownloaded {
 					manifestMeta, err = dwr.GetManifestMeta(godigest.Digest(manifestDigest)) //nolint:contextcheck
 					if err != nil {
-						return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{},
+						return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, pageInfo,
 							errors.Wrapf(err, "repodb: error while getting manifest metadata for digest %s", manifestDigest)
 					}
 				}
@@ -476,7 +477,7 @@ func (dwr DBWrapper) SearchRepos(ctx context.Context, searchText string, filter 
 
 				err = json.Unmarshal(manifestMeta.ConfigBlob, &configContent)
 				if err != nil {
-					return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{},
+					return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, pageInfo,
 						errors.Wrapf(err, "repodb: error while unmarshaling config content for digest %s", manifestDigest)
 				}
 
@@ -488,7 +489,7 @@ func (dwr DBWrapper) SearchRepos(ctx context.Context, searchText string, filter 
 
 				imageLastUpdated, err := common.GetImageLastUpdatedTimestamp(manifestMeta.ConfigBlob)
 				if err != nil {
-					return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{},
+					return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, pageInfo,
 						errors.Wrapf(err, "repodb: error while unmarshaling image config referenced by digest %s", manifestDigest)
 				}
 
@@ -521,7 +522,7 @@ func (dwr DBWrapper) SearchRepos(ctx context.Context, searchText string, filter 
 		}
 	}
 
-	foundRepos := pageFinder.Page()
+	foundRepos, pageInfo := pageFinder.Page()
 
 	// keep just the manifestMeta we need
 	for _, repoMeta := range foundRepos {
@@ -530,7 +531,7 @@ func (dwr DBWrapper) SearchRepos(ctx context.Context, searchText string, filter 
 		}
 	}
 
-	return foundRepos, foundManifestMetadataMap, err
+	return foundRepos, foundManifestMetadataMap, pageInfo, err
 }
 
 func (dwr DBWrapper) FilterTags(ctx context.Context, filter repodb.FilterFunc,
@@ -618,7 +619,7 @@ func (dwr DBWrapper) FilterTags(ctx context.Context, filter repodb.FilterFunc,
 		})
 	}
 
-	foundRepos = pageFinder.Page()
+	foundRepos, _ = pageFinder.Page()
 
 	// keep just the manifestMeta we need
 	for _, repoMeta := range foundRepos {
@@ -632,7 +633,7 @@ func (dwr DBWrapper) FilterTags(ctx context.Context, filter repodb.FilterFunc,
 
 func (dwr DBWrapper) SearchTags(ctx context.Context, searchText string, filter repodb.Filter,
 	requestedPage repodb.PageInput,
-) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, error) {
+) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
 	var (
 		foundManifestMetadataMap  = make(map[string]repodb.ManifestMetadata)
 		manifestMetadataMap       = make(map[string]repodb.ManifestMetadata)
@@ -641,16 +642,17 @@ func (dwr DBWrapper) SearchTags(ctx context.Context, searchText string, filter r
 		)
 
 		pageFinder repodb.PageFinder
+		pageInfo   repodb.PageInfo
 	)
 
 	pageFinder, err := repodb.NewBaseImagePageFinder(requestedPage.Limit, requestedPage.Offset, requestedPage.SortBy)
 	if err != nil {
-		return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, err
+		return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, pageInfo, err
 	}
 
 	searchedRepo, searchedTag, err := common.GetRepoTag(searchText)
 	if err != nil {
-		return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{},
+		return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, pageInfo,
 			errors.Wrap(err, "repodb: error while parsing search text, invalid format")
 	}
 
@@ -659,14 +661,14 @@ func (dwr DBWrapper) SearchTags(ctx context.Context, searchText string, filter r
 	for ; repoMetaAttribute != nil; repoMetaAttribute, err = repoMetaAttributeIterator.Next(ctx) {
 		if err != nil {
 			// log
-			return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, err
+			return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, pageInfo, err
 		}
 
 		var repoMeta repodb.RepoMetadata
 
 		err := attributevalue.Unmarshal(repoMetaAttribute, &repoMeta)
 		if err != nil {
-			return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, err
+			return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, pageInfo, err
 		}
 
 		if ok, err := localCtx.RepoIsUserAvailable(ctx, repoMeta.Name); !ok || err != nil {
@@ -692,7 +694,7 @@ func (dwr DBWrapper) SearchTags(ctx context.Context, searchText string, filter r
 
 				manifestMeta, err := dwr.GetManifestMeta(godigest.Digest(manifestDigest)) //nolint:contextcheck
 				if err != nil {
-					return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{},
+					return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, pageInfo,
 						errors.Wrapf(err, "repodb: error while unmashaling manifest metadata for digest %s", manifestDigest)
 				}
 
@@ -700,7 +702,7 @@ func (dwr DBWrapper) SearchTags(ctx context.Context, searchText string, filter r
 
 				err = json.Unmarshal(manifestMeta.ConfigBlob, &configContent)
 				if err != nil {
-					return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{},
+					return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, pageInfo,
 						errors.Wrapf(err, "repodb: error while unmashaling manifest metadata for digest %s", manifestDigest)
 				}
 
@@ -720,6 +722,10 @@ func (dwr DBWrapper) SearchTags(ctx context.Context, searchText string, filter r
 				manifestMetadataMap[manifestDigest] = manifestMeta
 			}
 
+			if len(matchedTags) == 0 {
+				continue
+			}
+
 			repoMeta.Tags = matchedTags
 
 			pageFinder.Add(repodb.DetailedRepoMeta{
@@ -728,7 +734,7 @@ func (dwr DBWrapper) SearchTags(ctx context.Context, searchText string, filter r
 		}
 	}
 
-	foundRepos := pageFinder.Page()
+	foundRepos, pageInfo := pageFinder.Page()
 
 	// keep just the manifestMeta we need
 	for _, repoMeta := range foundRepos {
@@ -737,7 +743,7 @@ func (dwr DBWrapper) SearchTags(ctx context.Context, searchText string, filter r
 		}
 	}
 
-	return foundRepos, foundManifestMetadataMap, err
+	return foundRepos, foundManifestMetadataMap, pageInfo, err
 }
 
 func (dwr DBWrapper) setRepoMeta(repo string, repoMeta repodb.RepoMetadata) error {
