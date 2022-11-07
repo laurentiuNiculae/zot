@@ -53,7 +53,7 @@ require (
 require (
 	github.com/aquasecurity/trivy v0.0.0-00010101000000-000000000000
 	github.com/containers/image/v5 v5.23.0
-	github.com/notaryproject/notation-go v0.10.0-alpha.3
+	github.com/notaryproject/notation-go v0.12.0-beta.1
 	github.com/opencontainers/distribution-spec/specs-go v0.0.0-20220620172159-4ab4752c3b86
 	github.com/sigstore/cosign v1.12.1
 	github.com/swaggo/http-swagger v1.3.3
@@ -279,6 +279,7 @@ require (
 	github.com/mozillazg/docker-credential-acr-helper v0.3.0 // indirect
 	github.com/mpvl/unique v0.0.0-20150818121801-cbe035fff7de // indirect
 	github.com/nmcclain/asn1-ber v0.0.0-20170104154839-2661553a0484 // indirect
+	github.com/notaryproject/notation-core-go v0.2.0-beta.1 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/open-policy-agent/opa v0.44.0 // indirect
 	github.com/opencontainers/runc v1.1.4 // indirect
@@ -399,7 +400,7 @@ require (
 	k8s.io/klog/v2 v2.60.1-0.20220317184644-43cc75f9ae89 // indirect
 	k8s.io/kube-openapi v0.0.0-20220124234850-424119656bbf // indirect
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect
-	oras.land/oras-go/v2 v2.0.0-rc.2 // indirect
+	oras.land/oras-go/v2 v2.0.0-rc.3 // indirect
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
 	sigs.k8s.io/release-utils v0.7.3 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
