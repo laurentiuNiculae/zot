@@ -1011,13 +1011,10 @@ func TestImageList(t *testing.T) {
 					repos := []repodb.RepoMetadata{
 						{
 							Name: "test",
-							Tags: map[string]string{
-								"1.0.1": "digestTag1.0.1",
+							Tags: map[string]repodb.Descriptor{
+								"1.0.1": {Digest: "digestTag1.0.1", MediaType: ispec.MediaTypeImageManifest},
 							},
-							Signatures:  []string{"testSignature"},
-							Stars:       100,
-							Description: "Description repo1",
-							LogoPath:    "test/logoPath",
+							Stars: 100,
 						},
 					}
 
@@ -1036,11 +1033,7 @@ func TestImageList(t *testing.T) {
 							ManifestBlob:  manifestBlob,
 							ConfigBlob:    configBlob,
 							DownloadCount: 0,
-							Signatures:    make(map[string][]string),
-							Dependencies:  make([]string, 0),
-							Dependants:    make([]string, 0),
-							BlobsSize:     0,
-							BlobCount:     0,
+							Signatures:    make(repodb.ManifestSignatures),
 						},
 					}
 

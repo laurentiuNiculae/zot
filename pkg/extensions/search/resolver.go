@@ -203,15 +203,15 @@ func getCVEListForImage(
 		return &gql_generated.CVEResultForImage{}, gqlerror.Errorf("no reference provided")
 	}
 
-	cveidMap, err := cveInfo.GetCVEListForImage(image)
+	cveList, err := cveInfo.GetCVEListForImage(image)
 	if err != nil {
 		return &gql_generated.CVEResultForImage{}, err
 	}
 
 	cveids := []*gql_generated.Cve{}
 
-	for id, cveDetail := range cveidMap {
-		vulID := id
+	for _, cveDetail := range cveList {
+		vulID := cveDetail.ID
 		desc := cveDetail.Description
 		title := cveDetail.Title
 		severity := cveDetail.Severity
