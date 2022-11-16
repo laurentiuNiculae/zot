@@ -538,7 +538,6 @@ func (dwr DBWrapper) FilterTags(ctx context.Context, filter repodb.FilterFunc,
 	requestedPage repodb.PageInput,
 ) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, repodb.PageInfo, error) {
 	var (
-		foundRepos                = make([]repodb.RepoMetadata, 0)
 		foundManifestMetadataMap  = make(map[string]repodb.ManifestMetadata)
 		manifestMetadataMap       = make(map[string]repodb.ManifestMetadata)
 		pageFinder                repodb.PageFinder
@@ -620,7 +619,7 @@ func (dwr DBWrapper) FilterTags(ctx context.Context, filter repodb.FilterFunc,
 		})
 	}
 
-	foundRepos, pageInfo = pageFinder.Page()
+	foundRepos, pageInfo := pageFinder.Page()
 
 	// keep just the manifestMeta we need
 	for _, repoMeta := range foundRepos {
