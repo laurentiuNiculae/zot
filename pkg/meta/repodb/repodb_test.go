@@ -48,17 +48,27 @@ func TestBoltDBWrapper(t *testing.T) {
 	})
 
 	Convey("Test RepoDB Interface implementation", t, func() {
-		filePath := path.Join(t.TempDir(), "repo.db")
-		boltDBParams := repodb.BoltDBParameters{
-			RootDir: t.TempDir(),
-		}
+		/*
+			filePath := path.Join(t.TempDir(), "repo.db")
+			boltDBParams := repodb.BoltDBParameters{
+				RootDir: t.TempDir(),
+			}
 
-		repoDB, err := repodb.NewBoltDBWrapper(boltDBParams)
+			var repoDB repodb.RepoDB
+
+			repoDB, err := repodb.NewBoltDBWrapper(boltDBParams)
+			So(repoDB, ShouldNotBeNil)
+			So(err, ShouldBeNil)
+
+			defer os.Remove(filePath)
+		*/
+
+		repoDB, err := repodb.NewDynamoDBWrapper(repodb.DynamoDBDriverParameters{
+			Endpoint: os.Getenv("DYNAMODBMOCK_ENDPOINT"),
+			Region:   "us-east-2",
+		})
 		So(repoDB, ShouldNotBeNil)
 		So(err, ShouldBeNil)
-
-		defer os.Remove(filePath)
-
 		Convey("Test SetManifestMeta and GetManifestMeta", func() {
 			configBlob, manifestBlob, err := generateTestImage()
 			So(err, ShouldBeNil)
