@@ -352,9 +352,6 @@ func TestRepoListWithNewestImage(t *testing.T) {
 		defer stopServer(ctlr)
 		WaitTillServerReady(baseURL)
 
-		err = triggerUploadForTestImages(GetBaseURL(port))
-		So(err, ShouldBeNil)
-
 		resp, err := resty.R().Get(baseURL + "/v2/")
 		So(resp, ShouldNotBeNil)
 		So(err, ShouldBeNil)
@@ -838,9 +835,6 @@ func TestExpandedRepoInfo(t *testing.T) {
 		go startServer(ctlr)
 		defer stopServer(ctlr)
 		WaitTillServerReady(baseURL)
-
-		err = triggerUploadForTestImages(GetBaseURL(port))
-		So(err, ShouldBeNil)
 
 		log := log.NewLogger("debug", "")
 		metrics := monitoring.NewMetricsServer(false, log)
