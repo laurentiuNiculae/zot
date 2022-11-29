@@ -47,28 +47,49 @@ func TestBoltDBWrapper(t *testing.T) {
 		defer os.Remove("repo.db")
 	})
 
-	Convey("Test RepoDB Interface implementation", t, func() {
-		/*
-			filePath := path.Join(t.TempDir(), "repo.db")
-			boltDBParams := repodb.BoltDBParameters{
-				RootDir: t.TempDir(),
-			}
+	Convey("BoltDB Wrapper", t, func() {
+		boltDBParams := repodb.BoltDBParameters{}
+		boltdbWrapper, err := repodb.NewBoltDBWrapper(boltDBParams)
+		defer os.Remove("repo.db")
+		So(boltdbWrapper, ShouldNotBeNil)
+		So(err, ShouldBeNil)
 
-			var repoDB repodb.RepoDB
+		RunRepoDBTests(boltdbWrapper)
+	})
+}
 
-			repoDB, err := repodb.NewBoltDBWrapper(boltDBParams)
-			So(repoDB, ShouldNotBeNil)
-			So(err, ShouldBeNil)
-
-			defer os.Remove(filePath)
-		*/
-
-		repoDB, err := repodb.NewDynamoDBWrapper(repodb.DynamoDBDriverParameters{
+func TestDynamoDBWrapper(t *testing.T) {
+	Convey("DynamoDB Wrapper", t, func() {
+		dynamoDBDriverParams := repodb.DynamoDBDriverParameters{
 			Endpoint: os.Getenv("DYNAMODBMOCK_ENDPOINT"),
 			Region:   "us-east-2",
-		})
-		So(repoDB, ShouldNotBeNil)
+		}
+		dynamoDriver, err := repodb.NewDynamoDBWrapper(dynamoDBDriverParams)
+		So(dynamoDriver, ShouldNotBeNil)
 		So(err, ShouldBeNil)
+
+		resetDynamoDBTables := func() error {
+			err := dynamoDriver.ResetRepoMetaTable()
+			if err != nil {
+				return err
+			}
+
+			err = dynamoDriver.ResetManifestMetaTable()
+
+			return err
+		}
+
+		RunRepoDBTests(dynamoDriver, resetDynamoDBTables)
+	})
+}
+
+func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
+	Convey("Test RepoDB Interface implementation", func() {
+		for _, prepFunc := range preparationFuncs {
+			err := prepFunc()
+			So(err, ShouldBeNil)
+		}
+
 		Convey("Test SetManifestMeta and GetManifestMeta", func() {
 			configBlob, manifestBlob, err := generateTestImage()
 			So(err, ShouldBeNil)
@@ -147,12 +168,12 @@ func TestBoltDBWrapper(t *testing.T) {
 				})
 
 				Convey("Tag is not valid", func() {
-					err = repoDB.SetRepoTag(repo1, "", manifestDigest1)
+					err := repoDB.SetRepoTag(repo1, "", manifestDigest1)
 					So(err, ShouldNotBeNil)
 				})
 
 				Convey("Manifest Digest is not valid", func() {
-					err = repoDB.SetRepoTag(repo1, tag1, "")
+					err := repoDB.SetRepoTag(repo1, tag1, "")
 					So(err, ShouldNotBeNil)
 				})
 			})
@@ -794,16 +815,6 @@ func TestBoltDBWrapper(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(len(repos), ShouldEqual, 1)
 				So(repos[0].Name, ShouldResemble, "repo49")
-
-				// sort by stars
-				repos, _, err = repoDB.SearchRepos(ctx, "repo", repodb.Filter{}, repodb.PageInput{
-					Limit:  1,
-					Offset: 0,
-					SortBy: repodb.Stars,
-				})
-				So(err, ShouldBeNil)
-				So(len(repos), ShouldEqual, 1)
-				So(repos[0].Name, ShouldResemble, "repo0")
 
 				// sort by last update
 				repos, _, err = repoDB.SearchRepos(ctx, "repo", repodb.Filter{}, repodb.PageInput{
