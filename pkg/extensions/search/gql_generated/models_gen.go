@@ -30,6 +30,7 @@ type CVEResultForImage struct {
 	Page    *PageInfo `json:"Page"`
 }
 
+// Parameters used to filter the results of the query
 type Filter struct {
 	Os            []*string `json:"Os"`
 	Arch          []*string `json:"Arch"`
@@ -117,6 +118,10 @@ type PageInfo struct {
 	ItemCount  int `json:"ItemCount"`
 }
 
+// Pagination parameters.
+// Limit: refers to the amout of results per page. If you set limit to -1, the pagination behaior is disabled
+// Offset: the results page number you want to receive.
+// Sort by: the criteria used to sort the results on the page.
 type PageInput struct {
 	Limit  *int          `json:"limit"`
 	Offset *int          `json:"offset"`
