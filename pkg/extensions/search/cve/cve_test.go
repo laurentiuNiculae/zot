@@ -1181,51 +1181,55 @@ func TestCVEStruct(t *testing.T) {
 
 		t.Log("Test GetCVEListForImage")
 
+		pageInput := cveinfo.PageInput{
+			SortBy: cveinfo.SeverityDsc,
+		}
+
 		// Image is found
-		cveList, err := cveInfo.GetCVEListForImage("repo1:0.1.0")
+		cveList, _, err := cveInfo.GetCVEListForImage("repo1:0.1.0", pageInput)
 		So(err, ShouldBeNil)
 		So(len(cveList), ShouldEqual, 1)
 		So(cveList[0].ID, ShouldEqual, "CVE1")
 
-		cveList, err = cveInfo.GetCVEListForImage("repo1:1.0.0")
+		cveList, _, err = cveInfo.GetCVEListForImage("repo1:1.0.0", pageInput)
 		So(err, ShouldBeNil)
 		So(len(cveList), ShouldEqual, 3)
 		So(cveList[0].ID, ShouldEqual, "CVE2")
 		So(cveList[1].ID, ShouldEqual, "CVE1")
 		So(cveList[2].ID, ShouldEqual, "CVE3")
 
-		cveList, err = cveInfo.GetCVEListForImage("repo1:1.0.1")
+		cveList, _, err = cveInfo.GetCVEListForImage("repo1:1.0.1", pageInput)
 		So(err, ShouldBeNil)
 		So(len(cveList), ShouldEqual, 2)
 		So(cveList[0].ID, ShouldEqual, "CVE1")
 		So(cveList[1].ID, ShouldEqual, "CVE3")
 
-		cveList, err = cveInfo.GetCVEListForImage("repo1:1.1.0")
+		cveList, _, err = cveInfo.GetCVEListForImage("repo1:1.1.0", pageInput)
 		So(err, ShouldBeNil)
 		So(len(cveList), ShouldEqual, 1)
 		So(cveList[0].ID, ShouldEqual, "CVE3")
 
-		cveList, err = cveInfo.GetCVEListForImage("repo6:1.0.0")
+		cveList, _, err = cveInfo.GetCVEListForImage("repo6:1.0.0", pageInput)
 		So(err, ShouldBeNil)
 		So(len(cveList), ShouldEqual, 0)
 
 		// Image is not scannable
-		cveList, err = cveInfo.GetCVEListForImage("repo2:1.0.0")
+		cveList, _, err = cveInfo.GetCVEListForImage("repo2:1.0.0", pageInput)
 		So(err, ShouldEqual, zerr.ErrScanNotSupported)
 		So(len(cveList), ShouldEqual, 0)
 
 		// Tag is not found
-		cveList, err = cveInfo.GetCVEListForImage("repo3:1.0.0")
+		cveList, _, err = cveInfo.GetCVEListForImage("repo3:1.0.0", pageInput)
 		So(err, ShouldEqual, zerr.ErrTagMetaNotFound)
 		So(len(cveList), ShouldEqual, 0)
 
 		// Manifest is not found
-		cveList, err = cveInfo.GetCVEListForImage("repo5:nonexitent-manifest")
+		cveList, _, err = cveInfo.GetCVEListForImage("repo5:nonexitent-manifest", pageInput)
 		So(err, ShouldEqual, zerr.ErrManifestMetaNotFound)
 		So(len(cveList), ShouldEqual, 0)
 
 		// Repo is not found
-		cveList, err = cveInfo.GetCVEListForImage("repo100:1.0.0")
+		cveList, _, err = cveInfo.GetCVEListForImage("repo100:1.0.0", pageInput)
 		So(err, ShouldEqual, zerr.ErrRepoMetaNotFound)
 		So(len(cveList), ShouldEqual, 0)
 
@@ -1350,7 +1354,7 @@ func TestCVEStruct(t *testing.T) {
 		So(cveSummary.Count, ShouldEqual, 0)
 		So(cveSummary.MaxSeverity, ShouldEqual, "")
 
-		cveList, err = cveInfo.GetCVEListForImage("repo1:0.1.0")
+		cveList, _, err = cveInfo.GetCVEListForImage("repo1:0.1.0", pageInput)
 		So(err, ShouldNotBeNil)
 		So(cveList, ShouldBeEmpty)
 
