@@ -1604,12 +1604,15 @@ func TestCVEResolvers(t *testing.T) { //nolint:gocyclo
 
 	Convey("Get CVE list for image ", t, func() {
 		Convey("Unpaginated request to get all CVEs in an image", func() {
-			// CVE pagination will be implemented later
+			sortCriteria := gql_generated.SortCriteriaAlphabeticAsc
+			pageInput := &gql_generated.PageInput{
+				SortBy: &sortCriteria,
+			}
 
 			responseContext := graphql.WithResponseContext(context.Background(), graphql.DefaultErrorPresenter,
 				graphql.DefaultRecover)
 
-			cveResult, err := getCVEListForImage(responseContext, "repo1:1.0.0", cveInfo, log)
+			cveResult, err := getCVEListForImage(responseContext, "repo1:1.0.0", cveInfo, pageInput, log)
 			So(err, ShouldBeNil)
 			So(*cveResult.Tag, ShouldEqual, "1.0.0")
 
@@ -1620,7 +1623,7 @@ func TestCVEResolvers(t *testing.T) { //nolint:gocyclo
 				So(expectedCves, ShouldContain, *cve.ID)
 			}
 
-			cveResult, err = getCVEListForImage(responseContext, "repo1:1.0.1", cveInfo, log)
+			cveResult, err = getCVEListForImage(responseContext, "repo1:1.0.1", cveInfo, pageInput, log)
 			So(err, ShouldBeNil)
 			So(*cveResult.Tag, ShouldEqual, "1.0.1")
 
@@ -1631,7 +1634,7 @@ func TestCVEResolvers(t *testing.T) { //nolint:gocyclo
 				So(expectedCves, ShouldContain, *cve.ID)
 			}
 
-			cveResult, err = getCVEListForImage(responseContext, "repo1:1.1.0", cveInfo, log)
+			cveResult, err = getCVEListForImage(responseContext, "repo1:1.1.0", cveInfo, pageInput, log)
 			So(err, ShouldBeNil)
 			So(*cveResult.Tag, ShouldEqual, "1.1.0")
 

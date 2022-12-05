@@ -178,9 +178,22 @@ func getCVEListForImage(
 	ctx context.Context, //nolint:unparam // may be used in the future to filter by permissions
 	image string,
 	cveInfo cveinfo.CveInfo,
+	requestedPage *gql_generated.PageInput,
 	log log.Logger, //nolint:unparam // may be used by devs for debugging
 ) (*gql_generated.CVEResultForImage, error) {
-	cveList, err := cveInfo.GetCVEListForImage(image)
+	if requestedPage == nil {
+		requestedPage = &gql_generated.PageInput{}
+	}
+
+	pageInput := cveinfo.PageInput{
+		Limit:  safeDerefferencing(requestedPage.Limit, 0),
+		Offset: safeDerefferencing(requestedPage.Offset, 0),
+		SortBy: cveinfo.SortCriteria(
+			safeDerefferencing(requestedPage.SortBy, gql_generated.SortCriteriaSeverity),
+		),
+	}
+
+	cveList, pageInfo, err := cveInfo.GetCVEListForImage(image, pageInput)
 	if err != nil {
 		return &gql_generated.CVEResultForImage{}, err
 	}
@@ -220,7 +233,14 @@ func getCVEListForImage(
 		)
 	}
 
-	return &gql_generated.CVEResultForImage{Tag: &copyImgTag, CVEList: cveids}, nil
+	return &gql_generated.CVEResultForImage{
+		Tag:     &copyImgTag,
+		CVEList: cveids,
+		Page: &gql_generated.PageInfo{
+			TotalCount: pageInfo.TotalCount,
+			ItemCount:  pageInfo.ItemCount,
+		},
+	}, nil
 }
 
 func FilterByTagInfo(tagsInfo []common.TagInfo) repodb.FilterFunc {
