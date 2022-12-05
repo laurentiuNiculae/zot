@@ -3,7 +3,6 @@ package cveinfo
 import (
 	"encoding/json"
 	"fmt"
-	"sort"
 
 	godigest "github.com/opencontainers/go-digest"
 	ispec "github.com/opencontainers/image-spec/specs-go/v1"
@@ -19,8 +18,9 @@ import (
 type CveInfo interface {
 	GetImageListForCVE(repo, cveID string) ([]common.TagInfo, error)
 	GetImageListWithCVEFixed(repo, cveID string) ([]common.TagInfo, error)
-	GetCVEListForImage(image string) ([]cvemodel.CVE, error)
+	GetCVEListForImage(image string, pageinput PageInput) ([]cvemodel.CVE, PageInfo, error)
 	GetCVESummaryForImage(image string) (ImageCVESummary, error)
+	CompareSeverities(severity1, severity2 string) int
 	UpdateDB() error
 }
 
@@ -205,37 +205,33 @@ func (cveinfo BaseCveInfo) GetImageListWithCVEFixed(repo, cveID string) ([]commo
 	return fixedTags, nil
 }
 
-func (cveinfo BaseCveInfo) GetCVEListForImage(image string) ([]cvemodel.CVE, error) {
+func (cveinfo BaseCveInfo) GetCVEListForImage(image string, pageInput PageInput) (
+	[]cvemodel.CVE,
+	PageInfo,
+	error,
+) {
 	isValidImage, err := cveinfo.Scanner.IsImageFormatScannable(image)
 	if !isValidImage {
-		return []cvemodel.CVE{}, err
+		return []cvemodel.CVE{}, PageInfo{}, err
 	}
 
 	cveMap, err := cveinfo.Scanner.ScanImage(image)
 	if err != nil {
-		return []cvemodel.CVE{}, err
+		return []cvemodel.CVE{}, PageInfo{}, err
 	}
 
-	cveIDList := []string{}
-	for cveID := range cveMap {
-		cveIDList = append(cveIDList, cveID)
+	pageFinder, err := NewCvePageFinder(pageInput.Limit, pageInput.Offset, pageInput.SortBy, cveinfo)
+	if err != nil {
+		return []cvemodel.CVE{}, PageInfo{}, err
 	}
 
-	// Sort based on package name, severity and vulnerabilityID
-	sort.SliceStable(cveIDList, func(i, j int) bool {
-		return cveinfo.Scanner.CompareSeverities(
-			cveMap[cveIDList[j]].Severity,
-			cveMap[cveIDList[i]].Severity,
-		) > 0
-	})
-
-	cveList := []cvemodel.CVE{}
-
-	for _, cveID := range cveIDList {
-		cveList = append(cveList, cveMap[cveID])
+	for _, cve := range cveMap {
+		pageFinder.Add(cve)
 	}
 
-	return cveList, nil
+	cveList, pageInfo := pageFinder.Page()
+
+	return cveList, pageInfo, nil
 }
 
 func (cveinfo BaseCveInfo) GetCVESummaryForImage(image string) (ImageCVESummary, error) {
@@ -278,4 +274,8 @@ func (cveinfo BaseCveInfo) GetCVESummaryForImage(image string) (ImageCVESummary,
 
 func (cveinfo BaseCveInfo) UpdateDB() error {
 	return cveinfo.Scanner.UpdateDB()
+}
+
+func (cveinfo BaseCveInfo) CompareSeverities(severity1, severity2 string) int {
+	return cveinfo.Scanner.CompareSeverities(severity1, severity2)
 }
