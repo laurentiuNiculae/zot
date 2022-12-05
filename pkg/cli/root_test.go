@@ -160,7 +160,7 @@ func TestVerify(t *testing.T) {
 				  "name":"dynamodb",
 				  "endpoint":"http://localhost:4566",
 				  "region":"us-east-2",
-				  "tableName":"BlobTable"
+				  "casheTablename":"BlobTable"
 			   }
 			},
 			"http":{
@@ -227,7 +227,7 @@ func TestVerify(t *testing.T) {
 				  "name":"dynamodb",
 				  "endpoint":"http://localhost:4566",
 				  "region":"us-east-2",
-				  "tableName":"BlobTable"
+				  "casheTablename":"BlobTable"
 			   },
 			   "storageDriver":{
 				  "name":"s3",
@@ -311,7 +311,7 @@ func TestVerify(t *testing.T) {
 						"name":"dynamodb",
 						"endpoint":"http://localhost:4566",
 						"region":"us-east-2",
-						"tableName":"BlobTable"
+						"casheTablename":"BlobTable"
 					 }
 				  }
 			   }
@@ -390,7 +390,7 @@ func TestVerify(t *testing.T) {
 						"name":"dynamodb",
 						"endpoint":"http://localhost:4566",
 						"region":"us-east-2",
-						"tableName":"BlobTable"
+						"casheTablename":"BlobTable"
 					 }
 				  }
 			   }

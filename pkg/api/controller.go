@@ -471,7 +471,7 @@ func CreateCacheDatabaseDriver(storageConfig config.StorageConfig, log log.Logge
 			dynamoParams := cache.DynamoDBDriverParameters{}
 			dynamoParams.Endpoint, _ = storageConfig.CacheDriver["endpoint"].(string)
 			dynamoParams.Region, _ = storageConfig.CacheDriver["region"].(string)
-			dynamoParams.TableName, _ = storageConfig.CacheDriver["tablename"].(string)
+			dynamoParams.TableName, _ = storageConfig.CacheDriver["casheTablename"].(string)
 
 			driver, _ := storage.Create("dynamodb", dynamoParams, log)
 
@@ -503,12 +503,16 @@ func (c *Controller) InitRepoDB(reloadCtx context.Context) error {
 }
 
 func (c *Controller) createRepoDBDriver(reloadCtx context.Context) (repodb.RepoDB, error) { //nolint:unparam
-	if c.Config.Storage.RemoteCache {
-		c.Log.Warn().Msgf("remote RepoDB implementation is not available yet, defaulting to local")
+	storageConfig := c.Config.Storage
 
-		return repodbfactory.Create("boltdb", repodb.BoltDBParameters{
-			RootDir: c.Config.Storage.RootDirectory,
-		})
+	if storageConfig.RemoteCache {
+		dynamoParams := repodb.DynamoDBDriverParameters{}
+		dynamoParams.Endpoint, _ = storageConfig.CacheDriver["endpoint"].(string)
+		dynamoParams.Region, _ = storageConfig.CacheDriver["region"].(string)
+		dynamoParams.RepoMetaTablename, _ = storageConfig.CacheDriver["repoMetaTablename"].(string)
+		dynamoParams.ManifestMetaTablename, _ = storageConfig.CacheDriver["manifestMetaTablename"].(string)
+
+		return repodbfactory.Create("dynamodb", dynamoParams)
 	}
 
 	params := repodb.BoltDBParameters{}

@@ -61,8 +61,10 @@ func TestBoltDBWrapper(t *testing.T) {
 func TestDynamoDBWrapper(t *testing.T) {
 	Convey("DynamoDB Wrapper", t, func() {
 		dynamoDBDriverParams := repodb.DynamoDBDriverParameters{
-			Endpoint: os.Getenv("DYNAMODBMOCK_ENDPOINT"),
-			Region:   "us-east-2",
+			Endpoint:              os.Getenv("DYNAMODBMOCK_ENDPOINT"),
+			RepoMetaTablename:     "RepoMetadataTable",
+			ManifestMetaTablename: "ManifestMetadataTable",
+			Region:                "us-east-2",
 		}
 		dynamoDriver, err := repodb.NewDynamoDBWrapper(dynamoDBDriverParams)
 		So(dynamoDriver, ShouldNotBeNil)

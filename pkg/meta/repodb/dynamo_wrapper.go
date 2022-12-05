@@ -22,12 +22,14 @@ import (
 )
 
 type DynamoDBWrapper struct {
-	client *dynamodb.Client
-	log    log.Logger
+	client                *dynamodb.Client
+	repoMetaTablename     string
+	manifestMetaTablename string
+	log                   log.Logger
 }
 
 type DynamoDBDriverParameters struct {
-	Endpoint, Region string
+	Endpoint, Region, RepoMetaTablename, ManifestMetaTablename string
 }
 
 func NewDynamoDBWrapper(params DynamoDBDriverParameters) (*DynamoDBWrapper, error) {
@@ -52,8 +54,10 @@ func NewDynamoDBWrapper(params DynamoDBDriverParameters) (*DynamoDBWrapper, erro
 
 	// Using the Config value, create the DynamoDB client
 	return &DynamoDBWrapper{
-		client: dynamodb.NewFromConfig(cfg),
-		log:    log.Logger{Logger: zerolog.New(os.Stdout)},
+		client:                dynamodb.NewFromConfig(cfg),
+		repoMetaTablename:     params.RepoMetaTablename,
+		manifestMetaTablename: params.ManifestMetaTablename,
+		log:                   log.Logger{Logger: zerolog.New(os.Stdout)},
 	}, nil
 }
 
@@ -199,7 +203,7 @@ func (dwr DynamoDBWrapper) SetRepoTag(repo string, tag string, manifestDigest go
 	}
 
 	resp, err := dwr.client.GetItem(context.TODO(), &dynamodb.GetItemInput{
-		TableName: aws.String("RepoMetadataTable"),
+		TableName: aws.String(dwr.repoMetaTablename),
 		Key: map[string]types.AttributeValue{
 			"RepoName": &types.AttributeValueMemberS{Value: repo},
 		},
@@ -229,7 +233,7 @@ func (dwr DynamoDBWrapper) SetRepoTag(repo string, tag string, manifestDigest go
 
 func (dwr DynamoDBWrapper) DeleteRepoTag(repo string, tag string) error {
 	resp, err := dwr.client.GetItem(context.TODO(), &dynamodb.GetItemInput{
-		TableName: aws.String("RepoMetadataTable"),
+		TableName: aws.String(dwr.repoMetaTablename),
 		Key: map[string]types.AttributeValue{
 			"RepoName": &types.AttributeValueMemberS{Value: repo},
 		},
@@ -253,7 +257,7 @@ func (dwr DynamoDBWrapper) DeleteRepoTag(repo string, tag string) error {
 
 	if len(repoMeta.Tags) == 0 {
 		_, err := dwr.client.DeleteItem(context.Background(), &dynamodb.DeleteItemInput{
-			TableName: aws.String("RepoMetadataTable"),
+			TableName: aws.String(dwr.repoMetaTablename),
 			Key: map[string]types.AttributeValue{
 				"RepoName": &types.AttributeValueMemberS{Value: repo},
 			},
@@ -279,7 +283,7 @@ func (dwr DynamoDBWrapper) DeleteRepoTag(repo string, tag string) error {
 				Value: repo,
 			},
 		},
-		TableName:        aws.String("RepoMetadataTable"),
+		TableName:        aws.String(dwr.repoMetaTablename),
 		UpdateExpression: aws.String("SET #RM = :RepoMetadata"),
 	})
 
@@ -288,7 +292,7 @@ func (dwr DynamoDBWrapper) DeleteRepoTag(repo string, tag string) error {
 
 func (dwr DynamoDBWrapper) GetRepoMeta(repo string) (RepoMetadata, error) {
 	resp, err := dwr.client.GetItem(context.TODO(), &dynamodb.GetItemInput{
-		TableName: aws.String("RepoMetadataTable"),
+		TableName: aws.String(dwr.repoMetaTablename),
 		Key: map[string]types.AttributeValue{
 			"RepoName": &types.AttributeValueMemberS{Value: repo},
 		},
@@ -314,7 +318,7 @@ func (dwr DynamoDBWrapper) GetRepoMeta(repo string) (RepoMetadata, error) {
 func (dwr DynamoDBWrapper) GetManifestMeta(manifestDigest godigest.Digest,
 ) (ManifestMetadata, error) { //nolint:contextcheck
 	resp, err := dwr.client.GetItem(context.Background(), &dynamodb.GetItemInput{
-		TableName: aws.String("ManifestMetadataTable"),
+		TableName: aws.String(dwr.manifestMetaTablename),
 		Key: map[string]types.AttributeValue{
 			"Digest": &types.AttributeValueMemberS{Value: manifestDigest.String()},
 		},
@@ -359,7 +363,7 @@ func (dwr DynamoDBWrapper) SetManifestMeta(manifestDigest godigest.Digest, manif
 				Value: manifestDigest.String(),
 			},
 		},
-		TableName:        aws.String("ManifestMetadataTable"),
+		TableName:        aws.String(dwr.manifestMetaTablename),
 		UpdateExpression: aws.String("SET #MM = :ManifestMetadata"),
 	})
 
@@ -431,7 +435,7 @@ func (dwr DynamoDBWrapper) GetMultipleRepoMeta(ctx context.Context,
 ) ([]RepoMetadata, error) {
 	var (
 		repoMetaAttributeIterator = newDynamoAttributesIterator(
-			dwr.client, "RepoMetadataTable", "RepoMetadata", dwr.log,
+			dwr.client, dwr.repoMetaTablename, "RepoMetadata", dwr.log,
 		)
 
 		pageFinder PageFinder
@@ -481,7 +485,7 @@ func (dwr DynamoDBWrapper) SearchRepos(ctx context.Context, searchText string, f
 		pageFinder               PageFinder
 
 		repoMetaAttributeIterator = newDynamoAttributesIterator(
-			dwr.client, "RepoMetadataTable", "RepoMetadata", dwr.log,
+			dwr.client, dwr.repoMetaTablename, "RepoMetadata", dwr.log,
 		)
 	)
 
@@ -601,7 +605,7 @@ func (dwr DynamoDBWrapper) SearchTags(ctx context.Context, searchText string, fi
 		foundManifestMetadataMap  = make(map[string]ManifestMetadata)
 		manifestMetadataMap       = make(map[string]ManifestMetadata)
 		repoMetaAttributeIterator = newDynamoAttributesIterator(
-			dwr.client, "RepoMetadataTable", "RepoMetadata", dwr.log,
+			dwr.client, dwr.repoMetaTablename, "RepoMetadata", dwr.log,
 		)
 
 		pageFinder PageFinder
@@ -722,7 +726,7 @@ func (dwr DynamoDBWrapper) setRepoMeta(repo string, repoMeta RepoMetadata) error
 				Value: repo,
 			},
 		},
-		TableName:        aws.String("RepoMetadataTable"),
+		TableName:        aws.String(dwr.repoMetaTablename),
 		UpdateExpression: aws.String("SET #RM = :RepoMetadata"),
 	})
 
@@ -731,7 +735,7 @@ func (dwr DynamoDBWrapper) setRepoMeta(repo string, repoMeta RepoMetadata) error
 
 func (dwr DynamoDBWrapper) createRepoMetaTable() error {
 	_, err := dwr.client.CreateTable(context.Background(), &dynamodb.CreateTableInput{
-		TableName: aws.String("RepoMetadataTable"),
+		TableName: aws.String(dwr.repoMetaTablename),
 		AttributeDefinitions: []types.AttributeDefinition{
 			{
 				AttributeName: aws.String("RepoName"),
@@ -752,7 +756,7 @@ func (dwr DynamoDBWrapper) createRepoMetaTable() error {
 
 func (dwr DynamoDBWrapper) deleteRepoMetaTable() error {
 	_, err := dwr.client.DeleteTable(context.Background(), &dynamodb.DeleteTableInput{
-		TableName: aws.String("RepoMetadataTable"),
+		TableName: aws.String(dwr.repoMetaTablename),
 	})
 
 	return err
@@ -769,7 +773,7 @@ func (dwr DynamoDBWrapper) ResetRepoMetaTable() error {
 
 func (dwr DynamoDBWrapper) createManifestMetaTable() error {
 	_, err := dwr.client.CreateTable(context.Background(), &dynamodb.CreateTableInput{
-		TableName: aws.String("ManifestMetadataTable"),
+		TableName: aws.String(dwr.manifestMetaTablename),
 		AttributeDefinitions: []types.AttributeDefinition{
 			{
 				AttributeName: aws.String("Digest"),
@@ -790,7 +794,7 @@ func (dwr DynamoDBWrapper) createManifestMetaTable() error {
 
 func (dwr DynamoDBWrapper) deleteManifestMetaTable() error {
 	_, err := dwr.client.DeleteTable(context.Background(), &dynamodb.DeleteTableInput{
-		TableName: aws.String("ManifestMetadataTable"),
+		TableName: aws.String(dwr.manifestMetaTablename),
 	})
 
 	return err

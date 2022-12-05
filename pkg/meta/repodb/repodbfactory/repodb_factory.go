@@ -11,10 +11,19 @@ func Create(dbtype string, parameters interface{}) (repodb.RepoDB, error) {
 		{
 			properParameters, ok := parameters.(repodb.BoltDBParameters)
 			if !ok {
-				panic("Failed type assertion")
+				panic("failed type assertion")
 			}
 
 			return repodb.NewBoltDBWrapper(properParameters)
+		}
+	case "dynamodb":
+		{
+			properParameters, ok := parameters.(repodb.DynamoDBDriverParameters)
+			if !ok {
+				panic("failed type assertion")
+			}
+
+			return repodb.NewDynamoDBWrapper(properParameters)
 		}
 	default:
 		{
