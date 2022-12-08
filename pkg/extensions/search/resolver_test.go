@@ -2580,7 +2580,9 @@ func TestBaseImageList(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(images.Results, ShouldNotBeEmpty)
 			So(len(images.Results), ShouldEqual, 2)
-			So(*images.Results[0].Tag, ShouldEqual, "1.0.1")
+			expectedTags := []string{"1.0.1", "1.0.3"}
+			So(expectedTags, ShouldContain, *images.Results[0].Tag)
+			So(expectedTags, ShouldContain, *images.Results[1].Tag)
 		})
 
 		Convey("valid baseImageList, results affected by pageInput", func() {
