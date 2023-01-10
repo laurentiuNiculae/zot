@@ -8,10 +8,10 @@ import (
 
 // MetadataDB.
 const (
-	ManifestDataBucket  = "ManifestData"
-	IndexMetadataBucket = "IndexMetadata"
-	UserMetadataBucket  = "UserMeta"
-	RepoMetadataBucket  = "RepoMetadata"
+	ManifestDataBucket = "ManifestData"
+	IndexDataBucket    = "IndexData"
+	UserMetadataBucket = "UserMeta"
+	RepoMetadataBucket = "RepoMetadata"
 	VersionBucket      = "Version"
 )
 
@@ -60,11 +60,11 @@ type RepoDB interface { //nolint:interfacebloat
 	// GetManifestMeta sets ManifestMetadata for a given manifest in the database
 	SetManifestMeta(repo string, manifestDigest godigest.Digest, mm ManifestMetadata) error
 
-	// SetIndexMeta sets IndexMetadata for a given index in the database
-	SetIndexMeta(digest godigest.Digest, indexMetadata IndexMetadata) error
+	// SetIndexData sets IndexMetadata for a given index in the database
+	SetIndexData(digest godigest.Digest, indexMetadata IndexData) error
 
-	// GetIndexMeta returns IndexMetadata for a given Index from the database
-	GetIndexMeta(indexDigest godigest.Digest) (IndexMetadata, error)
+	// GetIndexData returns IndexMetadata for a given Index from the database
+	GetIndexData(indexDigest godigest.Digest) (IndexData, error)
 
 	// IncrementManifestDownloads adds 1 to the download count of a manifest
 	IncrementImageDownloads(repo string, reference string) error
@@ -77,15 +77,15 @@ type RepoDB interface { //nolint:interfacebloat
 
 	// SearchRepos searches for repos given a search string
 	SearchRepos(ctx context.Context, searchText string, filter Filter, requestedPage PageInput) (
-		[]RepoMetadata, map[string]ManifestMetadata, map[string]IndexMetadata, PageInfo, error)
+		[]RepoMetadata, map[string]ManifestMetadata, map[string]IndexData, PageInfo, error)
 
 	// SearchTags searches for images(repo:tag) given a search string
 	SearchTags(ctx context.Context, searchText string, filter Filter, requestedPage PageInput) (
-		[]RepoMetadata, map[string]ManifestMetadata, map[string]IndexMetadata, PageInfo, error)
+		[]RepoMetadata, map[string]ManifestMetadata, map[string]IndexData, PageInfo, error)
 
 	// FilterTags filters for images given a filter function
 	FilterTags(ctx context.Context, filter FilterFunc,
-		requestedPage PageInput) ([]RepoMetadata, map[string]ManifestMetadata, map[string]IndexMetadata, PageInfo, error)
+		requestedPage PageInput) ([]RepoMetadata, map[string]ManifestMetadata, map[string]IndexData, PageInfo, error)
 
 	PatchDB() error
 }
@@ -97,7 +97,7 @@ type ManifestMetadata struct {
 	Signatures    ManifestSignatures
 }
 
-type IndexMetadata struct {
+type IndexData struct {
 	IndexBlob []byte
 }
 

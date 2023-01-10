@@ -175,7 +175,7 @@ func getImageSummary(ctx context.Context, repo, tag string, repoDB repodb.RepoDB
 
 	var (
 		manifestMetaMap = map[string]repodb.ManifestMetadata{}
-		indexMetaMap    = map[string]repodb.IndexMetadata{}
+		indexMetaMap    = map[string]repodb.IndexData{}
 	)
 
 	switch manifestDescriptor.MediaType {
@@ -191,7 +191,7 @@ func getImageSummary(ctx context.Context, repo, tag string, repoDB repodb.RepoDB
 	case ispec.MediaTypeImageIndex:
 		indexDigest := manifestDescriptor.Digest
 
-		indexMeta, err := repoDB.GetIndexMeta(godigest.Digest(indexDigest))
+		indexMeta, err := repoDB.GetIndexData(godigest.Digest(indexDigest))
 		if err != nil {
 			return nil, err
 		}
@@ -949,7 +949,7 @@ func expandedRepoInfo(ctx context.Context, repo string, repoDB repodb.RepoDB, cv
 
 	var (
 		manifestMetaMap = map[string]repodb.ManifestMetadata{}
-		indexMetaMap    = map[string]repodb.IndexMetadata{}
+		indexMetaMap    = map[string]repodb.IndexData{}
 	)
 
 	for tag, descriptor := range repoMeta.Tags {
@@ -977,7 +977,7 @@ func expandedRepoInfo(ctx context.Context, repo string, repoDB repodb.RepoDB, cv
 				continue
 			}
 
-			indexMeta, err := repoDB.GetIndexMeta(godigest.Digest(digest))
+			indexMeta, err := repoDB.GetIndexData(godigest.Digest(digest))
 			if err != nil {
 				graphql.AddError(ctx, errors.Wrapf(err,
 					"resolver: failed to get manifest meta for image %s:%s with manifest digest %s", repo, tag, digest))

@@ -252,9 +252,9 @@ func NewManifestData(repoName string, manifestBlob []byte, storeController stora
 }
 
 func NewIndexMeta(repoName string, indexBlob []byte, storeController storage.StoreController,
-) (IndexMetadata, error) {
+) (IndexData, error) {
 	var (
-		indexMeta IndexMetadata
+		indexMeta IndexData
 	)
 
 	indexMeta.IndexBlob = indexBlob
@@ -286,7 +286,7 @@ func SetMetadataFromInput(repo, reference, mediaType string, digest godigest.Dig
 			return err
 		}
 
-		err = repoDB.SetIndexMeta(digest, indexMetadata)
+		err = repoDB.SetIndexData(digest, indexMetadata)
 		if err != nil {
 			log.Error().Err(err).Msg("repodb: error while putting image meta")
 

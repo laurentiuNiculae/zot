@@ -310,7 +310,7 @@ func TestWrapperErrors(t *testing.T) {
 			err = setBadRepoMeta(dynamoWrapper.Client, "repo") //nolint:contextcheck
 			So(err, ShouldBeNil)
 
-			_, _, _, err = dynamoWrapper.SearchRepos(ctx, "", repodb.Filter{}, repodb.PageInput{})
+			_, _, _, _, err = dynamoWrapper.SearchRepos(ctx, "", repodb.Filter{}, repodb.PageInput{})
 
 			So(err, ShouldNotBeNil)
 		})
@@ -319,7 +319,7 @@ func TestWrapperErrors(t *testing.T) {
 			err := dynamoWrapper.SetRepoTag("repo", "tag1", "notFoundDigest", "") //nolint:contextcheck
 			So(err, ShouldBeNil)
 
-			_, _, _, err = dynamoWrapper.SearchRepos(ctx, "", repodb.Filter{}, repodb.PageInput{})
+			_, _, _, _, err = dynamoWrapper.SearchRepos(ctx, "", repodb.Filter{}, repodb.PageInput{})
 
 			So(err, ShouldNotBeNil)
 		})
@@ -334,7 +334,7 @@ func TestWrapperErrors(t *testing.T) {
 			})
 			So(err, ShouldBeNil)
 
-			_, _, _, err = dynamoWrapper.SearchRepos(ctx, "", repodb.Filter{}, repodb.PageInput{})
+			_, _, _, _, err = dynamoWrapper.SearchRepos(ctx, "", repodb.Filter{}, repodb.PageInput{})
 
 			So(err, ShouldNotBeNil)
 		})
@@ -343,7 +343,7 @@ func TestWrapperErrors(t *testing.T) {
 			err = setBadRepoMeta(dynamoWrapper.Client, "repo") //nolint:contextcheck
 			So(err, ShouldBeNil)
 
-			_, _, _, err = dynamoWrapper.SearchTags(ctx, "repo:", repodb.Filter{}, repodb.PageInput{})
+			_, _, _, _, err = dynamoWrapper.SearchTags(ctx, "repo:", repodb.Filter{}, repodb.PageInput{})
 
 			So(err, ShouldNotBeNil)
 		})
@@ -352,7 +352,7 @@ func TestWrapperErrors(t *testing.T) {
 			err := dynamoWrapper.SetRepoTag("repo", "tag1", "manifestNotFound", "") //nolint:contextcheck
 			So(err, ShouldBeNil)
 
-			_, _, _, err = dynamoWrapper.SearchTags(ctx, "repo:", repodb.Filter{}, repodb.PageInput{})
+			_, _, _, _, err = dynamoWrapper.SearchTags(ctx, "repo:", repodb.Filter{}, repodb.PageInput{})
 
 			So(err, ShouldNotBeNil)
 		})
@@ -370,7 +370,7 @@ func TestWrapperErrors(t *testing.T) {
 			)
 			So(err, ShouldBeNil)
 
-			_, _, _, err = dynamoWrapper.SearchTags(ctx, "repo:", repodb.Filter{}, repodb.PageInput{})
+			_, _, _, _, err = dynamoWrapper.SearchTags(ctx, "repo:", repodb.Filter{}, repodb.PageInput{})
 
 			So(err, ShouldNotBeNil)
 		})

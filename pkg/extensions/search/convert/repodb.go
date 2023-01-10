@@ -24,7 +24,7 @@ type SkipQGLField struct {
 }
 
 func RepoMeta2RepoSummary(ctx context.Context, repoMeta repodb.RepoMetadata,
-	manifestMetaMap map[string]repodb.ManifestMetadata, indexMetaMap map[string]repodb.IndexMetadata,
+	manifestMetaMap map[string]repodb.ManifestMetadata, indexMetaMap map[string]repodb.IndexData,
 	skip SkipQGLField, cveInfo cveinfo.CveInfo,
 ) *gql_generated.RepoSummary {
 	var (
@@ -145,7 +145,7 @@ func RepoMeta2RepoSummary(ctx context.Context, repoMeta repodb.RepoMetadata,
 
 func Descriptor2ImageSummary(ctx context.Context, descriptor repodb.Descriptor, repo, tag string, skipCVE bool,
 	repoMeta repodb.RepoMetadata, manifestMetaMap map[string]repodb.ManifestMetadata,
-	indexMetaMap map[string]repodb.IndexMetadata, cveInfo cveinfo.CveInfo,
+	indexMetaMap map[string]repodb.IndexData, cveInfo cveinfo.CveInfo,
 ) (*gql_generated.ImageSummary, map[string]int64, error) {
 	switch descriptor.MediaType {
 	case ispec.MediaTypeImageManifest:
@@ -173,7 +173,7 @@ func severityValue(severity string) int {
 }
 
 func ImageIndex2ImageSummary(ctx context.Context, repo, tag string, indexDigest godigest.Digest, skipCVE bool,
-	repoMeta repodb.RepoMetadata, indexMeta repodb.IndexMetadata, manifestMetaMap map[string]repodb.ManifestMetadata,
+	repoMeta repodb.RepoMetadata, indexMeta repodb.IndexData, manifestMetaMap map[string]repodb.ManifestMetadata,
 	cveInfo cveinfo.CveInfo,
 ) (*gql_generated.ImageSummary, map[string]int64, error) {
 	var indexContent ispec.Index
@@ -488,7 +488,7 @@ func getImageBlobsInfo(manifestDigest string, manifestSize int64, configDigest s
 }
 
 func RepoMeta2ImageSummaries(ctx context.Context, repoMeta repodb.RepoMetadata,
-	manifestMetaMap map[string]repodb.ManifestMetadata, indexMetaMap map[string]repodb.IndexMetadata,
+	manifestMetaMap map[string]repodb.ManifestMetadata, indexMetaMap map[string]repodb.IndexData,
 	skip SkipQGLField, cveInfo cveinfo.CveInfo,
 ) []*gql_generated.ImageSummary {
 	imageSummaries := make([]*gql_generated.ImageSummary, 0, len(repoMeta.Tags))
@@ -508,7 +508,7 @@ func RepoMeta2ImageSummaries(ctx context.Context, repoMeta repodb.RepoMetadata,
 }
 
 func RepoMeta2ExpandedRepoInfo(ctx context.Context, repoMeta repodb.RepoMetadata,
-	manifestMetaMap map[string]repodb.ManifestMetadata, indexMetaMap map[string]repodb.IndexMetadata,
+	manifestMetaMap map[string]repodb.ManifestMetadata, indexMetaMap map[string]repodb.IndexData,
 	skip SkipQGLField, cveInfo cveinfo.CveInfo,
 ) (*gql_generated.RepoSummary, []*gql_generated.ImageSummary) {
 	var (

@@ -63,7 +63,7 @@ func TestConvertErrors(t *testing.T) {
 			ctx,
 			repoMetas[0],
 			manifestMetaMap,
-			map[string]repodb.IndexMetadata{},
+			map[string]repodb.IndexData{},
 			convert.SkipQGLField{},
 			mocks.CveInfoMock{
 				GetCVESummaryForImageFn: func(image string) (cveinfo.ImageCVESummary, error) {
