@@ -276,7 +276,7 @@ func SetMetadataFromInput(repo, reference, mediaType string, digest godigest.Dig
 
 		err = repoDB.SetManifestData(digest, imageData)
 		if err != nil {
-			log.Error().Err(err).Msg("repodb: error while putting image meta")
+			log.Error().Err(err).Msg("repodb: error while putting manifest meta")
 
 			return err
 		}
@@ -288,7 +288,7 @@ func SetMetadataFromInput(repo, reference, mediaType string, digest godigest.Dig
 
 		err = repoDB.SetIndexData(digest, indexMetadata)
 		if err != nil {
-			log.Error().Err(err).Msg("repodb: error while putting image meta")
+			log.Error().Err(err).Msg("repodb: error while putting index meta")
 
 			return err
 		}

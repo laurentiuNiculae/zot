@@ -277,6 +277,14 @@ func WriteImageToFileSystem(image Image, repoName string, storeController storag
 	return nil
 }
 
+func WriteMultiArchImageToFileSystem(multiarchImage MultiarchImage, repoName string,
+	storeController storage.StoreController,
+) error {
+	// TODO:
+
+	return nil
+}
+
 func WaitTillServerReady(url string) {
 	for {
 		_, err := resty.R().Get(url)
@@ -990,34 +998,70 @@ func SignImageUsingNotary(repoTag, port string) error {
 }
 
 func GetRandomMultiarchImageComponents() (ispec.Index, []Image, error) {
-	image1, err := GetImageWithConfig(ispec.Image{
-		Platform: ispec.Platform{
-			OS:           "linux",
-			Architecture: "amd64",
+	randomLayer1 := make([]byte, 100)
+
+	_, err := rand.Read(randomLayer1)
+	if err != nil {
+		return ispec.Index{}, []Image{}, err
+	}
+
+	image1, err := GetImageWithComponents(
+		ispec.Image{
+			Platform: ispec.Platform{
+				OS:           "linux",
+				Architecture: "amd64",
+			},
 		},
-	})
+		[][]byte{
+			randomLayer1,
+		})
+
 	image1.Reference = getManifestDigest(image1.Manifest).String()
 	if err != nil {
 		return ispec.Index{}, []Image{}, err
 	}
 
-	image2, err := GetImageWithConfig(ispec.Image{
-		Platform: ispec.Platform{
-			OS:           "linux",
-			Architecture: "386",
+	randomLayer2 := make([]byte, 100)
+
+	_, err = rand.Read(randomLayer2)
+	if err != nil {
+		return ispec.Index{}, []Image{}, err
+	}
+
+	image2, err := GetImageWithComponents(
+		ispec.Image{
+			Platform: ispec.Platform{
+				OS:           "linux",
+				Architecture: "386",
+			},
 		},
-	})
+		[][]byte{
+			randomLayer2,
+		})
+
 	image2.Reference = getManifestDigest(image2.Manifest).String()
 	if err != nil {
 		return ispec.Index{}, []Image{}, err
 	}
 
-	image3, err := GetImageWithConfig(ispec.Image{
-		Platform: ispec.Platform{
-			OS:           "windows",
-			Architecture: "amd64",
+	randomLayer3 := make([]byte, 100)
+
+	_, err = rand.Read(randomLayer3)
+	if err != nil {
+		return ispec.Index{}, []Image{}, err
+	}
+
+	image3, err := GetImageWithComponents(
+		ispec.Image{
+			Platform: ispec.Platform{
+				OS:           "windows",
+				Architecture: "amd64",
+			},
 		},
-	})
+		[][]byte{
+			randomLayer3,
+		})
+
 	image3.Reference = getManifestDigest(image3.Manifest).String()
 	if err != nil {
 		return ispec.Index{}, []Image{}, err

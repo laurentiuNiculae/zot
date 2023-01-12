@@ -794,10 +794,10 @@ func TestGetReferrersGQL(t *testing.T) {
 
 		err = UploadImage(
 			Image{
-				Manifest: manifest,
-				Config:   config,
-				Layers:   layers,
-				Reference:      "1.0",
+				Manifest:  manifest,
+				Config:    config,
+				Layers:    layers,
+				Reference: "1.0",
 			},
 			baseURL,
 			repo)
@@ -4348,7 +4348,7 @@ func TestRepoDBWhenPushingImages(t *testing.T) {
 }
 
 func TestRepoDBIndexOperations(t *testing.T) {
-	Convey("Idex Operations", t, func() {
+	Convey("Idex Operations BoltDB", t, func() {
 		dir := t.TempDir()
 
 		port := GetFreePort()
@@ -4368,383 +4368,436 @@ func TestRepoDBIndexOperations(t *testing.T) {
 		defer stopServer(ctlr)
 		WaitTillServerReady(baseURL)
 
-		Convey("Push test index", func() {
-			repo := "repo"
+		RunRepoDBIndexTests(baseURL, port)
+	})
 
-			multiarchImage, err := GetRandomMultiarchImage("tag1")
-			So(err, ShouldBeNil)
+	Convey("Idex Operations Dynamo", t, func() {
+		dir := t.TempDir()
 
-			indexBlob, err := json.Marshal(multiarchImage.Index)
-			So(err, ShouldBeNil)
+		port := GetFreePort()
+		baseURL := GetBaseURL(port)
+		conf := config.New()
+		conf.HTTP.Port = port
+		conf.Storage.RootDirectory = dir
+		conf.Storage.GC = false
+		conf.Storage.Dedupe = false
+		conf.Storage.RemoteCache = true
 
-			indexDigest := godigest.FromBytes(indexBlob)
+		conf.Storage.StorageDriver = map[string]interface{}{
+			"name":           "s3",
+			"rootdirectory":  "/zot",
+			"accesskey":      "foobar",
+			"secretkey":      "foobar",
+			"regionendpoint": "http://localhost:4566",
+			"region":         "us-east-2",
+			"bucket":         "zot-storage",
+			"secure":         true,
+			"skipverify":     false,
+		}
 
-			err = UploadMultiarchImage(multiarchImage, baseURL, repo)
-			So(err, ShouldBeNil)
+		conf.Storage.CacheDriver = map[string]interface{}{
+			"name":                  "dynamodb",
+			"endpoint":              "http://localhost:4566",
+			"region":                "us-east-2",
+			"cachetablename":        "BlobTable",
+			"repometatablename":     "RepoMetadataTable",
+			"manifestdatatablename": "ManifestDataTable",
+			"indexdatatablename":    "IndexDataTable",
+			"versiontablename":      "Version",
+		}
 
-			query := `
-			{
-				GlobalSearch(query:"repo:tag1"){
-					Images {
-						RepoName Tag DownloadCount
+		defaultVal := true
+		conf.Extensions = &extconf.ExtensionConfig{
+			Search: &extconf.SearchConfig{BaseConfig: extconf.BaseConfig{Enable: &defaultVal}},
+		}
+
+		ctlr := api.NewController(conf)
+
+		go startServer(ctlr)
+		defer stopServer(ctlr)
+		WaitTillServerReady(baseURL)
+
+		RunRepoDBIndexTests(baseURL, port)
+	})
+}
+
+func RunRepoDBIndexTests(baseURL, port string) {
+	Convey("Push test index", func() {
+		repo := "repo"
+
+		multiarchImage, err := GetRandomMultiarchImage("tag1")
+		So(err, ShouldBeNil)
+
+		indexBlob, err := json.Marshal(multiarchImage.Index)
+		So(err, ShouldBeNil)
+
+		indexDigest := godigest.FromBytes(indexBlob)
+
+		err = UploadMultiarchImage(multiarchImage, baseURL, repo)
+		So(err, ShouldBeNil)
+
+		query := `
+		{
+			GlobalSearch(query:"repo:tag1"){
+				Images {
+					RepoName Tag DownloadCount
+					IsSigned
+					Manifests {
+						Digest
+						ConfigDigest
+						Platform {Os Arch}
+						Layers {Size Digest}
+						LastUpdated
 						IsSigned
+						Size
+					}
+				}
+			}
+		}`
+
+		resp, err := resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
+		So(resp, ShouldNotBeNil)
+		So(err, ShouldBeNil)
+		So(resp.StatusCode(), ShouldEqual, http.StatusOK)
+
+		responseStruct := &GlobalSearchResultResp{}
+
+		err = json.Unmarshal(resp.Body(), responseStruct)
+		So(err, ShouldBeNil)
+
+		responseImages := responseStruct.GlobalSearchResult.GlobalSearch.Images
+		So(responseImages, ShouldNotBeEmpty)
+		responseImage := responseImages[0]
+		So(len(responseImage.Manifests), ShouldEqual, 3)
+
+		err = SignImageUsingCosign("repo:tag1", port)
+		So(err, ShouldBeNil)
+
+		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
+		So(resp, ShouldNotBeNil)
+		So(err, ShouldBeNil)
+		So(resp.StatusCode(), ShouldEqual, http.StatusOK)
+
+		responseStruct = &GlobalSearchResultResp{}
+
+		err = json.Unmarshal(resp.Body(), responseStruct)
+		So(err, ShouldBeNil)
+
+		responseImages = responseStruct.GlobalSearchResult.GlobalSearch.Images
+		So(responseImages, ShouldNotBeEmpty)
+		responseImage = responseImages[0]
+
+		So(responseImage.IsSigned, ShouldBeTrue)
+
+		// remove signature
+		cosignTag := "sha256-" + indexDigest.Encoded() + ".sig"
+		resp, err = resty.R().Delete(baseURL + "/v2/" + "repo" + "/manifests/" + cosignTag)
+
+		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
+		So(resp, ShouldNotBeNil)
+		So(err, ShouldBeNil)
+		So(resp.StatusCode(), ShouldEqual, http.StatusOK)
+
+		responseStruct = &GlobalSearchResultResp{}
+
+		err = json.Unmarshal(resp.Body(), responseStruct)
+		So(err, ShouldBeNil)
+
+		responseImages = responseStruct.GlobalSearchResult.GlobalSearch.Images
+		So(responseImages, ShouldNotBeEmpty)
+		responseImage = responseImages[0]
+
+		So(responseImage.IsSigned, ShouldBeFalse)
+	})
+
+	Convey("Index base images", func() {
+		// ---------------- BASE IMAGE -------------------
+		imageAMD64, err := GetImageWithComponents(
+			ispec.Image{
+				Platform: ispec.Platform{
+					OS:           "linux",
+					Architecture: "amd64",
+				},
+			},
+			[][]byte{
+				{10, 20, 30},
+				{11, 21, 31},
+			})
+		So(err, ShouldBeNil)
+
+		imageSomeArch, err := GetImageWithComponents(
+			ispec.Image{
+				Platform: ispec.Platform{
+					OS:           "linux",
+					Architecture: "someArch",
+				},
+			}, [][]byte{
+				{18, 28, 38},
+				{12, 22, 32},
+			})
+		So(err, ShouldBeNil)
+
+		multiImage := GetMultiarchImageForImages("latest", []Image{
+			imageAMD64,
+			imageSomeArch,
+		})
+		err = UploadMultiarchImage(multiImage, baseURL, "test-repo")
+		So(err, ShouldBeNil)
+		// ---------------- BASE IMAGE -------------------
+
+		//  ---------------- SAME LAYERS -------------------
+		image1, err := GetImageWithComponents(
+			imageSomeArch.Config,
+			[][]byte{
+				{0, 0, 2},
+			},
+		)
+
+		image2, err := GetImageWithComponents(
+			imageAMD64.Config,
+			append(imageAMD64.Layers),
+		)
+		multiImage = GetMultiarchImageForImages("index-one-arch-same-layers", []Image{
+			image1, image2,
+		})
+		//  ---------------- SAME LAYERS -------------------
+
+		//  ---------------- LESS LAYERS -------------------
+		image1, err = GetImageWithComponents(
+			imageSomeArch.Config,
+			[][]byte{
+				{3, 2, 2},
+				{5, 2, 5},
+			},
+		)
+
+		image2, err = GetImageWithComponents(
+			imageAMD64.Config,
+			[][]byte{imageAMD64.Layers[0]},
+		)
+		multiImage = GetMultiarchImageForImages("index-one-arch-less-layers", []Image{
+			image1, image2,
+		})
+		err = UploadMultiarchImage(multiImage, baseURL, "index-one-arch-less-layers")
+		So(err, ShouldBeNil)
+		//  ---------------- LESS LAYERS -------------------
+
+		//  ---------------- LESS LAYERS FALSE -------------------
+		image1, err = GetImageWithComponents(
+			imageSomeArch.Config,
+			[][]byte{
+				{3, 2, 2},
+				{5, 2, 5},
+			},
+		)
+		auxLayer := imageAMD64.Layers[0]
+		auxLayer[0] = 20
+
+		image2, err = GetImageWithComponents(
+			imageAMD64.Config,
+			[][]byte{auxLayer},
+		)
+		multiImage = GetMultiarchImageForImages("index-one-arch-less-layers-false", []Image{
+			image1, image2,
+		})
+		err = UploadMultiarchImage(multiImage, baseURL, "index-one-arch-less-layers-false")
+		So(err, ShouldBeNil)
+		//  ---------------- LESS LAYERS FALSE -------------------
+
+		//  ---------------- MORE LAYERS -------------------
+		image1, err = GetImageWithComponents(
+			imageSomeArch.Config,
+			[][]byte{
+				{0, 0, 2},
+				{3, 0, 2},
+			},
+		)
+
+		image2, err = GetImageWithComponents(
+			imageAMD64.Config,
+			append(imageAMD64.Layers, []byte{1, 3, 55}),
+		)
+		multiImage = GetMultiarchImageForImages("index-one-arch-more-layers", []Image{
+			image1, image2,
+		})
+
+		err = UploadMultiarchImage(multiImage, baseURL, "index-one-arch-more-layers")
+		So(err, ShouldBeNil)
+		//  ---------------- MORE LAYERS -------------------
+
+		query := `
+			{
+				BaseImageList(image:"test-repo:latest"){
+					Results{
+						RepoName
+						Tag
 						Manifests {
 							Digest
 							ConfigDigest
-							Platform {Os Arch}
-							Layers {Size Digest}
 							LastUpdated
 							IsSigned
 							Size
 						}
+						IsSigned
+						Size
 					}
 				}
 			}`
 
-			resp, err := resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
-			So(resp, ShouldNotBeNil)
-			So(err, ShouldBeNil)
-			So(resp.StatusCode(), ShouldEqual, http.StatusOK)
+		resp, err := resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
+		So(resp, ShouldNotBeNil)
 
-			responseStruct := &GlobalSearchResultResp{}
+		So(strings.Contains(string(resp.Body()), "index-one-arch-less-layers"), ShouldBeTrue)
+		So(strings.Contains(string(resp.Body()), "index-one-arch-same-layers"), ShouldBeFalse)
+		So(strings.Contains(string(resp.Body()), "index-one-arch-less-layers-false"), ShouldBeFalse)
+		So(strings.Contains(string(resp.Body()), "index-one-arch-more-layers"), ShouldBeFalse)
+		So(strings.Contains(string(resp.Body()), "test-repo"), ShouldBeFalse)
+	})
 
-			err = json.Unmarshal(resp.Body(), responseStruct)
-			So(err, ShouldBeNil)
+	Convey("Index derived images", func() {
+		// ---------------- BASE IMAGE -------------------
+		imageAMD64, err := GetImageWithComponents(
+			ispec.Image{
+				Platform: ispec.Platform{
+					OS:           "linux",
+					Architecture: "amd64",
+				},
+			},
+			[][]byte{
+				{10, 20, 30},
+				{11, 21, 31},
+			})
+		So(err, ShouldBeNil)
 
-			responseImages := responseStruct.GlobalSearchResult.GlobalSearch.Images
-			So(responseImages, ShouldNotBeEmpty)
-			responseImage := responseImages[0]
-			So(len(responseImage.Manifests), ShouldEqual, 3)
+		imageSomeArch, err := GetImageWithComponents(
+			ispec.Image{
+				Platform: ispec.Platform{
+					OS:           "linux",
+					Architecture: "someArch",
+				},
+			}, [][]byte{
+				{18, 28, 38},
+				{12, 22, 32},
+			})
+		So(err, ShouldBeNil)
 
-			err = SignImageUsingCosign("repo:tag1", port)
-			So(err, ShouldBeNil)
+		multiImage := GetMultiarchImageForImages("latest", []Image{
+			imageAMD64,
+			imageSomeArch,
+		})
+		err = UploadMultiarchImage(multiImage, baseURL, "test-repo")
+		So(err, ShouldBeNil)
+		// ---------------- BASE IMAGE -------------------
 
-			resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
-			So(resp, ShouldNotBeNil)
-			So(err, ShouldBeNil)
-			So(resp.StatusCode(), ShouldEqual, http.StatusOK)
+		//  ---------------- SAME LAYERS -------------------
+		image1, err := GetImageWithComponents(
+			imageSomeArch.Config,
+			[][]byte{
+				{0, 0, 2},
+			},
+		)
 
-			responseStruct = &GlobalSearchResultResp{}
+		image2, err := GetImageWithComponents(
+			imageAMD64.Config,
+			append(imageAMD64.Layers),
+		)
+		multiImage = GetMultiarchImageForImages("index-one-arch-same-layers", []Image{
+			image1, image2,
+		})
+		//  ---------------- SAME LAYERS -------------------
 
-			err = json.Unmarshal(resp.Body(), responseStruct)
-			So(err, ShouldBeNil)
+		//  ---------------- LESS LAYERS -------------------
+		image1, err = GetImageWithComponents(
+			imageSomeArch.Config,
+			[][]byte{
+				{3, 2, 2},
+				{5, 2, 5},
+			},
+		)
 
-			responseImages = responseStruct.GlobalSearchResult.GlobalSearch.Images
-			So(responseImages, ShouldNotBeEmpty)
-			responseImage = responseImages[0]
+		image2, err = GetImageWithComponents(
+			imageAMD64.Config,
+			[][]byte{imageAMD64.Layers[0]},
+		)
+		multiImage = GetMultiarchImageForImages("index-one-arch-less-layers", []Image{
+			image1, image2,
+		})
+		err = UploadMultiarchImage(multiImage, baseURL, "index-one-arch-less-layers")
+		So(err, ShouldBeNil)
+		//  ---------------- LESS LAYERS -------------------
 
-			So(responseImage.IsSigned, ShouldBeTrue)
+		//  ---------------- LESS LAYERS FALSE -------------------
+		image1, err = GetImageWithComponents(
+			imageSomeArch.Config,
+			[][]byte{
+				{3, 2, 2},
+				{5, 2, 5},
+			},
+		)
 
-			// remove signature
-			cosignTag := "sha256-" + indexDigest.Encoded() + ".sig"
-			resp, err = resty.R().Delete(baseURL + "/v2/" + "repo" + "/manifests/" + cosignTag)
+		image2, err = GetImageWithComponents(
+			imageAMD64.Config,
+			[][]byte{{99, 100, 102}},
+		)
+		multiImage = GetMultiarchImageForImages("index-one-arch-less-layers-false", []Image{
+			image1, image2,
+		})
+		err = UploadMultiarchImage(multiImage, baseURL, "index-one-arch-less-layers-false")
+		So(err, ShouldBeNil)
+		//  ---------------- LESS LAYERS FALSE -------------------
 
-			resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
-			So(resp, ShouldNotBeNil)
-			So(err, ShouldBeNil)
-			So(resp.StatusCode(), ShouldEqual, http.StatusOK)
+		//  ---------------- MORE LAYERS -------------------
+		image1, err = GetImageWithComponents(
+			imageSomeArch.Config,
+			[][]byte{
+				{0, 0, 2},
+				{3, 0, 2},
+			},
+		)
 
-			responseStruct = &GlobalSearchResultResp{}
-
-			err = json.Unmarshal(resp.Body(), responseStruct)
-			So(err, ShouldBeNil)
-
-			responseImages = responseStruct.GlobalSearchResult.GlobalSearch.Images
-			So(responseImages, ShouldNotBeEmpty)
-			responseImage = responseImages[0]
-
-			So(responseImage.IsSigned, ShouldBeFalse)
+		image2, err = GetImageWithComponents(
+			imageAMD64.Config,
+			[][]byte{
+				imageAMD64.Layers[0],
+				imageAMD64.Layers[1],
+				{1, 3, 55},
+			},
+		)
+		multiImage = GetMultiarchImageForImages("index-one-arch-more-layers", []Image{
+			image2,
 		})
 
-		Convey("Index base images", func() {
-			// ---------------- BASE IMAGE -------------------
-			imageAMD64, err := GetImageWithComponents(
-				ispec.Image{
-					Platform: ispec.Platform{
-						OS:           "linux",
-						Architecture: "amd64",
-					},
-				},
-				[][]byte{
-					{10, 20, 30},
-					{11, 21, 31},
-				})
-			So(err, ShouldBeNil)
+		err = UploadMultiarchImage(multiImage, baseURL, "index-one-arch-more-layers")
+		So(err, ShouldBeNil)
+		//  ---------------- MORE LAYERS -------------------
 
-			imageSomeArch, err := GetImageWithComponents(
-				ispec.Image{
-					Platform: ispec.Platform{
-						OS:           "linux",
-						Architecture: "someArch",
-					},
-				}, [][]byte{
-					{18, 28, 38},
-					{12, 22, 32},
-				})
-			So(err, ShouldBeNil)
-
-			multiImage := GetMultiarchImageForImages("latest", []Image{
-				imageAMD64,
-				imageSomeArch,
-			})
-			err = UploadMultiarchImage(multiImage, baseURL, "test-repo")
-			So(err, ShouldBeNil)
-			// ---------------- BASE IMAGE -------------------
-
-			//  ---------------- SAME LAYERS -------------------
-			image1, err := GetImageWithComponents(
-				imageSomeArch.Config,
-				[][]byte{
-					{0, 0, 2},
-				},
-			)
-
-			image2, err := GetImageWithComponents(
-				imageAMD64.Config,
-				append(imageAMD64.Layers),
-			)
-			multiImage = GetMultiarchImageForImages("index-one-arch-same-layers", []Image{
-				image1, image2,
-			})
-			//  ---------------- SAME LAYERS -------------------
-
-			//  ---------------- LESS LAYERS -------------------
-			image1, err = GetImageWithComponents(
-				imageSomeArch.Config,
-				[][]byte{
-					{3, 2, 2},
-					{5, 2, 5},
-				},
-			)
-
-			image2, err = GetImageWithComponents(
-				imageAMD64.Config,
-				[][]byte{imageAMD64.Layers[0]},
-			)
-			multiImage = GetMultiarchImageForImages("index-one-arch-less-layers", []Image{
-				image1, image2,
-			})
-			err = UploadMultiarchImage(multiImage, baseURL, "index-one-arch-less-layers")
-			So(err, ShouldBeNil)
-			//  ---------------- LESS LAYERS -------------------
-
-			//  ---------------- LESS LAYERS FALSE -------------------
-			image1, err = GetImageWithComponents(
-				imageSomeArch.Config,
-				[][]byte{
-					{3, 2, 2},
-					{5, 2, 5},
-				},
-			)
-			auxLayer := imageAMD64.Layers[0]
-			auxLayer[0] = 20
-
-			image2, err = GetImageWithComponents(
-				imageAMD64.Config,
-				[][]byte{auxLayer},
-			)
-			multiImage = GetMultiarchImageForImages("index-one-arch-less-layers-false", []Image{
-				image1, image2,
-			})
-			err = UploadMultiarchImage(multiImage, baseURL, "index-one-arch-less-layers-false")
-			So(err, ShouldBeNil)
-			//  ---------------- LESS LAYERS FALSE -------------------
-
-			//  ---------------- MORE LAYERS -------------------
-			image1, err = GetImageWithComponents(
-				imageSomeArch.Config,
-				[][]byte{
-					{0, 0, 2},
-					{3, 0, 2},
-				},
-			)
-
-			image2, err = GetImageWithComponents(
-				imageAMD64.Config,
-				append(imageAMD64.Layers, []byte{1, 3, 55}),
-			)
-			multiImage = GetMultiarchImageForImages("index-one-arch-more-layers", []Image{
-				image1, image2,
-			})
-
-			err = UploadMultiarchImage(multiImage, baseURL, "index-one-arch-more-layers")
-			So(err, ShouldBeNil)
-			//  ---------------- MORE LAYERS -------------------
-
-			query := `
-				{
-					BaseImageList(image:"test-repo:latest"){
-						Results{
-							RepoName
-							Tag
-							Manifests {
-								Digest
-								ConfigDigest
-								LastUpdated
-								IsSigned
-								Size
-							}
+		query := `
+			{
+				DerivedImageList(image:"test-repo:latest"){
+					Results{
+						RepoName
+						Tag
+						Manifests {
+							Digest
+							ConfigDigest
+							LastUpdated
 							IsSigned
 							Size
 						}
+						IsSigned
+						Size
 					}
-				}`
+				}
+			}`
 
-			resp, err := resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
-			So(resp, ShouldNotBeNil)
+		resp, err := resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
+		So(resp, ShouldNotBeNil)
 
-			So(strings.Contains(string(resp.Body()), "index-one-arch-less-layers"), ShouldBeTrue)
-			So(strings.Contains(string(resp.Body()), "index-one-arch-same-layers"), ShouldBeFalse)
-			So(strings.Contains(string(resp.Body()), "index-one-arch-less-layers-false"), ShouldBeFalse)
-			So(strings.Contains(string(resp.Body()), "index-one-arch-more-layers"), ShouldBeFalse)
-			So(strings.Contains(string(resp.Body()), "test-repo"), ShouldBeFalse)
-		})
-
-		Convey("Index derived images", func() {
-			// ---------------- BASE IMAGE -------------------
-			imageAMD64, err := GetImageWithComponents(
-				ispec.Image{
-					Platform: ispec.Platform{
-						OS:           "linux",
-						Architecture: "amd64",
-					},
-				},
-				[][]byte{
-					{10, 20, 30},
-					{11, 21, 31},
-				})
-			So(err, ShouldBeNil)
-
-			imageSomeArch, err := GetImageWithComponents(
-				ispec.Image{
-					Platform: ispec.Platform{
-						OS:           "linux",
-						Architecture: "someArch",
-					},
-				}, [][]byte{
-					{18, 28, 38},
-					{12, 22, 32},
-				})
-			So(err, ShouldBeNil)
-
-			multiImage := GetMultiarchImageForImages("latest", []Image{
-				imageAMD64,
-				imageSomeArch,
-			})
-			err = UploadMultiarchImage(multiImage, baseURL, "test-repo")
-			So(err, ShouldBeNil)
-			// ---------------- BASE IMAGE -------------------
-
-			//  ---------------- SAME LAYERS -------------------
-			image1, err := GetImageWithComponents(
-				imageSomeArch.Config,
-				[][]byte{
-					{0, 0, 2},
-				},
-			)
-
-			image2, err := GetImageWithComponents(
-				imageAMD64.Config,
-				append(imageAMD64.Layers),
-			)
-			multiImage = GetMultiarchImageForImages("index-one-arch-same-layers", []Image{
-				image1, image2,
-			})
-			//  ---------------- SAME LAYERS -------------------
-
-			//  ---------------- LESS LAYERS -------------------
-			image1, err = GetImageWithComponents(
-				imageSomeArch.Config,
-				[][]byte{
-					{3, 2, 2},
-					{5, 2, 5},
-				},
-			)
-
-			image2, err = GetImageWithComponents(
-				imageAMD64.Config,
-				[][]byte{imageAMD64.Layers[0]},
-			)
-			multiImage = GetMultiarchImageForImages("index-one-arch-less-layers", []Image{
-				image1, image2,
-			})
-			err = UploadMultiarchImage(multiImage, baseURL, "index-one-arch-less-layers")
-			So(err, ShouldBeNil)
-			//  ---------------- LESS LAYERS -------------------
-
-			//  ---------------- LESS LAYERS FALSE -------------------
-			image1, err = GetImageWithComponents(
-				imageSomeArch.Config,
-				[][]byte{
-					{3, 2, 2},
-					{5, 2, 5},
-				},
-			)
-
-			image2, err = GetImageWithComponents(
-				imageAMD64.Config,
-				[][]byte{{99, 100, 102}},
-			)
-			multiImage = GetMultiarchImageForImages("index-one-arch-less-layers-false", []Image{
-				image1, image2,
-			})
-			err = UploadMultiarchImage(multiImage, baseURL, "index-one-arch-less-layers-false")
-			So(err, ShouldBeNil)
-			//  ---------------- LESS LAYERS FALSE -------------------
-
-			//  ---------------- MORE LAYERS -------------------
-			image1, err = GetImageWithComponents(
-				imageSomeArch.Config,
-				[][]byte{
-					{0, 0, 2},
-					{3, 0, 2},
-				},
-			)
-
-			image2, err = GetImageWithComponents(
-				imageAMD64.Config,
-				[][]byte{
-					imageAMD64.Layers[0],
-					imageAMD64.Layers[1],
-					{1, 3, 55},
-				},
-			)
-			multiImage = GetMultiarchImageForImages("index-one-arch-more-layers", []Image{
-				image2,
-			})
-
-			err = UploadMultiarchImage(multiImage, baseURL, "index-one-arch-more-layers")
-			So(err, ShouldBeNil)
-			//  ---------------- MORE LAYERS -------------------
-
-			query := `
-				{
-					DerivedImageList(image:"test-repo:latest"){
-						Results{
-							RepoName
-							Tag
-							Manifests {
-								Digest
-								ConfigDigest
-								LastUpdated
-								IsSigned
-								Size
-							}
-							IsSigned
-							Size
-						}
-					}
-				}`
-
-			resp, err := resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
-			So(resp, ShouldNotBeNil)
-
-			So(strings.Contains(string(resp.Body()), "index-one-arch-less-layers"), ShouldBeFalse)
-			So(strings.Contains(string(resp.Body()), "index-one-arch-same-layers"), ShouldBeFalse)
-			So(strings.Contains(string(resp.Body()), "index-one-arch-less-layers-false"), ShouldBeFalse)
-			So(strings.Contains(string(resp.Body()), "index-one-arch-more-layers"), ShouldBeTrue)
-			So(strings.Contains(string(resp.Body()), "test-repo"), ShouldBeFalse)
-		})
+		So(strings.Contains(string(resp.Body()), "index-one-arch-less-layers"), ShouldBeFalse)
+		So(strings.Contains(string(resp.Body()), "index-one-arch-same-layers"), ShouldBeFalse)
+		So(strings.Contains(string(resp.Body()), "index-one-arch-less-layers-false"), ShouldBeFalse)
+		So(strings.Contains(string(resp.Body()), "index-one-arch-more-layers"), ShouldBeTrue)
+		So(strings.Contains(string(resp.Body()), "test-repo"), ShouldBeFalse)
 	})
 }
 

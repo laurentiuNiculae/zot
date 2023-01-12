@@ -691,8 +691,10 @@ func (bdw DBWrapper) SearchRepos(ctx context.Context, searchText string, filter 
 	err = bdw.DB.View(func(tx *bolt.Tx) error {
 		var (
 			manifestMetadataMap = make(map[string]repodb.ManifestMetadata)
+			indexDataMap        = make(map[string]repodb.IndexData)
 			repoBuck            = tx.Bucket([]byte(repodb.RepoMetadataBucket))
-			dataBuck            = tx.Bucket([]byte(repodb.ManifestDataBucket))
+			indexBuck           = tx.Bucket([]byte(repodb.IndexDataBucket))
+			manifestBuck        = tx.Bucket([]byte(repodb.ManifestDataBucket))
 		)
 
 		cursor := repoBuck.Cursor()
@@ -720,49 +722,131 @@ func (bdw DBWrapper) SearchRepos(ctx context.Context, searchText string, filter 
 					isSigned          = false
 				)
 
-				for _, descriptor := range repoMeta.Tags {
-					// TODO: manage media type index
+				for tag, descriptor := range repoMeta.Tags {
+					switch descriptor.MediaType {
+					case ispec.MediaTypeImageManifest:
+						var manifestMeta repodb.ManifestMetadata
 
-					var manifestMeta repodb.ManifestMetadata
+						manifestMeta, manifestDownloaded := manifestMetadataMap[descriptor.Digest]
 
-					manifestMeta, manifestDownloaded := manifestMetadataMap[descriptor.Digest]
+						if !manifestDownloaded {
+							manifestMetaBlob := manifestBuck.Get([]byte(descriptor.Digest))
+							if manifestMetaBlob == nil {
+								return zerr.ErrManifestMetaNotFound
+							}
 
-					if !manifestDownloaded {
-						manifestMetaBlob := dataBuck.Get([]byte(descriptor.Digest))
-						if manifestMetaBlob == nil {
+							err := json.Unmarshal(manifestMetaBlob, &manifestMeta)
+							if err != nil {
+								return errors.Wrapf(err, "repodb: error while unmarshaling manifest metadata for digest %s", descriptor.Digest)
+							}
+						}
+
+						// get fields related to filtering
+						var configContent ispec.Image
+
+						err = json.Unmarshal(manifestMeta.ConfigBlob, &configContent)
+						if err != nil {
+							return errors.Wrapf(err, "repodb: error while unmarshaling config content for digest %s", descriptor.Digest)
+						}
+
+						osSet[configContent.OS] = true
+						archSet[configContent.Architecture] = true
+
+						// get fields related to sorting
+						repoDownloads += repoMeta.Statistics[descriptor.Digest].DownloadCount
+
+						imageLastUpdated := common.GetImageLastUpdatedTimestamp(configContent)
+
+						if firstImageChecked || repoLastUpdated.Before(imageLastUpdated) {
+							repoLastUpdated = imageLastUpdated
+							firstImageChecked = false
+
+							isSigned = common.CheckIsSigned(repoMeta.Signatures[descriptor.Digest])
+						}
+
+						manifestMetadataMap[descriptor.Digest] = manifestMeta
+					case ispec.MediaTypeImageIndex:
+						var indexLastUpdated time.Time
+
+						digest := descriptor.Digest
+
+						if _, indexExists := indexDataMap[digest]; indexExists {
+							continue
+						}
+
+						indexDataBlob := indexBuck.Get([]byte(digest))
+						if indexDataBlob == nil {
 							return zerr.ErrManifestMetaNotFound
 						}
 
-						err := json.Unmarshal(manifestMetaBlob, &manifestMeta)
+						var indexData repodb.IndexData
+
+						err := json.Unmarshal(indexDataBlob, &indexData)
 						if err != nil {
-							return errors.Wrapf(err, "repodb: error while unmarshaling manifest metadata for digest %s", descriptor.Digest)
+							return errors.Wrapf(err, "repodb: error while unmashaling manifest metadata for digest %s", digest)
 						}
+
+						var indexContent ispec.Index
+
+						err = json.Unmarshal(indexData.IndexBlob, &indexContent)
+						if err != nil {
+							return errors.Wrapf(err, "repodb: error while unmashaling index content for %s:%s", repoName, tag)
+						}
+
+						for _, manifest := range indexContent.Manifests {
+							digest := manifest.Digest.String()
+
+							if _, manifestExists := manifestMetadataMap[digest]; manifestExists {
+								continue
+							}
+
+							manifestDataBlob := manifestBuck.Get([]byte(digest))
+							if manifestDataBlob == nil {
+								return zerr.ErrManifestMetaNotFound
+							}
+
+							var manifestData repodb.ManifestData
+
+							err := json.Unmarshal(manifestDataBlob, &manifestData)
+							if err != nil {
+								return errors.Wrapf(err, "repodb: error while unmashaling manifest metadata for digest %s", digest)
+							}
+
+							var configContent ispec.Image
+
+							err = json.Unmarshal(manifestData.ConfigBlob, &configContent)
+							if err != nil {
+								return errors.Wrapf(err, "repodb: error while unmashaling image config for digest %s", digest)
+							}
+
+							osSet[configContent.OS] = true
+							archSet[configContent.Architecture] = true
+
+							// get fields related to sorting
+							repoDownloads += repoMeta.Statistics[descriptor.Digest].DownloadCount
+
+							imageLastUpdated := common.GetImageLastUpdatedTimestamp(configContent)
+							if firstImageChecked || indexLastUpdated.Before(imageLastUpdated) {
+								indexLastUpdated = imageLastUpdated
+								firstImageChecked = false
+
+								isSigned = common.CheckIsSigned(repoMeta.Signatures[descriptor.Digest])
+							}
+
+							manifestMetadataMap[digest] = repodb.ManifestMetadata{
+								ManifestBlob: manifestData.ManifestBlob,
+								ConfigBlob:   manifestData.ConfigBlob,
+							}
+						}
+
+						if repoLastUpdated.Before(indexLastUpdated) {
+							repoLastUpdated = indexLastUpdated
+						}
+
+						indexDataMap[digest] = indexData
+					default:
+						bdw.Log.Error().Msg("Unsupported type")
 					}
-
-					// get fields related to filtering
-					var configContent ispec.Image
-
-					err = json.Unmarshal(manifestMeta.ConfigBlob, &configContent)
-					if err != nil {
-						return errors.Wrapf(err, "repodb: error while unmarshaling config content for digest %s", descriptor.Digest)
-					}
-
-					osSet[configContent.OS] = true
-					archSet[configContent.Architecture] = true
-
-					// get fields related to sorting
-					repoDownloads += repoMeta.Statistics[descriptor.Digest].DownloadCount
-
-					imageLastUpdated := common.GetImageLastUpdatedTimestamp(configContent)
-
-					if firstImageChecked || repoLastUpdated.Before(imageLastUpdated) {
-						repoLastUpdated = imageLastUpdated
-						firstImageChecked = false
-
-						isSigned = common.CheckIsSigned(repoMeta.Signatures[descriptor.Digest])
-					}
-
-					manifestMetadataMap[descriptor.Digest] = manifestMeta
 				}
 
 				repoFilterData := repodb.FilterData{
@@ -786,10 +870,32 @@ func (bdw DBWrapper) SearchRepos(ctx context.Context, searchText string, filter 
 
 		foundRepos, pageInfo = pageFinder.Page()
 
-		// keep just the manifestMeta we need
+		// keep just the manifestMeta and indexData we need
 		for _, repoMeta := range foundRepos {
-			for _, manifestDigest := range repoMeta.Tags {
-				foundManifestMetadataMap[manifestDigest.Digest] = manifestMetadataMap[manifestDigest.Digest]
+			for _, descriptor := range repoMeta.Tags {
+				switch descriptor.MediaType {
+				case ispec.MediaTypeImageManifest:
+					foundManifestMetadataMap[descriptor.Digest] = manifestMetadataMap[descriptor.Digest]
+				case ispec.MediaTypeImageIndex:
+					indexData := indexDataMap[descriptor.Digest]
+
+					var indexContent ispec.Index
+
+					err := json.Unmarshal(indexData.IndexBlob, &indexContent)
+					if err != nil {
+						return err
+					}
+
+					for _, manifestDescriptor := range indexContent.Manifests {
+						manifestDigest := manifestDescriptor.Digest.String()
+
+						foundManifestMetadataMap[manifestDigest] = manifestMetadataMap[manifestDigest]
+					}
+
+					indexDataMap[descriptor.Digest] = indexData
+				default:
+					bdw.Log.Error().Msg("Unsupported type")
+				}
 			}
 		}
 
@@ -804,11 +910,11 @@ func (bdw DBWrapper) FilterTags(ctx context.Context, filter repodb.FilterFunc,
 ) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexData,
 	repodb.PageInfo, error) {
 	var (
-		foundRepos               = make([]repodb.RepoMetadata, 0)
-		foundManifestMetadataMap = make(map[string]repodb.ManifestMetadata)
-		foundManifestDataMap     = make(map[string]repodb.IndexData)
-		pageFinder               repodb.PageFinder
-		pageInfo                 repodb.PageInfo
+		foundRepos          = make([]repodb.RepoMetadata, 0)
+		manifestMetadataMap = make(map[string]repodb.ManifestMetadata)
+		indexDataMap        = make(map[string]repodb.IndexData)
+		pageFinder          repodb.PageFinder
+		pageInfo            repodb.PageInfo
 	)
 
 	pageFinder, err := repodb.NewBaseImagePageFinder(requestedPage.Limit, requestedPage.Offset, requestedPage.SortBy)
@@ -819,10 +925,10 @@ func (bdw DBWrapper) FilterTags(ctx context.Context, filter repodb.FilterFunc,
 
 	err = bdw.DB.View(func(tx *bolt.Tx) error {
 		var (
-			manifestMetadataMap = make(map[string]repodb.ManifestMetadata)
-			repoBuck            = tx.Bucket([]byte(repodb.RepoMetadataBucket))
-			dataBuck            = tx.Bucket([]byte(repodb.ManifestDataBucket))
-			cursor              = repoBuck.Cursor()
+			repoBuck     = tx.Bucket([]byte(repodb.RepoMetadataBucket))
+			indexBuck    = tx.Bucket([]byte(repodb.IndexDataBucket))
+			manifestBuck = tx.Bucket([]byte(repodb.ManifestDataBucket))
+			cursor       = repoBuck.Cursor()
 		)
 
 		repoName, repoMetaBlob := cursor.First()
@@ -842,51 +948,123 @@ func (bdw DBWrapper) FilterTags(ctx context.Context, filter repodb.FilterFunc,
 			matchedTags := make(map[string]repodb.Descriptor)
 			// take all manifestMetas
 			for tag, descriptor := range repoMeta.Tags {
-				// TODO: manage media type index
-
-				manifestDigest := descriptor.Digest
 
 				matchedTags[tag] = descriptor
+				switch descriptor.MediaType {
+				case ispec.MediaTypeImageManifest:
+					manifestDigest := descriptor.Digest
 
-				// in case tags reference the same manifest we don't download from DB multiple times
-				if manifestMeta, manifestExists := manifestMetadataMap[manifestDigest]; manifestExists {
+					// in case tags reference the same manifest we don't download from DB multiple times
+					if manifestMeta, manifestExists := manifestMetadataMap[manifestDigest]; manifestExists {
+						manifestMetadataMap[manifestDigest] = manifestMeta
+
+						continue
+					}
+
+					manifestDataBlob := manifestBuck.Get([]byte(manifestDigest))
+					if manifestDataBlob == nil {
+						return zerr.ErrManifestMetaNotFound
+					}
+
+					var manifestData repodb.ManifestData
+
+					err := json.Unmarshal(manifestDataBlob, &manifestData)
+					if err != nil {
+						return errors.Wrapf(err, "repodb: error while unmashaling manifest metadata for digest %s", manifestDigest)
+					}
+
+					var configContent ispec.Image
+
+					err = json.Unmarshal(manifestData.ConfigBlob, &configContent)
+					if err != nil {
+						return errors.Wrapf(err, "repodb: error while unmashaling manifest metadata for digest %s", manifestDigest)
+					}
+
+					manifestMeta := repodb.ManifestMetadata{
+						ConfigBlob:   manifestData.ConfigBlob,
+						ManifestBlob: manifestData.ManifestBlob,
+					}
+
+					if !filter(repoMeta, manifestMeta) {
+						delete(matchedTags, tag)
+						delete(manifestMetadataMap, manifestDigest)
+
+						continue
+					}
+
 					manifestMetadataMap[manifestDigest] = manifestMeta
+				case ispec.MediaTypeImageIndex:
+					digest := descriptor.Digest
 
-					continue
+					if _, indexExists := indexDataMap[digest]; indexExists {
+						continue
+					}
+
+					indexDataBlob := indexBuck.Get([]byte(digest))
+					if indexDataBlob == nil {
+						return zerr.ErrManifestMetaNotFound
+					}
+
+					var indexData repodb.IndexData
+
+					err := json.Unmarshal(indexDataBlob, &indexData)
+					if err != nil {
+						return errors.Wrapf(err, "repodb: error while unmashaling manifest metadata for digest %s", digest)
+					}
+
+					var indexContent ispec.Index
+
+					err = json.Unmarshal(indexData.IndexBlob, &indexContent)
+					if err != nil {
+						return errors.Wrapf(err, "repodb: error while unmashaling index content for %s:%s", repoName, tag)
+					}
+
+					manifestHasBeenMatched := false
+
+					for _, manifest := range indexContent.Manifests {
+						digest := manifest.Digest.String()
+
+						if _, manifestExists := manifestMetadataMap[digest]; manifestExists {
+							continue
+						}
+
+						manifestMetaBlob := manifestBuck.Get([]byte(digest))
+						if manifestMetaBlob == nil {
+							return zerr.ErrManifestMetaNotFound
+						}
+
+						var manifestMeta repodb.ManifestMetadata
+
+						err := json.Unmarshal(manifestMetaBlob, &manifestMeta)
+						if err != nil {
+							return errors.Wrapf(err, "repodb: error while unmashaling manifest metadata for digest %s", digest)
+						}
+
+						manifestMetadataMap[digest] = manifestMeta
+
+						if filter(repoMeta, manifestMeta) {
+							manifestHasBeenMatched = true
+						}
+					}
+
+					if !manifestHasBeenMatched {
+						delete(matchedTags, tag)
+
+						for _, manifest := range indexContent.Manifests {
+							delete(manifestMetadataMap, manifest.Digest.String())
+						}
+
+						continue
+					}
+
+					indexDataMap[digest] = indexData
+				default:
+					bdw.Log.Error().Msg("Unsupported type")
 				}
+			}
 
-				manifestDataBlob := dataBuck.Get([]byte(manifestDigest))
-				if manifestDataBlob == nil {
-					return zerr.ErrManifestMetaNotFound
-				}
-
-				var manifestData repodb.ManifestData
-
-				err := json.Unmarshal(manifestDataBlob, &manifestData)
-				if err != nil {
-					return errors.Wrapf(err, "repodb: error while unmashaling manifest metadata for digest %s", manifestDigest)
-				}
-
-				var configContent ispec.Image
-
-				err = json.Unmarshal(manifestData.ConfigBlob, &configContent)
-				if err != nil {
-					return errors.Wrapf(err, "repodb: error while unmashaling manifest metadata for digest %s", manifestDigest)
-				}
-
-				manifestMeta := repodb.ManifestMetadata{
-					ConfigBlob:   manifestData.ConfigBlob,
-					ManifestBlob: manifestData.ManifestBlob,
-				}
-
-				if !filter(repoMeta, manifestMeta) {
-					delete(matchedTags, tag)
-					delete(manifestMetadataMap, manifestDigest)
-
-					continue
-				}
-
-				manifestMetadataMap[manifestDigest] = manifestMeta
+			if len(matchedTags) == 0 {
+				continue
 			}
 
 			repoMeta.Tags = matchedTags
@@ -898,27 +1076,20 @@ func (bdw DBWrapper) FilterTags(ctx context.Context, filter repodb.FilterFunc,
 
 		foundRepos, pageInfo = pageFinder.Page()
 
-		// keep just the manifestMeta we need
-		for _, repoMeta := range foundRepos {
-			for _, descriptor := range repoMeta.Tags {
-				foundManifestMetadataMap[descriptor.Digest] = manifestMetadataMap[descriptor.Digest]
-			}
-		}
-
 		return nil
 	})
 
-	return foundRepos, foundManifestMetadataMap, foundManifestDataMap, pageInfo, err
+	return foundRepos, manifestMetadataMap, indexDataMap, pageInfo, err
 }
 
 func (bdw DBWrapper) SearchTags(ctx context.Context, searchText string, filter repodb.Filter,
 	requestedPage repodb.PageInput,
 ) ([]repodb.RepoMetadata, map[string]repodb.ManifestMetadata, map[string]repodb.IndexData, repodb.PageInfo, error) {
 	var (
-		foundRepos               = make([]repodb.RepoMetadata, 0)
-		foundManifestMetadataMap = make(map[string]repodb.ManifestMetadata)
-		foundManifestDataMap     = make(map[string]repodb.IndexData)
-		pageInfo                 repodb.PageInfo
+		foundRepos          = make([]repodb.RepoMetadata, 0)
+		manifestMetadataMap = make(map[string]repodb.ManifestMetadata)
+		indexDataMap        = make(map[string]repodb.IndexData)
+		pageInfo            repodb.PageInfo
 
 		pageFinder repodb.PageFinder
 	)
@@ -938,10 +1109,10 @@ func (bdw DBWrapper) SearchTags(ctx context.Context, searchText string, filter r
 
 	err = bdw.DB.View(func(tx *bolt.Tx) error {
 		var (
-			manifestMetadataMap = make(map[string]repodb.ManifestMetadata)
-			repoBuck            = tx.Bucket([]byte(repodb.RepoMetadataBucket))
-			dataBuck            = tx.Bucket([]byte(repodb.ManifestDataBucket))
-			cursor              = repoBuck.Cursor()
+			repoBuck     = tx.Bucket([]byte(repodb.RepoMetadataBucket))
+			indexBuck    = tx.Bucket([]byte(repodb.IndexDataBucket))
+			manifestBuck = tx.Bucket([]byte(repodb.ManifestDataBucket))
+			cursor       = repoBuck.Cursor()
 		)
 
 		repoName, repoMetaBlob := cursor.Seek([]byte(searchedRepo))
@@ -962,7 +1133,6 @@ func (bdw DBWrapper) SearchTags(ctx context.Context, searchText string, filter r
 				matchedTags := make(map[string]repodb.Descriptor)
 				// take all manifestMetas
 				for tag, descriptor := range repoMeta.Tags {
-					// TODO: manage media type index
 
 					if !strings.HasPrefix(tag, searchedTag) {
 						continue
@@ -970,46 +1140,133 @@ func (bdw DBWrapper) SearchTags(ctx context.Context, searchText string, filter r
 
 					matchedTags[tag] = descriptor
 
-					// in case tags reference the same manifest we don't download from DB multiple times
-					if manifestMeta, manifestExists := manifestMetadataMap[descriptor.Digest]; manifestExists {
+					switch descriptor.MediaType {
+					case ispec.MediaTypeImageManifest:
+						// in case tags reference the same manifest we don't download from DB multiple times
+						if manifestMeta, manifestExists := manifestMetadataMap[descriptor.Digest]; manifestExists {
+							manifestMetadataMap[descriptor.Digest] = manifestMeta
+
+							continue
+						}
+
+						manifestMetaBlob := manifestBuck.Get([]byte(descriptor.Digest))
+						if manifestMetaBlob == nil {
+							return zerr.ErrManifestMetaNotFound
+						}
+
+						var manifestMeta repodb.ManifestMetadata
+
+						err := json.Unmarshal(manifestMetaBlob, &manifestMeta)
+						if err != nil {
+							return errors.Wrapf(err, "repodb: error while unmashaling manifest metadata for digest %s", descriptor.Digest)
+						}
+
+						var configContent ispec.Image
+
+						err = json.Unmarshal(manifestMeta.ConfigBlob, &configContent)
+						if err != nil {
+							return errors.Wrapf(err, "repodb: error while unmashaling manifest metadata for digest %s", descriptor.Digest)
+						}
+
+						imageFilterData := repodb.FilterData{
+							OsList:   []string{configContent.OS},
+							ArchList: []string{configContent.Architecture},
+							IsSigned: false,
+						}
+
+						if !common.AcceptedByFilter(filter, imageFilterData) {
+							delete(matchedTags, tag)
+							delete(manifestMetadataMap, descriptor.Digest)
+
+							continue
+						}
+
 						manifestMetadataMap[descriptor.Digest] = manifestMeta
+					case ispec.MediaTypeImageIndex:
+						digest := descriptor.Digest
 
-						continue
+						if _, indexExists := indexDataMap[digest]; indexExists {
+							continue
+						}
+
+						indexDataBlob := indexBuck.Get([]byte(digest))
+						if indexDataBlob == nil {
+							return zerr.ErrManifestMetaNotFound
+						}
+
+						var indexData repodb.IndexData
+
+						err := json.Unmarshal(indexDataBlob, &indexData)
+						if err != nil {
+							return errors.Wrapf(err, "repodb: error while unmashaling manifest metadata for digest %s", digest)
+						}
+
+						var indexContent ispec.Index
+
+						err = json.Unmarshal(indexData.IndexBlob, &indexContent)
+						if err != nil {
+							return errors.Wrapf(err, "repodb: error while unmashaling index content for %s:%s", repoName, tag)
+						}
+
+						manifestHasBeenMatched := false
+
+						for _, manifest := range indexContent.Manifests {
+							digest := manifest.Digest.String()
+
+							if _, manifestExists := manifestMetadataMap[digest]; manifestExists {
+								continue
+							}
+
+							manifestDataBlob := manifestBuck.Get([]byte(digest))
+							if manifestDataBlob == nil {
+								return zerr.ErrManifestMetaNotFound
+							}
+
+							var manifestData repodb.ManifestData
+
+							err := json.Unmarshal(manifestDataBlob, &manifestData)
+							if err != nil {
+								return errors.Wrapf(err, "repodb: error while unmashaling manifest metadata for digest %s", digest)
+							}
+
+							var configContent ispec.Image
+
+							err = json.Unmarshal(manifestData.ConfigBlob, &configContent)
+							if err != nil {
+								return errors.Wrapf(err, "repodb: error while unmashaling manifest metadata for digest %s", descriptor.Digest)
+							}
+
+							imageFilterData := repodb.FilterData{
+								OsList:   []string{configContent.OS},
+								ArchList: []string{configContent.Architecture},
+								IsSigned: false,
+							}
+
+							manifestMetadataMap[digest] = repodb.ManifestMetadata{
+								ManifestBlob: manifestData.ManifestBlob,
+								ConfigBlob:   manifestData.ConfigBlob,
+							}
+
+							if common.AcceptedByFilter(filter, imageFilterData) {
+								manifestHasBeenMatched = true
+							}
+						}
+
+						if !manifestHasBeenMatched {
+							delete(matchedTags, tag)
+
+							for _, manifest := range indexContent.Manifests {
+								delete(manifestMetadataMap, manifest.Digest.String())
+							}
+
+							continue
+						}
+
+						indexDataMap[digest] = indexData
+					default:
+						bdw.Log.Error().Msg("Unsupported type")
 					}
 
-					manifestMetaBlob := dataBuck.Get([]byte(descriptor.Digest))
-					if manifestMetaBlob == nil {
-						return zerr.ErrManifestMetaNotFound
-					}
-
-					var manifestMeta repodb.ManifestMetadata
-
-					err := json.Unmarshal(manifestMetaBlob, &manifestMeta)
-					if err != nil {
-						return errors.Wrapf(err, "repodb: error while unmashaling manifest metadata for digest %s", descriptor.Digest)
-					}
-
-					var configContent ispec.Image
-
-					err = json.Unmarshal(manifestMeta.ConfigBlob, &configContent)
-					if err != nil {
-						return errors.Wrapf(err, "repodb: error while unmashaling manifest metadata for digest %s", descriptor.Digest)
-					}
-
-					imageFilterData := repodb.FilterData{
-						OsList:   []string{configContent.OS},
-						ArchList: []string{configContent.Architecture},
-						IsSigned: false,
-					}
-
-					if !common.AcceptedByFilter(filter, imageFilterData) {
-						delete(matchedTags, tag)
-						delete(manifestMetadataMap, descriptor.Digest)
-
-						continue
-					}
-
-					manifestMetadataMap[descriptor.Digest] = manifestMeta
 				}
 
 				if len(matchedTags) == 0 {
@@ -1026,17 +1283,10 @@ func (bdw DBWrapper) SearchTags(ctx context.Context, searchText string, filter r
 
 		foundRepos, pageInfo = pageFinder.Page()
 
-		// keep just the manifestMeta we need
-		for _, repoMeta := range foundRepos {
-			for _, descriptor := range repoMeta.Tags {
-				foundManifestMetadataMap[descriptor.Digest] = manifestMetadataMap[descriptor.Digest]
-			}
-		}
-
 		return nil
 	})
 
-	return foundRepos, foundManifestMetadataMap, foundManifestDataMap, pageInfo, err
+	return foundRepos, manifestMetadataMap, indexDataMap, pageInfo, err
 }
 
 func (bdw *DBWrapper) PatchDB() error {
