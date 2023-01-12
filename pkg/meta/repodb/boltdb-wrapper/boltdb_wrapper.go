@@ -531,7 +531,7 @@ func (bdw DBWrapper) IncrementImageDownloads(repo string, reference string) erro
 			return err
 		}
 
-		manifestDigest := reference
+		descriptorDigest := reference
 
 		if !common.ReferenceIsDigest(reference) {
 			// search digest for tag
@@ -541,12 +541,12 @@ func (bdw DBWrapper) IncrementImageDownloads(repo string, reference string) erro
 				return zerr.ErrManifestMetaNotFound
 			}
 
-			manifestDigest = descriptor.Digest
+			descriptorDigest = descriptor.Digest
 		}
 
-		manifestStatistics := repoMeta.Statistics[manifestDigest]
+		manifestStatistics := repoMeta.Statistics[descriptorDigest]
 		manifestStatistics.DownloadCount++
-		repoMeta.Statistics[manifestDigest] = manifestStatistics
+		repoMeta.Statistics[descriptorDigest] = manifestStatistics
 
 		repoMetaBlob, err = json.Marshal(repoMeta)
 		if err != nil {

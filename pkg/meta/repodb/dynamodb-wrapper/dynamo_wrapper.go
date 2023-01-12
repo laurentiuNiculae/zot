@@ -437,7 +437,7 @@ func (dwr DBWrapper) IncrementImageDownloads(repo string, reference string) erro
 		return err
 	}
 
-	manifestDigest := reference
+	descriptorDigest := reference
 
 	if !common.ReferenceIsDigest(reference) {
 		// search digest for tag
@@ -447,19 +447,14 @@ func (dwr DBWrapper) IncrementImageDownloads(repo string, reference string) erro
 			return zerr.ErrManifestMetaNotFound
 		}
 
-		manifestDigest = descriptor.Digest
+		descriptorDigest = descriptor.Digest
 	}
 
-	manifestMeta, err := dwr.GetManifestMeta(repo, godigest.Digest(manifestDigest))
-	if err != nil {
-		return err
-	}
+	manifestStatistics := repoMeta.Statistics[descriptorDigest]
+	manifestStatistics.DownloadCount++
+	repoMeta.Statistics[descriptorDigest] = manifestStatistics
 
-	manifestMeta.DownloadCount++
-
-	err = dwr.SetManifestMeta(repo, godigest.Digest(manifestDigest), manifestMeta)
-
-	return err
+	return dwr.setRepoMeta(repo, repoMeta)
 }
 
 func (dwr DBWrapper) AddManifestSignature(repo string, signedManifestDigest godigest.Digest,
