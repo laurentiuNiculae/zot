@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/opencontainers/go-digest"
+	godigest "github.com/opencontainers/go-digest"
 	"github.com/opencontainers/image-spec/specs-go"
 	ispec "github.com/opencontainers/image-spec/specs-go/v1"
 	. "github.com/smartystreets/goconvey/convey"
@@ -23,6 +24,7 @@ import (
 	dynamo "zotregistry.io/zot/pkg/meta/repodb/dynamodb-wrapper"
 	dynamoParams "zotregistry.io/zot/pkg/meta/repodb/dynamodb-wrapper/params"
 	localCtx "zotregistry.io/zot/pkg/requestcontext"
+	"zotregistry.io/zot/pkg/test"
 )
 
 const (
@@ -1277,6 +1279,21 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 				repodb.PageInput{SortBy: repodb.AlphabeticAsc})
 			So(err, ShouldBeNil)
 			So(len(repos), ShouldEqual, 0)
+		})
+
+		Convey("Test index logic", func() {
+			multiArch, err := test.GetRandomMultiarchImage("tag1")
+			So(err, ShouldBeNil)
+
+			err = repoDB.SetIndexData(multiArch.Digest(), multiArch.IndexData())
+			So(err, ShouldBeNil)
+
+			result, err := repoDB.GetIndexData(multiArch.Digest())
+			So(err, ShouldBeNil)
+			So(result, ShouldResemble, multiArch.IndexData())
+
+			_, err = repoDB.GetIndexData(godigest.FromString("inexistent"))
+			So(err, ShouldNotBeNil)
 		})
 	})
 }

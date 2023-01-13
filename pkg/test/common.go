@@ -28,6 +28,7 @@ import (
 	"github.com/sigstore/cosign/cmd/cosign/cli/sign"
 	"gopkg.in/resty.v1"
 
+	"zotregistry.io/zot/pkg/meta/repodb"
 	"zotregistry.io/zot/pkg/storage"
 )
 
@@ -77,6 +78,17 @@ type MultiarchImage struct {
 	Index     ispec.Index
 	Images    []Image
 	Reference string
+
+	digest    godigest.Digest
+	indexData repodb.IndexData
+}
+
+func (mi *MultiarchImage) Digest() godigest.Digest {
+	return mi.digest
+}
+
+func (mi *MultiarchImage) IndexData() repodb.IndexData {
+	return mi.indexData
 }
 
 func GetFreePort() string {
@@ -1093,8 +1105,20 @@ func GetRandomMultiarchImageComponents() (ispec.Index, []Image, error) {
 
 func GetRandomMultiarchImage(reference string) (MultiarchImage, error) {
 	index, images, err := GetRandomMultiarchImageComponents()
+	if err != nil {
+		return MultiarchImage{}, err
+	}
 
-	return MultiarchImage{Index: index, Images: images, Reference: reference}, err
+	indexBlob, err := json.Marshal(index)
+	if err != nil {
+		return MultiarchImage{}, err
+	}
+
+	return MultiarchImage{Index: index, Images: images, Reference: reference,
+		digest: godigest.FromBytes(indexBlob),
+		indexData: repodb.IndexData{
+			IndexBlob: indexBlob,
+		}}, err
 }
 
 func GetMultiarchImageForImages(reference string, images []Image) MultiarchImage {
