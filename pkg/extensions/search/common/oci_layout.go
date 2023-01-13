@@ -227,8 +227,16 @@ func (olu BaseOciLayoutUtils) GetImageTagsWithTimestamp(repo string) ([]TagInfo,
 
 			timeStamp := GetImageLastUpdated(imageInfo)
 
-			tagsInfo = append(tagsInfo, TagInfo{Name: val, Timestamp: timeStamp,
-				Descriptor: Descriptor{Digest: digest, MediaType: manifest.MediaType}})
+			tagsInfo = append(tagsInfo,
+				TagInfo{
+					Name:      val,
+					Timestamp: timeStamp,
+					Descriptor: Descriptor{
+						Digest:    digest,
+						MediaType: manifest.MediaType,
+					},
+				},
+			)
 		}
 	}
 

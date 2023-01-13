@@ -137,13 +137,13 @@ func getImageListForDigest(ctx context.Context, digest string, repoDB repodb.Rep
 	}
 
 	// get all repos
-	reposMeta, manifestMetaMap, indexMetaMap, _, err := repoDB.FilterTags(ctx, FilterByDigest(digest), pageInput)
+	reposMeta, manifestMetaMap, indexDataMap, _, err := repoDB.FilterTags(ctx, FilterByDigest(digest), pageInput)
 	if err != nil {
 		return []*gql_generated.ImageSummary{}, err
 	}
 
 	for _, repoMeta := range reposMeta {
-		imageSummaries := convert.RepoMeta2ImageSummaries(ctx, repoMeta, manifestMetaMap, indexMetaMap,
+		imageSummaries := convert.RepoMeta2ImageSummaries(ctx, repoMeta, manifestMetaMap, indexDataMap,
 			skip, cveInfo)
 
 		imageList = append(imageList, imageSummaries...)
@@ -175,7 +175,7 @@ func getImageSummary(ctx context.Context, repo, tag string, repoDB repodb.RepoDB
 
 	var (
 		manifestMetaMap = map[string]repodb.ManifestMetadata{}
-		indexMetaMap    = map[string]repodb.IndexData{}
+		indexDataMap    = map[string]repodb.IndexData{}
 	)
 
 	switch manifestDescriptor.MediaType {
@@ -191,16 +191,16 @@ func getImageSummary(ctx context.Context, repo, tag string, repoDB repodb.RepoDB
 	case ispec.MediaTypeImageIndex:
 		indexDigest := manifestDescriptor.Digest
 
-		indexMeta, err := repoDB.GetIndexData(godigest.Digest(indexDigest))
+		indexData, err := repoDB.GetIndexData(godigest.Digest(indexDigest))
 		if err != nil {
 			return nil, err
 		}
 
-		indexMetaMap[indexDigest] = indexMeta
+		indexDataMap[indexDigest] = indexData
 
 		var indexContent ispec.Index
 
-		err = json.Unmarshal(indexMeta.IndexBlob, &indexContent)
+		err = json.Unmarshal(indexData.IndexBlob, &indexContent)
 		if err != nil {
 			return nil, err
 		}
@@ -223,7 +223,7 @@ func getImageSummary(ctx context.Context, repo, tag string, repoDB repodb.RepoDB
 	skip := convert.SkipQGLField{
 		Vulnerabilities: canSkipField(convert.GetPreloads(ctx), "Vulnerabilities"),
 	}
-	imageSummaries := convert.RepoMeta2ImageSummaries(ctx, repoMeta, manifestMetaMap, indexMetaMap, skip, cveInfo)
+	imageSummaries := convert.RepoMeta2ImageSummaries(ctx, repoMeta, manifestMetaMap, indexDataMap, skip, cveInfo)
 
 	return imageSummaries[0], nil
 }
@@ -372,13 +372,13 @@ func getImageListForCVE(
 	}
 
 	// get all repos
-	reposMeta, manifestMetaMap, indexMetaMap, _, err := repoDB.FilterTags(ctx, FilterByTagInfo(affectedImages), pageInput)
+	reposMeta, manifestMetaMap, indexDataMap, _, err := repoDB.FilterTags(ctx, FilterByTagInfo(affectedImages), pageInput)
 	if err != nil {
 		return []*gql_generated.ImageSummary{}, err
 	}
 
 	for _, repoMeta := range reposMeta {
-		imageSummaries := convert.RepoMeta2ImageSummaries(ctx, repoMeta, manifestMetaMap, indexMetaMap, skip, cveInfo)
+		imageSummaries := convert.RepoMeta2ImageSummaries(ctx, repoMeta, manifestMetaMap, indexDataMap, skip, cveInfo)
 
 		imageList = append(imageList, imageSummaries...)
 	}
@@ -424,7 +424,7 @@ func getImageListWithCVEFixed(
 	}
 
 	// get all repos
-	reposMeta, manifestMetaMap, indexMetaMap, _, err := repoDB.FilterTags(ctx, FilterByTagInfo(tagsInfo), pageInput)
+	reposMeta, manifestMetaMap, indexDataMap, _, err := repoDB.FilterTags(ctx, FilterByTagInfo(tagsInfo), pageInput)
 	if err != nil {
 		return []*gql_generated.ImageSummary{}, err
 	}
@@ -434,7 +434,7 @@ func getImageListWithCVEFixed(
 			continue
 		}
 
-		imageSummaries := convert.RepoMeta2ImageSummaries(ctx, repoMeta, manifestMetaMap, indexMetaMap, skip, cveInfo)
+		imageSummaries := convert.RepoMeta2ImageSummaries(ctx, repoMeta, manifestMetaMap, indexDataMap, skip, cveInfo)
 		imageList = append(imageList, imageSummaries...)
 	}
 
@@ -467,13 +467,13 @@ func repoListWithNewestImage(
 		),
 	}
 
-	reposMeta, manifestMetaMap, indexMetaMap, pageInfo, err := repoDB.SearchRepos(ctx, "", repodb.Filter{}, pageInput)
+	reposMeta, manifestMetaMap, indexDataMap, pageInfo, err := repoDB.SearchRepos(ctx, "", repodb.Filter{}, pageInput)
 	if err != nil {
 		return &gql_generated.PaginatedReposResult{}, err
 	}
 
 	for _, repoMeta := range reposMeta {
-		repoSummary := convert.RepoMeta2RepoSummary(ctx, repoMeta, manifestMetaMap, indexMetaMap,
+		repoSummary := convert.RepoMeta2RepoSummary(ctx, repoMeta, manifestMetaMap, indexDataMap,
 			skip, cveInfo)
 		repos = append(repos, repoSummary)
 	}
@@ -523,13 +523,13 @@ func globalSearch(ctx context.Context, query string, repoDB repodb.RepoDB, filte
 			),
 		}
 
-		reposMeta, manifestMetaMap, indexMetaMap, pageInfo, err := repoDB.SearchRepos(ctx, query, localFilter, pageInput)
+		reposMeta, manifestMetaMap, indexDataMap, pageInfo, err := repoDB.SearchRepos(ctx, query, localFilter, pageInput)
 		if err != nil {
 			return &gql_generated.PaginatedReposResult{}, []*gql_generated.ImageSummary{}, []*gql_generated.LayerSummary{}, err
 		}
 
 		for _, repoMeta := range reposMeta {
-			repoSummary := convert.RepoMeta2RepoSummary(ctx, repoMeta, manifestMetaMap, indexMetaMap,
+			repoSummary := convert.RepoMeta2RepoSummary(ctx, repoMeta, manifestMetaMap, indexDataMap,
 				skip, cveInfo)
 
 			repos = append(repos, repoSummary)
@@ -554,13 +554,13 @@ func globalSearch(ctx context.Context, query string, repoDB repodb.RepoDB, filte
 			),
 		}
 
-		reposMeta, manifestMetaMap, indexMetaMap, pageInfo, err := repoDB.SearchTags(ctx, query, localFilter, pageInput)
+		reposMeta, manifestMetaMap, indexDataMap, pageInfo, err := repoDB.SearchTags(ctx, query, localFilter, pageInput)
 		if err != nil {
 			return &gql_generated.PaginatedReposResult{}, []*gql_generated.ImageSummary{}, []*gql_generated.LayerSummary{}, err
 		}
 
 		for _, repoMeta := range reposMeta {
-			imageSummaries := convert.RepoMeta2ImageSummaries(ctx, repoMeta, manifestMetaMap, indexMetaMap, skip, cveInfo)
+			imageSummaries := convert.RepoMeta2ImageSummaries(ctx, repoMeta, manifestMetaMap, indexDataMap, skip, cveInfo)
 
 			images = append(images, imageSummaries...)
 		}
@@ -617,7 +617,7 @@ func derivedImageList(ctx context.Context, image string, repoDB repodb.RepoDB,
 	}
 
 	// we need all available tags
-	reposMeta, manifestMetaMap, indexMetaMap, pageInfo, err := repoDB.FilterTags(ctx,
+	reposMeta, manifestMetaMap, indexDataMap, pageInfo, err := repoDB.FilterTags(ctx,
 		filterDerivedImages(searchedImage),
 		pageInput)
 	if err != nil {
@@ -625,7 +625,7 @@ func derivedImageList(ctx context.Context, image string, repoDB repodb.RepoDB,
 	}
 
 	for _, repoMeta := range reposMeta {
-		summary := convert.RepoMeta2ImageSummaries(ctx, repoMeta, manifestMetaMap, indexMetaMap, skip, cveInfo)
+		summary := convert.RepoMeta2ImageSummaries(ctx, repoMeta, manifestMetaMap, indexDataMap, skip, cveInfo)
 		derivedList = append(derivedList, summary...)
 	}
 
@@ -732,7 +732,7 @@ func baseImageList(ctx context.Context, image string, repoDB repodb.RepoDB,
 	}
 
 	// we need all available tags
-	reposMeta, manifestMetaMap, indexMetaMap, pageInfo, err := repoDB.FilterTags(ctx,
+	reposMeta, manifestMetaMap, indexDataMap, pageInfo, err := repoDB.FilterTags(ctx,
 		filterBaseImages(searchedImage),
 		pageInput)
 	if err != nil {
@@ -740,7 +740,7 @@ func baseImageList(ctx context.Context, image string, repoDB repodb.RepoDB,
 	}
 
 	for _, repoMeta := range reposMeta {
-		summary := convert.RepoMeta2ImageSummaries(ctx, repoMeta, manifestMetaMap, indexMetaMap, skip, cveInfo)
+		summary := convert.RepoMeta2ImageSummaries(ctx, repoMeta, manifestMetaMap, indexDataMap, skip, cveInfo)
 		imageSummaries = append(imageSummaries, summary...)
 	}
 
@@ -949,7 +949,7 @@ func expandedRepoInfo(ctx context.Context, repo string, repoDB repodb.RepoDB, cv
 
 	var (
 		manifestMetaMap = map[string]repodb.ManifestMetadata{}
-		indexMetaMap    = map[string]repodb.IndexData{}
+		indexDataMap    = map[string]repodb.IndexData{}
 	)
 
 	for tag, descriptor := range repoMeta.Tags {
@@ -973,11 +973,11 @@ func expandedRepoInfo(ctx context.Context, repo string, repoDB repodb.RepoDB, cv
 		case ispec.MediaTypeImageIndex:
 			digest := descriptor.Digest
 
-			if _, alreadyDownloaded := indexMetaMap[digest]; alreadyDownloaded {
+			if _, alreadyDownloaded := indexDataMap[digest]; alreadyDownloaded {
 				continue
 			}
 
-			indexMeta, err := repoDB.GetIndexData(godigest.Digest(digest))
+			indexData, err := repoDB.GetIndexData(godigest.Digest(digest))
 			if err != nil {
 				graphql.AddError(ctx, errors.Wrapf(err,
 					"resolver: failed to get manifest meta for image %s:%s with manifest digest %s", repo, tag, digest))
@@ -985,17 +985,16 @@ func expandedRepoInfo(ctx context.Context, repo string, repoDB repodb.RepoDB, cv
 				continue
 			}
 
-			indexMetaMap[digest] = indexMeta
+			indexDataMap[digest] = indexData
 		default:
 		}
-
 	}
 
 	skip := convert.SkipQGLField{
 		Vulnerabilities: canSkipField(convert.GetPreloads(ctx), "Summary.NewestImage.Vulnerabilities"),
 	}
 
-	repoSummary, imageSummaries := convert.RepoMeta2ExpandedRepoInfo(ctx, repoMeta, manifestMetaMap, indexMetaMap,
+	repoSummary, imageSummaries := convert.RepoMeta2ExpandedRepoInfo(ctx, repoMeta, manifestMetaMap, indexDataMap,
 		skip, cveInfo)
 
 	dateSortedImages := make(timeSlice, 0, len(imageSummaries))
@@ -1056,7 +1055,7 @@ func getImageList(ctx context.Context, repo string, repoDB repodb.RepoDB, cveInf
 	}
 
 	// reposMeta, manifestMetaMap, err := repoDB.SearchRepos(ctx, repo, repodb.Filter{}, pageInput)
-	reposMeta, manifestMetaMap, indexMetaMap, _, err := repoDB.FilterTags(ctx,
+	reposMeta, manifestMetaMap, indexDataMap, _, err := repoDB.FilterTags(ctx,
 		func(repoMeta repodb.RepoMetadata, manifestMeta repodb.ManifestMetadata) bool {
 			return true
 		},
@@ -1069,7 +1068,7 @@ func getImageList(ctx context.Context, repo string, repoDB repodb.RepoDB, cveInf
 		if repoMeta.Name != repo && repo != "" {
 			continue
 		}
-		imageSummaries := convert.RepoMeta2ImageSummaries(ctx, repoMeta, manifestMetaMap, indexMetaMap, skip, cveInfo)
+		imageSummaries := convert.RepoMeta2ImageSummaries(ctx, repoMeta, manifestMetaMap, indexDataMap, skip, cveInfo)
 
 		imageList = append(imageList, imageSummaries...)
 	}

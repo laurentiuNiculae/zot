@@ -255,9 +255,8 @@ func (dwr DBWrapper) GetRepoStars(repo string) (int, error) {
 	return repoMeta.Stars, nil
 }
 
-func (dwr DBWrapper) SetIndexData(indexDigest godigest.Digest, indexMetadata repodb.IndexData) error {
-
-	indexAttributeValue, err := attributevalue.Marshal(indexMetadata)
+func (dwr DBWrapper) SetIndexData(indexDigest godigest.Digest, indexData repodb.IndexData) error {
+	indexAttributeValue, err := attributevalue.Marshal(indexData)
 	if err != nil {
 		return err
 	}
@@ -642,6 +641,7 @@ func (dwr DBWrapper) SearchRepos(ctx context.Context, searchText string, filter 
 			for _, descriptor := range repoMeta.Tags {
 				switch descriptor.MediaType {
 				case ispec.MediaTypeImageManifest:
+					manifestFilterInfo := dwr.collectImageManifestFilterInfo(repoMeta, descriptor.Digest, manifestMetadataMap)
 					var manifestMeta repodb.ManifestMetadata
 
 					manifestMeta, manifestDownloaded := manifestMetadataMap[descriptor.Digest]
@@ -690,7 +690,7 @@ func (dwr DBWrapper) SearchRepos(ctx context.Context, searchText string, filter 
 						continue
 					}
 
-					indexData, err := dwr.GetIndexData(godigest.Digest(indexDigest))
+					indexData, err := dwr.GetIndexData(godigest.Digest(indexDigest)) //nolint:contextcheck
 					if err != nil {
 						return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, map[string]repodb.IndexData{},
 							pageInfo,
@@ -713,12 +713,11 @@ func (dwr DBWrapper) SearchRepos(ctx context.Context, searchText string, filter 
 							continue
 						}
 
-						manifestData, err := dwr.GetManifestData(manifest.Digest)
+						manifestData, err := dwr.GetManifestData(manifest.Digest) //nolint:contextcheck
 						if err != nil {
 							return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, map[string]repodb.IndexData{},
 								pageInfo,
 								errors.Wrapf(err, "repodb: error while getting manifest data for digest %s", manifestDigest)
-
 						}
 
 						var configContent ispec.Image
@@ -797,7 +796,6 @@ func (dwr DBWrapper) SearchRepos(ctx context.Context, searchText string, filter 
 					return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, map[string]repodb.IndexData{},
 						pageInfo,
 						errors.Wrapf(err, "repodb: error while getting manifest data for digest %s", descriptor.Digest)
-
 				}
 
 				for _, manifestDescriptor := range indexContent.Manifests {
@@ -814,6 +812,30 @@ func (dwr DBWrapper) SearchRepos(ctx context.Context, searchText string, filter 
 	}
 
 	return foundRepos, foundManifestMetadataMap, indexDataMap, pageInfo, err
+}
+
+func (dwr DBWrapper) collectImageManifestFilterInfo(manifestDigest string,
+	manifestMetadataMap map[string]repodb.ManifestMetadata,
+) (repodb.FilterData, error) {
+	var manifestMeta repodb.ManifestMetadata
+
+	manifestMeta, manifestDownloaded := manifestMetadataMap[manifestDigest]
+
+	if !manifestDownloaded {
+		var err error
+
+		manifestMeta, err = dwr.GetManifestMeta(repoMeta.Name, godigest.Digest(descriptor.Digest)) //nolint:contextcheck
+		if err != nil {
+			return repodb.FilterData{},
+				errors.Wrapf(err, "repodb: error while unmarshaling manifest metadata for digest %s", descriptor.Digest)
+		}
+	}
+
+	return
+}
+
+func (dwr DBWrapper) collectImageIndexFilterInfo() repodb.FilterData {
+
 }
 
 func (dwr DBWrapper) FilterTags(ctx context.Context, filter repodb.FilterFunc,
@@ -904,7 +926,7 @@ func (dwr DBWrapper) FilterTags(ctx context.Context, filter repodb.FilterFunc,
 					continue
 				}
 
-				indexData, err := dwr.GetIndexData(godigest.Digest(indexDigest))
+				indexData, err := dwr.GetIndexData(godigest.Digest(indexDigest)) //nolint:contextcheck
 				if err != nil {
 					return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, map[string]repodb.IndexData{},
 						pageInfo,
@@ -929,7 +951,7 @@ func (dwr DBWrapper) FilterTags(ctx context.Context, filter repodb.FilterFunc,
 						continue
 					}
 
-					manifestData, err := dwr.GetManifestData(manifest.Digest)
+					manifestData, err := dwr.GetManifestData(manifest.Digest) //nolint:contextcheck
 					if err != nil {
 						return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, map[string]repodb.IndexData{},
 							pageInfo,
@@ -1084,7 +1106,7 @@ func (dwr DBWrapper) SearchTags(ctx context.Context, searchText string, filter r
 						continue
 					}
 
-					indexData, err := dwr.GetIndexData(godigest.Digest(indexDigest))
+					indexData, err := dwr.GetIndexData(godigest.Digest(indexDigest)) //nolint:contextcheck
 					if err != nil {
 						return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, map[string]repodb.IndexData{},
 							pageInfo,
@@ -1109,11 +1131,11 @@ func (dwr DBWrapper) SearchTags(ctx context.Context, searchText string, filter r
 							continue
 						}
 
-						manifestData, err := dwr.GetManifestData(manifest.Digest)
+						manifestData, err := dwr.GetManifestData(manifest.Digest) //nolint:contextcheck
 						if err != nil {
 							return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, map[string]repodb.IndexData{},
 								pageInfo,
-								errors.Wrapf(err, "repodb: error while geting manifest data for digest %s", manifestDigest)
+								errors.Wrapf(err, "repodb: error while getting manifest data for digest %s", manifestDigest)
 						}
 
 						var configContent ispec.Image

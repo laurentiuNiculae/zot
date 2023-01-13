@@ -116,9 +116,8 @@ func (cveinfo BaseCveInfo) GetImageListForCVE(repo, cveID string) ([]common.TagI
 			}
 		case ispec.MediaTypeImageIndex:
 		default:
-			// TODO:
+			cveinfo.Log.Error().Msg("type not supported")
 		}
-
 	}
 
 	return imgList, nil

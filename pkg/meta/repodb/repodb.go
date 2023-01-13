@@ -2,6 +2,7 @@ package repodb
 
 import (
 	"context"
+	"time"
 
 	godigest "github.com/opencontainers/go-digest"
 )
@@ -60,10 +61,10 @@ type RepoDB interface { //nolint:interfacebloat
 	// GetManifestMeta sets ManifestMetadata for a given manifest in the database
 	SetManifestMeta(repo string, manifestDigest godigest.Digest, mm ManifestMetadata) error
 
-	// SetIndexData sets IndexMetadata for a given index in the database
-	SetIndexData(digest godigest.Digest, indexMetadata IndexData) error
+	// SetIndexData sets indexData for a given index in the database
+	SetIndexData(digest godigest.Digest, indexData IndexData) error
 
-	// GetIndexData returns IndexMetadata for a given Index from the database
+	// GetIndexData returns indexData for a given Index from the database
 	GetIndexData(indexDigest godigest.Digest) (IndexData, error)
 
 	// IncrementManifestDownloads adds 1 to the download count of a manifest
@@ -174,7 +175,9 @@ type Filter struct {
 }
 
 type FilterData struct {
-	OsList   []string
-	ArchList []string
-	IsSigned bool
+	DownloadCount int
+	LastUpdated   time.Time
+	OsList        []string
+	ArchList      []string
+	IsSigned      bool
 }

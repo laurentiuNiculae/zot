@@ -212,7 +212,8 @@ func (sdm RepoDBMock) SearchRepos(ctx context.Context, searchText string, filter
 		return sdm.SearchReposFn(ctx, searchText, filter, requestedPage)
 	}
 
-	return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, map[string]repodb.IndexData{}, repodb.PageInfo{}, nil
+	return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{},
+		map[string]repodb.IndexData{}, repodb.PageInfo{}, nil
 }
 
 func (sdm RepoDBMock) SearchTags(ctx context.Context, searchText string, filter repodb.Filter,
@@ -222,7 +223,8 @@ func (sdm RepoDBMock) SearchTags(ctx context.Context, searchText string, filter 
 		return sdm.SearchTagsFn(ctx, searchText, filter, requestedPage)
 	}
 
-	return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, map[string]repodb.IndexData{}, repodb.PageInfo{}, nil
+	return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{},
+		map[string]repodb.IndexData{}, repodb.PageInfo{}, nil
 }
 
 func (sdm RepoDBMock) FilterTags(ctx context.Context, filter repodb.FilterFunc,
@@ -232,7 +234,8 @@ func (sdm RepoDBMock) FilterTags(ctx context.Context, filter repodb.FilterFunc,
 		return sdm.FilterTagsFn(ctx, filter, requestedPage)
 	}
 
-	return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, map[string]repodb.IndexData{}, repodb.PageInfo{}, nil
+	return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{},
+		map[string]repodb.IndexData{}, repodb.PageInfo{}, nil
 }
 
 func (sdm RepoDBMock) SearchDigests(ctx context.Context, searchText string, requestedPage repodb.PageInput,
@@ -272,9 +275,9 @@ func (sdm RepoDBMock) SearchForDescendantImages(ctx context.Context, searchText 
 	return []repodb.RepoMetadata{}, map[string]repodb.ManifestMetadata{}, nil
 }
 
-func (sdm RepoDBMock) SetIndexData(digest godigest.Digest, indexMetadata repodb.IndexData) error {
+func (sdm RepoDBMock) SetIndexData(digest godigest.Digest, indexData repodb.IndexData) error {
 	if sdm.SetIndexDataFn != nil {
-		return sdm.SetIndexDataFn(digest, indexMetadata)
+		return sdm.SetIndexDataFn(digest, indexData)
 	}
 
 	return nil

@@ -24,7 +24,7 @@ type SkipQGLField struct {
 }
 
 func RepoMeta2RepoSummary(ctx context.Context, repoMeta repodb.RepoMetadata,
-	manifestMetaMap map[string]repodb.ManifestMetadata, indexMetaMap map[string]repodb.IndexData,
+	manifestMetaMap map[string]repodb.ManifestMetadata, indexDataMap map[string]repodb.IndexData,
 	skip SkipQGLField, cveInfo cveinfo.CveInfo,
 ) *gql_generated.RepoSummary {
 	var (
@@ -47,9 +47,8 @@ func RepoMeta2RepoSummary(ctx context.Context, repoMeta repodb.RepoMetadata,
 	)
 
 	for tag, descriptor := range repoMeta.Tags {
-		// TODO: Descriptor2ImageSummary(descriptor) ImageSummary
 		imageSummary, imageBlobsMap, err := Descriptor2ImageSummary(ctx, descriptor, repoMeta.Name, tag, true, repoMeta,
-			manifestMetaMap, indexMetaMap, cveInfo)
+			manifestMetaMap, indexDataMap, cveInfo)
 		if err != nil {
 			continue
 		}
@@ -145,40 +144,47 @@ func RepoMeta2RepoSummary(ctx context.Context, repoMeta repodb.RepoMetadata,
 
 func Descriptor2ImageSummary(ctx context.Context, descriptor repodb.Descriptor, repo, tag string, skipCVE bool,
 	repoMeta repodb.RepoMetadata, manifestMetaMap map[string]repodb.ManifestMetadata,
-	indexMetaMap map[string]repodb.IndexData, cveInfo cveinfo.CveInfo,
+	indexDataMap map[string]repodb.IndexData, cveInfo cveinfo.CveInfo,
 ) (*gql_generated.ImageSummary, map[string]int64, error) {
 	switch descriptor.MediaType {
 	case ispec.MediaTypeImageManifest:
 		return ImageManifest2ImageSummary(ctx, repo, tag, godigest.Digest(descriptor.Digest), skipCVE,
 			repoMeta, manifestMetaMap[descriptor.Digest], cveInfo)
 	case ispec.MediaTypeImageIndex:
-		// TODO: Add INDEX META somehow
 		return ImageIndex2ImageSummary(ctx, repo, tag, godigest.Digest(descriptor.Digest), skipCVE,
-			repoMeta, indexMetaMap[descriptor.Digest], manifestMetaMap, cveInfo)
+			repoMeta, indexDataMap[descriptor.Digest], manifestMetaMap, cveInfo)
 	default:
 		return &gql_generated.ImageSummary{}, map[string]int64{}, nil
 	}
 }
 
+const (
+	none = iota
+	low
+	medium
+	high
+	critical
+)
+
 func severityValue(severity string) int {
 	sevMap := map[string]int{
-		"NONE":     0,
-		"LOW":      1,
-		"MEDIUM":   2,
-		"HIGH":     3,
-		"CRITICAL": 4,
+		"NONE":     none,
+		"LOW":      low,
+		"MEDIUM":   medium,
+		"HIGH":     high,
+		"CRITICAL": critical,
 	}
 
 	return sevMap[severity]
 }
 
 func ImageIndex2ImageSummary(ctx context.Context, repo, tag string, indexDigest godigest.Digest, skipCVE bool,
-	repoMeta repodb.RepoMetadata, indexMeta repodb.IndexData, manifestMetaMap map[string]repodb.ManifestMetadata,
+	repoMeta repodb.RepoMetadata, indexData repodb.IndexData, manifestMetaMap map[string]repodb.ManifestMetadata,
 	cveInfo cveinfo.CveInfo,
 ) (*gql_generated.ImageSummary, map[string]int64, error) {
 	var indexContent ispec.Index
 
-	err := json.Unmarshal(indexMeta.IndexBlob, &indexContent)
+	err := json.Unmarshal(indexData.IndexBlob, &indexContent)
 	if err != nil {
 		return &gql_generated.ImageSummary{}, map[string]int64{}, err
 	}
@@ -488,15 +494,14 @@ func getImageBlobsInfo(manifestDigest string, manifestSize int64, configDigest s
 }
 
 func RepoMeta2ImageSummaries(ctx context.Context, repoMeta repodb.RepoMetadata,
-	manifestMetaMap map[string]repodb.ManifestMetadata, indexMetaMap map[string]repodb.IndexData,
+	manifestMetaMap map[string]repodb.ManifestMetadata, indexDataMap map[string]repodb.IndexData,
 	skip SkipQGLField, cveInfo cveinfo.CveInfo,
 ) []*gql_generated.ImageSummary {
 	imageSummaries := make([]*gql_generated.ImageSummary, 0, len(repoMeta.Tags))
 
 	for tag, descriptor := range repoMeta.Tags {
 		imageSummary, _, err := Descriptor2ImageSummary(ctx, descriptor, repoMeta.Name, tag, skip.Vulnerabilities,
-			repoMeta, manifestMetaMap, indexMetaMap, cveInfo)
-
+			repoMeta, manifestMetaMap, indexDataMap, cveInfo)
 		if err != nil {
 			continue
 		}
@@ -508,7 +513,7 @@ func RepoMeta2ImageSummaries(ctx context.Context, repoMeta repodb.RepoMetadata,
 }
 
 func RepoMeta2ExpandedRepoInfo(ctx context.Context, repoMeta repodb.RepoMetadata,
-	manifestMetaMap map[string]repodb.ManifestMetadata, indexMetaMap map[string]repodb.IndexData,
+	manifestMetaMap map[string]repodb.ManifestMetadata, indexDataMap map[string]repodb.IndexData,
 	skip SkipQGLField, cveInfo cveinfo.CveInfo,
 ) (*gql_generated.RepoSummary, []*gql_generated.ImageSummary) {
 	var (
@@ -533,9 +538,8 @@ func RepoMeta2ExpandedRepoInfo(ctx context.Context, repoMeta repodb.RepoMetadata
 	)
 
 	for tag, descriptor := range repoMeta.Tags {
-
 		imageSummary, imageBlobs, err := Descriptor2ImageSummary(ctx, descriptor, repoName, tag, true,
-			repoMeta, manifestMetaMap, indexMetaMap, cveInfo)
+			repoMeta, manifestMetaMap, indexDataMap, cveInfo)
 		if err != nil {
 			// TODO: handle error
 			continue
@@ -588,12 +592,10 @@ func RepoMeta2ExpandedRepoInfo(ctx context.Context, repoMeta repodb.RepoMetadata
 		vendor := vendor
 		repoVendors = append(repoVendors, &vendor)
 	}
-
 	// We only scan the latest image on the repo for performance reasons
 	// Check if vulnerability scanning is disabled
 	if cveInfo != nil && lastUpdatedImageSummary != nil && !skip.Vulnerabilities {
 		// TODO: check if trivy can scan multi-arch images
-
 		imageName := fmt.Sprintf("%s:%s", repoMeta.Name, *lastUpdatedImageSummary.Tag)
 
 		imageCveSummary, err := cveInfo.GetCVESummaryForImage(imageName)

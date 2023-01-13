@@ -630,9 +630,11 @@ func GetImageWithLayers(layers [][]byte) (Image, error) {
 		})
 	}
 
+	const schemaVersion = 2
+
 	manifest := ispec.Manifest{
 		Versioned: specs.Versioned{
-			SchemaVersion: 2,
+			SchemaVersion: schemaVersion,
 		},
 		Config: ispec.Descriptor{
 			MediaType: "application/vnd.oci.image.config.v1+json",
@@ -665,9 +667,11 @@ func GetImageWithComponents(config ispec.Image, layers [][]byte) (Image, error) 
 		})
 	}
 
+	const schemaVersion = 2
+
 	manifest := ispec.Manifest{
 		Versioned: specs.Versioned{
-			SchemaVersion: 2,
+			SchemaVersion: schemaVersion,
 		},
 		Config: ispec.Descriptor{
 			MediaType: "application/vnd.oci.image.config.v1+json",
@@ -960,8 +964,10 @@ func SignImageUsingCosign(repoTag, port string) error {
 
 	imageURL := fmt.Sprintf("localhost:%s/%s", port, repoTag)
 
+	const timeoutPeriod = 5
+
 	// sign the image
-	return sign.SignCmd(&options.RootOptions{Verbose: true, Timeout: 5 * time.Minute},
+	return sign.SignCmd(&options.RootOptions{Verbose: true, Timeout: timeoutPeriod * time.Minute},
 		options.KeyOpts{KeyRef: path.Join(tdir, "cosign.key"), PassFunc: generate.GetPass},
 		options.RegistryOptions{AllowInsecure: true},
 		map[string]interface{}{"tag": "1.0"},
@@ -1010,7 +1016,9 @@ func SignImageUsingNotary(repoTag, port string) error {
 }
 
 func GetRandomMultiarchImageComponents() (ispec.Index, []Image, error) {
-	randomLayer1 := make([]byte, 100)
+	const layerSize = 100
+
+	randomLayer1 := make([]byte, layerSize)
 
 	_, err := rand.Read(randomLayer1)
 	if err != nil {
@@ -1027,13 +1035,13 @@ func GetRandomMultiarchImageComponents() (ispec.Index, []Image, error) {
 		[][]byte{
 			randomLayer1,
 		})
-
-	image1.Reference = getManifestDigest(image1.Manifest).String()
 	if err != nil {
 		return ispec.Index{}, []Image{}, err
 	}
 
-	randomLayer2 := make([]byte, 100)
+	image1.Reference = getManifestDigest(image1.Manifest).String()
+
+	randomLayer2 := make([]byte, layerSize)
 
 	_, err = rand.Read(randomLayer2)
 	if err != nil {
@@ -1050,13 +1058,13 @@ func GetRandomMultiarchImageComponents() (ispec.Index, []Image, error) {
 		[][]byte{
 			randomLayer2,
 		})
-
-	image2.Reference = getManifestDigest(image2.Manifest).String()
 	if err != nil {
 		return ispec.Index{}, []Image{}, err
 	}
 
-	randomLayer3 := make([]byte, 100)
+	image2.Reference = getManifestDigest(image2.Manifest).String()
+
+	randomLayer3 := make([]byte, layerSize)
 
 	_, err = rand.Read(randomLayer3)
 	if err != nil {
@@ -1073,11 +1081,11 @@ func GetRandomMultiarchImageComponents() (ispec.Index, []Image, error) {
 		[][]byte{
 			randomLayer3,
 		})
-
-	image3.Reference = getManifestDigest(image3.Manifest).String()
 	if err != nil {
 		return ispec.Index{}, []Image{}, err
 	}
+
+	image3.Reference = getManifestDigest(image3.Manifest).String()
 
 	index := ispec.Index{
 		MediaType: ispec.MediaTypeImageIndex,
@@ -1114,11 +1122,13 @@ func GetRandomMultiarchImage(reference string) (MultiarchImage, error) {
 		return MultiarchImage{}, err
 	}
 
-	return MultiarchImage{Index: index, Images: images, Reference: reference,
+	return MultiarchImage{
+		Index: index, Images: images, Reference: reference,
 		digest: godigest.FromBytes(indexBlob),
 		indexData: repodb.IndexData{
 			IndexBlob: indexBlob,
-		}}, err
+		},
+	}, err
 }
 
 func GetMultiarchImageForImages(reference string, images []Image) MultiarchImage {
@@ -1131,7 +1141,7 @@ func GetMultiarchImageForImages(reference string, images []Image) MultiarchImage
 			Size:      getManifestSize(image.Manifest),
 		})
 
-		// update the refference with the digest of the manifest
+		// update the reference with the digest of the manifest
 		images[i].Reference = getManifestDigest(image.Manifest).String()
 	}
 
@@ -1153,13 +1163,19 @@ func AddImageToMultiarchImage(multiImage MultiarchImage, image Image) MultiarchI
 }
 
 func getManifestSize(manifest ispec.Manifest) int64 {
-	manifestBlob, _ := json.Marshal(manifest)
+	manifestBlob, err := json.Marshal(manifest)
+	if err != nil {
+		return 0
+	}
 
 	return int64(len(manifestBlob))
 }
 
 func getManifestDigest(manifest ispec.Manifest) godigest.Digest {
-	manifestBlob, _ := json.Marshal(manifest)
+	manifestBlob, err := json.Marshal(manifest)
+	if err != nil {
+		return ""
+	}
 
 	return godigest.FromBytes(manifestBlob)
 }

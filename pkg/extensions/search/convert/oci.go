@@ -10,7 +10,6 @@ import (
 	"zotregistry.io/zot/pkg/extensions/search/common"
 	"zotregistry.io/zot/pkg/extensions/search/gql_generated"
 	"zotregistry.io/zot/pkg/log"
-	"zotregistry.io/zot/pkg/meta/repodb"
 )
 
 func BuildImageInfo(repo string, tag string, manifestDigest godigest.Digest,
@@ -283,15 +282,4 @@ func getAllHistory(manifestContent ispec.Manifest, configContent ispec.Image) (
 	}
 
 	return allHistory, nil
-}
-
-func imageHasSignatures(signatures repodb.ManifestSignatures) bool {
-	// (sigType, signatures)
-	for _, sigs := range signatures {
-		if len(sigs) > 0 {
-			return true
-		}
-	}
-
-	return false
 }

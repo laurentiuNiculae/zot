@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/opencontainers/go-digest"
 	godigest "github.com/opencontainers/go-digest"
 	"github.com/opencontainers/image-spec/specs-go"
 	ispec "github.com/opencontainers/image-spec/specs-go/v1"
@@ -106,7 +105,7 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 			configBlob, manifestBlob, err := generateTestImage()
 			So(err, ShouldBeNil)
 
-			manifestDigest := digest.FromBytes(manifestBlob)
+			manifestDigest := godigest.FromBytes(manifestBlob)
 
 			err = repoDB.SetManifestData(manifestDigest, repodb.ManifestData{
 				ManifestBlob: manifestBlob,
@@ -131,10 +130,10 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 				repo1           = "repo1"
 				repo2           = "repo2"
 				tag1            = "0.0.1"
-				manifestDigest1 = digest.FromString("fake-manifest1")
+				manifestDigest1 = godigest.FromString("fake-manifest1")
 
 				tag2            = "0.0.2"
-				manifestDigest2 = digest.FromString("fake-manifes2")
+				manifestDigest2 = godigest.FromString("fake-manifes2")
 			)
 
 			Convey("Setting a good repo", func() {
@@ -195,11 +194,11 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 			var (
 				repo1           = "repo1"
 				tag1            = "0.0.1"
-				manifestDigest1 = digest.FromString("fake-manifest1")
+				manifestDigest1 = godigest.FromString("fake-manifest1")
 
 				repo2           = "repo2"
 				tag2            = "0.0.2"
-				manifestDigest2 = digest.FromString("fake-manifest2")
+				manifestDigest2 = godigest.FromString("fake-manifest2")
 
 				InexistentRepo = "InexistentRepo"
 			)
@@ -231,9 +230,9 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 			var (
 				repo            = "repo1"
 				tag1            = "0.0.1"
-				manifestDigest1 = digest.FromString("fake-manifest1")
+				manifestDigest1 = godigest.FromString("fake-manifest1")
 				tag2            = "0.0.2"
-				manifestDigest2 = digest.FromString("fake-manifest2")
+				manifestDigest2 = godigest.FromString("fake-manifest2")
 			)
 
 			err := repoDB.SetRepoTag(repo, tag1, manifestDigest1, ispec.MediaTypeImageManifest)
@@ -296,9 +295,9 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 				repo1           = "repo1"
 				repo2           = "repo2"
 				tag1            = "0.0.1"
-				manifestDigest1 = digest.FromString("fake-manifest1")
+				manifestDigest1 = godigest.FromString("fake-manifest1")
 				tag2            = "0.0.2"
-				manifestDigest2 = digest.FromString("fake-manifest2")
+				manifestDigest2 = godigest.FromString("fake-manifest2")
 			)
 
 			err := repoDB.SetRepoTag(repo1, tag1, manifestDigest1, ispec.MediaTypeImageManifest)
@@ -353,7 +352,7 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 			var (
 				repo1           = "repo1"
 				tag1            = "0.0.1"
-				manifestDigest1 = digest.FromString("fake-manifest1")
+				manifestDigest1 = godigest.FromString("fake-manifest1")
 			)
 
 			err := repoDB.SetRepoTag(repo1, tag1, manifestDigest1, ispec.MediaTypeImageManifest)
@@ -385,7 +384,7 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 			var (
 				repo1           = "repo1"
 				tag1            = "0.0.1"
-				manifestDigest1 = digest.FromString("fake-manifest1")
+				manifestDigest1 = godigest.FromString("fake-manifest1")
 			)
 
 			err := repoDB.SetRepoTag(repo1, tag1, manifestDigest1, ispec.MediaTypeImageManifest)
@@ -420,7 +419,7 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 			var (
 				repo1           = "repo1"
 				tag1            = "0.0.1"
-				manifestDigest1 = digest.FromString("fake-manifest1")
+				manifestDigest1 = godigest.FromString("fake-manifest1")
 			)
 
 			err := repoDB.SetRepoTag(repo1, tag1, manifestDigest1, ispec.MediaTypeImageManifest)
@@ -455,7 +454,7 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 			configBlob, manifestBlob, err := generateTestImage()
 			So(err, ShouldBeNil)
 
-			manifestDigest := digest.FromBytes(manifestBlob)
+			manifestDigest := godigest.FromBytes(manifestBlob)
 
 			err = repoDB.SetRepoTag(repo1, tag1, manifestDigest, ispec.MediaTypeImageManifest)
 			So(err, ShouldBeNil)
@@ -490,7 +489,7 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 			var (
 				repo1           = "repo1"
 				tag1            = "0.0.1"
-				manifestDigest1 = digest.FromString("fake-manifest1")
+				manifestDigest1 = godigest.FromString("fake-manifest1")
 			)
 
 			err := repoDB.SetRepoTag(repo1, tag1, manifestDigest1, ispec.MediaTypeImageManifest)
@@ -518,7 +517,7 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 			var (
 				repo1           = "repo1"
 				tag1            = "0.0.1"
-				manifestDigest1 = digest.FromString("fake-manifest1")
+				manifestDigest1 = godigest.FromString("fake-manifest1")
 			)
 
 			err := repoDB.SetRepoTag(repo1, tag1, manifestDigest1, ispec.MediaTypeImageManifest)
@@ -561,11 +560,11 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 				repo2           = "repo2"
 				repo3           = "repo3"
 				tag1            = "0.0.1"
-				manifestDigest1 = digest.FromString("fake-manifest1")
+				manifestDigest1 = godigest.FromString("fake-manifest1")
 				tag2            = "0.0.2"
-				manifestDigest2 = digest.FromString("fake-manifest2")
+				manifestDigest2 = godigest.FromString("fake-manifest2")
 				tag3            = "0.0.3"
-				manifestDigest3 = digest.FromString("fake-manifest3")
+				manifestDigest3 = godigest.FromString("fake-manifest3")
 				ctx             = context.Background()
 				emptyManifest   ispec.Manifest
 				emptyConfig     ispec.Manifest
@@ -626,7 +625,8 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 				err = repoDB.SetRepoTag(repo1, tag2, manifestDigest2, ispec.MediaTypeImageManifest)
 				So(err, ShouldBeNil)
 
-				repos, manifesMetaMap, _, _, err := repoDB.SearchRepos(ctx, "RepoThatDoesntExist", repodb.Filter{}, repodb.PageInput{})
+				repos, manifesMetaMap, _, _, err := repoDB.SearchRepos(ctx, "RepoThatDoesntExist", repodb.Filter{},
+					repodb.PageInput{})
 				So(err, ShouldBeNil)
 				So(len(repos), ShouldEqual, 0)
 				So(len(manifesMetaMap), ShouldEqual, 0)
@@ -714,7 +714,7 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 				repoNameBuilder := strings.Builder{}
 
 				for _, i := range rand.Perm(reposCount) {
-					manifestDigest := digest.FromString("fakeManifest" + strconv.Itoa(i))
+					manifestDigest := godigest.FromString("fakeManifest" + strconv.Itoa(i))
 					timeString := fmt.Sprintf("1%02d0-01-01 04:35", i)
 					createdTime, err := time.Parse("2006-01-02 15:04", timeString)
 					So(err, ShouldBeNil)
@@ -867,9 +867,9 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 			var (
 				repo1           = "repo1"
 				repo2           = "repo2"
-				manifestDigest1 = digest.FromString("fake-manifest1")
-				manifestDigest2 = digest.FromString("fake-manifest2")
-				manifestDigest3 = digest.FromString("fake-manifest3")
+				manifestDigest1 = godigest.FromString("fake-manifest1")
+				manifestDigest2 = godigest.FromString("fake-manifest2")
+				manifestDigest3 = godigest.FromString("fake-manifest3")
 				ctx             = context.Background()
 				emptyManifest   ispec.Manifest
 				emptyConfig     ispec.Manifest
@@ -959,7 +959,7 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 					repo2           = "repo2"
 					repo3           = "repo3"
 					tag1            = "0.0.1"
-					manifestDigest1 = digest.FromString("fake-manifest1")
+					manifestDigest1 = godigest.FromString("fake-manifest1")
 					tag2            = "0.0.2"
 					tag3            = "0.0.3"
 				)
@@ -1015,7 +1015,7 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 			var (
 				repo1           = "repo1"
 				tag1            = "0.0.1"
-				manifestDigest1 = digest.FromString("fake-manifest1")
+				manifestDigest1 = godigest.FromString("fake-manifest1")
 				tag2            = "0.0.2"
 				tag3            = "0.0.3"
 				tag4            = "0.0.4"
@@ -1090,9 +1090,9 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 				repo4           = "repo4"
 				tag1            = "0.0.1"
 				tag2            = "0.0.2"
-				manifestDigest1 = digest.FromString("fake-manifest1")
-				manifestDigest2 = digest.FromString("fake-manifest2")
-				manifestDigest3 = digest.FromString("fake-manifest3")
+				manifestDigest1 = godigest.FromString("fake-manifest1")
+				manifestDigest2 = godigest.FromString("fake-manifest2")
+				manifestDigest3 = godigest.FromString("fake-manifest3")
 			)
 
 			err := repoDB.SetRepoTag(repo1, tag1, manifestDigest1, ispec.MediaTypeImageManifest)
@@ -1149,7 +1149,8 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 				Os: []*string{&opSys},
 			}
 
-			repos, _, _, _, err := repoDB.SearchRepos(context.TODO(), "", filter, repodb.PageInput{SortBy: repodb.AlphabeticAsc})
+			repos, _, _, _, err := repoDB.SearchRepos(context.TODO(), "", filter,
+				repodb.PageInput{SortBy: repodb.AlphabeticAsc})
 			So(err, ShouldBeNil)
 			So(len(repos), ShouldEqual, 2)
 			So(repos[0].Name, ShouldResemble, "repo1")
@@ -1159,7 +1160,8 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 			filter = repodb.Filter{
 				Os: []*string{&opSys},
 			}
-			repos, _, _, _, err = repoDB.SearchRepos(context.TODO(), "repo", filter, repodb.PageInput{SortBy: repodb.AlphabeticAsc})
+			repos, _, _, _, err = repoDB.SearchRepos(context.TODO(), "repo", filter,
+				repodb.PageInput{SortBy: repodb.AlphabeticAsc})
 			So(err, ShouldBeNil)
 			So(len(repos), ShouldEqual, 2)
 			So(repos[0].Name, ShouldResemble, "repo1")
@@ -1169,7 +1171,8 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 			filter = repodb.Filter{
 				Os: []*string{&opSys},
 			}
-			repos, _, _, _, err = repoDB.SearchRepos(context.TODO(), "repo", filter, repodb.PageInput{SortBy: repodb.AlphabeticAsc})
+			repos, _, _, _, err = repoDB.SearchRepos(context.TODO(), "repo", filter,
+				repodb.PageInput{SortBy: repodb.AlphabeticAsc})
 			So(err, ShouldBeNil)
 			So(len(repos), ShouldEqual, 0)
 
@@ -1179,7 +1182,8 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 				Os:   []*string{&opSys},
 				Arch: []*string{&arch},
 			}
-			repos, _, _, _, err = repoDB.SearchRepos(context.TODO(), "repo", filter, repodb.PageInput{SortBy: repodb.AlphabeticAsc})
+			repos, _, _, _, err = repoDB.SearchRepos(context.TODO(), "repo", filter,
+				repodb.PageInput{SortBy: repodb.AlphabeticAsc})
 			So(err, ShouldBeNil)
 			So(len(repos), ShouldEqual, 2)
 			So(repos[0].Name, ShouldResemble, "repo1")
@@ -1191,7 +1195,8 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 				Os:   []*string{&opSys},
 				Arch: []*string{&arch},
 			}
-			repos, _, _, _, err = repoDB.SearchRepos(context.TODO(), "repo", filter, repodb.PageInput{SortBy: repodb.AlphabeticAsc})
+			repos, _, _, _, err = repoDB.SearchRepos(context.TODO(), "repo", filter,
+				repodb.PageInput{SortBy: repodb.AlphabeticAsc})
 			So(err, ShouldBeNil)
 			So(len(repos), ShouldEqual, 1)
 		})
@@ -1204,9 +1209,9 @@ func RunRepoDBTests(repoDB repodb.RepoDB, preparationFuncs ...func() error) {
 				repo4           = "repo4"
 				tag1            = "0.0.1"
 				tag2            = "0.0.2"
-				manifestDigest1 = digest.FromString("fake-manifest1")
-				manifestDigest2 = digest.FromString("fake-manifest2")
-				manifestDigest3 = digest.FromString("fake-manifest3")
+				manifestDigest1 = godigest.FromString("fake-manifest1")
+				manifestDigest2 = godigest.FromString("fake-manifest2")
+				manifestDigest3 = godigest.FromString("fake-manifest3")
 			)
 
 			err := repoDB.SetRepoTag(repo1, tag1, manifestDigest1, ispec.MediaTypeImageManifest)
@@ -1330,11 +1335,11 @@ func TestRelevanceSorting(t *testing.T) {
 				repo3           = "notalpine"
 				repo4           = "unmached/repo"
 				tag1            = "0.0.1"
-				manifestDigest1 = digest.FromString("fake-manifest1")
+				manifestDigest1 = godigest.FromString("fake-manifest1")
 				tag2            = "0.0.2"
-				manifestDigest2 = digest.FromString("fake-manifest2")
+				manifestDigest2 = godigest.FromString("fake-manifest2")
 				tag3            = "0.0.3"
-				manifestDigest3 = digest.FromString("fake-manifest3")
+				manifestDigest3 = godigest.FromString("fake-manifest3")
 				ctx             = context.Background()
 				emptyManifest   ispec.Manifest
 				emptyConfig     ispec.Manifest
@@ -1397,7 +1402,7 @@ func generateTestImage() ([]byte, []byte, error) {
 		},
 		RootFS: ispec.RootFS{
 			Type:    "layers",
-			DiffIDs: []digest.Digest{},
+			DiffIDs: []godigest.Digest{},
 		},
 		Author: "ZotUser",
 	}
@@ -1407,7 +1412,7 @@ func generateTestImage() ([]byte, []byte, error) {
 		return []byte{}, []byte{}, err
 	}
 
-	configDigest := digest.FromBytes(configBlob)
+	configDigest := godigest.FromBytes(configBlob)
 
 	layers := [][]byte{
 		make([]byte, 100),
@@ -1434,7 +1439,7 @@ func generateTestImage() ([]byte, []byte, error) {
 		Layers: []ispec.Descriptor{
 			{
 				MediaType: "application/vnd.oci.image.layer.v1.tar",
-				Digest:    digest.FromBytes(layers[0]),
+				Digest:    godigest.FromBytes(layers[0]),
 				Size:      int64(len(layers[0])),
 			},
 		},

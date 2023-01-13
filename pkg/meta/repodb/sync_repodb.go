@@ -251,19 +251,17 @@ func NewManifestData(repoName string, manifestBlob []byte, storeController stora
 	return manifestData, nil
 }
 
-func NewIndexMeta(repoName string, indexBlob []byte, storeController storage.StoreController,
+func NewIndexData(repoName string, indexBlob []byte, storeController storage.StoreController,
 ) (IndexData, error) {
-	var (
-		indexMeta IndexData
-	)
+	indexData := IndexData{}
 
-	indexMeta.IndexBlob = indexBlob
+	indexData.IndexBlob = indexBlob
 
-	return indexMeta, nil
+	return indexData, nil
 }
 
 // SetMetadataFromInput tries to set manifest metadata and update repo metadata by adding the current tag
-// (in case the reference is a tag). The function expects image manifests and indexes (multi arch images)
+// (in case the reference is a tag). The function expects image manifests and indexes (multi arch images).
 func SetMetadataFromInput(repo, reference, mediaType string, digest godigest.Digest, manifestBlob []byte,
 	storeController storage.StoreController, repoDB RepoDB, log log.Logger,
 ) error {
@@ -281,12 +279,12 @@ func SetMetadataFromInput(repo, reference, mediaType string, digest godigest.Dig
 			return err
 		}
 	case ispec.MediaTypeImageIndex:
-		indexMetadata, err := NewIndexMeta(repo, manifestBlob, storeController)
+		indexData, err := NewIndexData(repo, manifestBlob, storeController)
 		if err != nil {
 			return err
 		}
 
-		err = repoDB.SetIndexData(digest, indexMetadata)
+		err = repoDB.SetIndexData(digest, indexData)
 		if err != nil {
 			log.Error().Err(err).Msg("repodb: error while putting index meta")
 

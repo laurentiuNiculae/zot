@@ -43,9 +43,12 @@ func TestOnUpdateManifest(t *testing.T) {
 		config, layers, manifest, err := test.GetRandomImageComponents(100)
 		So(err, ShouldBeNil)
 
-		err = test.WriteImageToFileSystem(test.Image{Config: config, Manifest: manifest, Layers: layers,
-			Reference: "tag1"},
-			"repo", storeController)
+		err = test.WriteImageToFileSystem(
+			test.Image{
+				Config: config, Manifest: manifest, Layers: layers, Reference: "tag1",
+			},
+			"repo",
+			storeController)
 		So(err, ShouldBeNil)
 
 		manifestBlob, err := json.Marshal(manifest)
