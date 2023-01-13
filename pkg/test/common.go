@@ -949,7 +949,7 @@ func SignImageUsingCosign(repoTag, port string) error {
 	imageURL := fmt.Sprintf("localhost:%s/%s", port, repoTag)
 
 	// sign the image
-	return sign.SignCmd(&options.RootOptions{Verbose: true, Timeout: 1 * time.Minute},
+	return sign.SignCmd(&options.RootOptions{Verbose: true, Timeout: 5 * time.Minute},
 		options.KeyOpts{KeyRef: path.Join(tdir, "cosign.key"), PassFunc: generate.GetPass},
 		options.RegistryOptions{AllowInsecure: true},
 		map[string]interface{}{"tag": "1.0"},
