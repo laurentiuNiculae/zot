@@ -3,7 +3,7 @@ module zotregistry.io/zot
 go 1.20
 
 require (
-	github.com/99designs/gqlgen v0.17.31
+	github.com/99designs/gqlgen v0.17.34
 	github.com/Masterminds/semver v1.5.0
 	github.com/apex/log v1.9.0
 	github.com/aquasecurity/trivy-db v0.0.0-20230515061101-378ab9ed302c
@@ -162,7 +162,7 @@ require (
 	github.com/skeema/knownhosts v1.1.1 // indirect
 	github.com/spdx/tools-golang v0.5.0 // indirect
 	github.com/tetratelabs/wazero v1.2.0 // indirect
-	github.com/urfave/cli/v2 v2.25.0 // indirect
+	github.com/urfave/cli/v2 v2.25.5 // indirect
 	github.com/vbauerster/mpb/v8 v8.3.0 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect
@@ -366,7 +366,7 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/masahiro331/go-mvn-version v0.0.0-20210429150710-d3157d602a08 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.17 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/miekg/pkcs11 v1.1.1 // indirect
@@ -458,7 +458,7 @@ require (
 	golang.org/x/term v0.9.0 // indirect
 	golang.org/x/text v0.10.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.8.0 // indirect
+	golang.org/x/tools v0.9.3 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.122.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
