@@ -237,8 +237,8 @@ func TestSignature(t *testing.T) {
 		err = os.Chdir(currentDir)
 		So(err, ShouldBeNil)
 
-		port := test.GetFreePort()
-		url := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		url := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		defaultVal := true
@@ -313,8 +313,8 @@ func TestSignature(t *testing.T) {
 		err = os.Chdir(currentDir)
 		So(err, ShouldBeNil)
 
-		port := test.GetFreePort()
-		url := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		url := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		defaultVal := true
@@ -364,8 +364,8 @@ func TestSignature(t *testing.T) {
 
 //nolint:dupl
 func TestDerivedImageList(t *testing.T) {
-	port := test.GetFreePort()
-	url := test.GetBaseURL(port)
+	port := testc.GetFreePort()
+	url := testc.GetBaseURL(port)
 	conf := config.New()
 	conf.HTTP.Port = port
 	defaultVal := true
@@ -423,8 +423,8 @@ func TestDerivedImageList(t *testing.T) {
 
 //nolint:dupl
 func TestBaseImageList(t *testing.T) {
-	port := test.GetFreePort()
-	url := test.GetBaseURL(port)
+	port := testc.GetFreePort()
+	url := testc.GetBaseURL(port)
 	conf := config.New()
 	conf.HTTP.Port = port
 	defaultVal := true
@@ -734,8 +734,8 @@ func TestOutputFormat(t *testing.T) {
 
 func TestOutputFormatGQL(t *testing.T) {
 	Convey("Test from real server", t, func() {
-		port := test.GetFreePort()
-		url := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		url := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		defaultVal := true
@@ -900,8 +900,8 @@ func TestOutputFormatGQL(t *testing.T) {
 
 func TestServerResponseGQL(t *testing.T) {
 	Convey("Test from real server", t, func() {
-		port := test.GetFreePort()
-		url := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		url := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		defaultVal := true
@@ -1118,8 +1118,8 @@ func TestServerResponseGQL(t *testing.T) {
 }
 
 func TestServerResponse(t *testing.T) {
-	port := test.GetFreePort()
-	url := test.GetBaseURL(port)
+	port := testc.GetFreePort()
+	url := testc.GetBaseURL(port)
 	conf := config.New()
 	conf.HTTP.Port = port
 	defaultVal := true
@@ -1227,14 +1227,14 @@ func TestServerResponse(t *testing.T) {
 
 func TestServerResponseGQLWithoutPermissions(t *testing.T) {
 	Convey("Test accessing a blobs folder without having permissions fails fast", t, func() {
-		port := test.GetFreePort()
+		port := testc.GetFreePort()
 		conf := config.New()
 		conf.HTTP.Port = port
 
 		dir := t.TempDir()
 
 		srcStorageCtlr := test.GetDefaultStoreController(dir, zlog.NewLogger("debug", ""))
-		err := test.WriteImageToFileSystem(CreateDefaultImage(), "zot-test", "0.0.1", srcStorageCtlr)
+		err := WriteImageToFileSystem(CreateDefaultImage(), "zot-test", "0.0.1", srcStorageCtlr)
 		So(err, ShouldBeNil)
 
 		err = os.Chmod(path.Join(dir, "zot-test", "blobs"), 0o000)
@@ -1267,8 +1267,8 @@ func TestServerResponseGQLWithoutPermissions(t *testing.T) {
 
 func TestDisplayIndex(t *testing.T) {
 	Convey("Init Basic Server, No GQL", t, func() {
-		port := test.GetFreePort()
-		baseURL := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 
@@ -1360,8 +1360,8 @@ func runDisplayIndexTests(baseURL string) {
 
 func TestImagesSortFlag(t *testing.T) {
 	rootDir := t.TempDir()
-	port := test.GetFreePort()
-	baseURL := test.GetBaseURL(port)
+	port := testc.GetFreePort()
+	baseURL := testc.GetBaseURL(port)
 	conf := config.New()
 	conf.HTTP.Port = port
 
@@ -1383,12 +1383,12 @@ func TestImagesSortFlag(t *testing.T) {
 
 	storeController := test.GetDefaultStoreController(rootDir, ctlr.Log)
 
-	err := test.WriteImageToFileSystem(image1, "a-repo", "tag1", storeController)
+	err := WriteImageToFileSystem(image1, "a-repo", "tag1", storeController)
 	if err != nil {
 		t.FailNow()
 	}
 
-	err = test.WriteImageToFileSystem(image2, "b-repo", "tag2", storeController)
+	err = WriteImageToFileSystem(image2, "b-repo", "tag2", storeController)
 	if err != nil {
 		t.FailNow()
 	}
@@ -1433,8 +1433,8 @@ func TestImagesSortFlag(t *testing.T) {
 }
 
 func TestImagesCommandGQL(t *testing.T) {
-	port := test.GetFreePort()
-	baseURL := test.GetBaseURL(port)
+	port := testc.GetFreePort()
+	baseURL := testc.GetBaseURL(port)
 	conf := config.New()
 	conf.HTTP.Port = port
 
@@ -1836,8 +1836,8 @@ func TestImagesCommandGQL(t *testing.T) {
 }
 
 func TestImageCommandREST(t *testing.T) {
-	port := test.GetFreePort()
-	baseURL := test.GetBaseURL(port)
+	port := testc.GetFreePort()
+	baseURL := testc.GetBaseURL(port)
 	conf := config.New()
 	conf.HTTP.Port = port
 

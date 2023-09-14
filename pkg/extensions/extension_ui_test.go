@@ -17,14 +17,15 @@ import (
 	"zotregistry.io/zot/pkg/api/config"
 	extconf "zotregistry.io/zot/pkg/extensions/config"
 	"zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 	. "zotregistry.io/zot/pkg/test/image-utils"
 )
 
 func TestUIExtension(t *testing.T) {
 	Convey("Verify zot with UI extension starts successfully", t, func() {
 		conf := config.New()
-		port := test.GetFreePort()
-		baseURL := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf.HTTP.Port = port
 
 		// we won't use the logging config feature as we want logs in both

@@ -16,13 +16,14 @@ import (
 	"zotregistry.io/zot/pkg/api/constants"
 	extconf "zotregistry.io/zot/pkg/extensions/config"
 	"zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 )
 
 func TestGetExensionsDisabled(t *testing.T) {
 	Convey("start zot server with extensions but no extensions built", t, func(c C) {
 		conf := config.New()
-		port := test.GetFreePort()
-		baseURL := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		conf.HTTP.Port = port
 

@@ -451,7 +451,7 @@ func TestConvertDockerToOCI(t *testing.T) {
 
 		srcStorageCtlr := test.GetDefaultStoreController(dir, log.NewLogger("debug", ""))
 
-		err := test.WriteImageToFileSystem(CreateDefaultImage(), "zot-test", "0.0.1", srcStorageCtlr)
+		err := WriteImageToFileSystem(CreateDefaultImage(), "zot-test", "0.0.1", srcStorageCtlr)
 		So(err, ShouldBeNil)
 
 		imageRef, err := layout.NewReference(path.Join(dir, "zot-test"), "0.0.1")

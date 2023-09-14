@@ -27,6 +27,7 @@ import (
 	mTypes "zotregistry.io/zot/pkg/meta/types"
 	reqCtx "zotregistry.io/zot/pkg/requestcontext"
 	"zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 	"zotregistry.io/zot/pkg/test/mocks"
 )
 
@@ -50,10 +51,10 @@ func TestAllowedMethodsHeaderAPIKey(t *testing.T) {
 
 	Convey("Test http options response", t, func() {
 		conf := config.New()
-		port := test.GetFreePort()
+		port := testc.GetFreePort()
 		conf.HTTP.Port = port
 		conf.HTTP.Auth.APIKey = defaultVal
-		baseURL := test.GetBaseURL(port)
+		baseURL := testc.GetBaseURL(port)
 
 		ctlr := api.NewController(conf)
 		ctlr.Config.Storage.RootDirectory = t.TempDir()
@@ -72,8 +73,8 @@ func TestAllowedMethodsHeaderAPIKey(t *testing.T) {
 
 func TestAPIKeys(t *testing.T) {
 	Convey("Make a new controller", t, func() {
-		port := test.GetFreePort()
-		baseURL := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		conf := config.New()
 		conf.HTTP.Port = port

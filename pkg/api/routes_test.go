@@ -32,6 +32,7 @@ import (
 	reqCtx "zotregistry.io/zot/pkg/requestcontext"
 	storageTypes "zotregistry.io/zot/pkg/storage/types"
 	"zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 	"zotregistry.io/zot/pkg/test/mocks"
 )
 
@@ -39,8 +40,8 @@ const sessionStr = "session"
 
 func TestRoutes(t *testing.T) {
 	Convey("Make a new controller", t, func() {
-		port := test.GetFreePort()
-		baseURL := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 

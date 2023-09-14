@@ -1,15 +1,42 @@
 package common
 
 import (
-	"errors"
+	"fmt"
 	"net/url"
 	"os"
-	"path/filepath"
+	"path"
+	"time"
 
+	"github.com/phayes/freeport"
 	"gopkg.in/resty.v1"
 )
 
-var ErrNoGoModFileFound = errors.New("test: no go.mod file found in parent directories")
+const (
+	BaseURL       = "http://127.0.0.1:%s"
+	BaseSecureURL = "https://127.0.0.1:%s"
+	SleepTime     = 100 * time.Millisecond
+)
+
+type isser interface {
+	Is(string) bool
+}
+
+// Index returns the index of the first occurrence of name in s,
+// or -1 if not present.
+func Index[E isser](s []E, name string) int {
+	for i, v := range s {
+		if v.Is(name) {
+			return i
+		}
+	}
+
+	return -1
+}
+
+// Contains reports whether name is present in s.
+func Contains[E isser](s []E, name string) bool {
+	return Index(s, name) >= 0
+}
 
 func Location(baseURL string, resp *resty.Response) string {
 	// For some API responses, the Location header is set and is supposed to
@@ -29,24 +56,40 @@ func Location(baseURL string, resp *resty.Response) string {
 	return baseURL + path
 }
 
-func GetProjectRootDir() (string, error) {
-	workDir, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-
+func WaitTillServerReady(url string) {
 	for {
-		goModPath := filepath.Join(workDir, "go.mod")
-
-		_, err := os.Stat(goModPath)
+		_, err := resty.R().Get(url)
 		if err == nil {
-			return workDir, nil
+			break
 		}
 
-		if workDir == filepath.Dir(workDir) {
-			return "", ErrNoGoModFileFound
-		}
-
-		workDir = filepath.Dir(workDir)
+		time.Sleep(SleepTime)
 	}
+}
+
+func WaitTillTrivyDBDownloadStarted(rootDir string) {
+	for {
+		if _, err := os.Stat(path.Join(rootDir, "_trivy", "db", "trivy.db")); err == nil {
+			break
+		}
+
+		time.Sleep(SleepTime)
+	}
+}
+
+func GetFreePort() string {
+	port, err := freeport.GetFreePort()
+	if err != nil {
+		panic(err)
+	}
+
+	return fmt.Sprint(port)
+}
+
+func GetBaseURL(port string) string {
+	return fmt.Sprintf(BaseURL, port)
+}
+
+func GetSecureBaseURL(port string) string {
+	return fmt.Sprintf(BaseSecureURL, port)
 }

@@ -20,7 +20,8 @@ import (
 	"zotregistry.io/zot/pkg/api/constants"
 	"zotregistry.io/zot/pkg/common"
 	extconf "zotregistry.io/zot/pkg/extensions/config"
-	. "zotregistry.io/zot/pkg/test"
+	"zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 	. "zotregistry.io/zot/pkg/test/image-utils"
 )
 
@@ -52,8 +53,8 @@ func TestDigestSearchHTTP(t *testing.T) {
 	Convey("Test image search by digest scanning", t, func() {
 		rootDir := t.TempDir()
 
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = rootDir
@@ -63,7 +64,7 @@ func TestDigestSearchHTTP(t *testing.T) {
 		}
 
 		ctlr := api.NewController(conf)
-		ctrlManager := NewControllerManager(ctlr)
+		ctrlManager := test.NewControllerManager(ctlr)
 
 		ctrlManager.StartAndWait(port)
 
@@ -74,7 +75,7 @@ func TestDigestSearchHTTP(t *testing.T) {
 		layers1 := [][]byte{
 			{3, 2, 2},
 		}
-		image1, err := GetImageWithComponents(
+		image1, err := test.GetImageWithComponents( //nolint: staticcheck
 			ispec.Image{
 				Created: &createdTime1,
 				History: []ispec.History{
@@ -93,7 +94,7 @@ func TestDigestSearchHTTP(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		createdTime2 := time.Date(2010, 1, 1, 12, 0, 0, 0, time.UTC)
-		image2, err := GetImageWithComponents(
+		image2, err := test.GetImageWithComponents( //nolint: staticcheck
 			ispec.Image{
 				History: []ispec.History{{Created: &createdTime2}},
 				Platform: ispec.Platform{
@@ -264,8 +265,8 @@ func TestDigestSearchHTTPSubPaths(t *testing.T) {
 	Convey("Test image search by digest scanning using storage subpaths", t, func() {
 		subRootDir := t.TempDir()
 
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		defaultVal := true
@@ -285,14 +286,14 @@ func TestDigestSearchHTTPSubPaths(t *testing.T) {
 		subPathMap["/a"] = config.StorageConfig{RootDirectory: subRootDir}
 
 		ctlr.Config.Storage.SubPaths = subPathMap
-		ctrlManager := NewControllerManager(ctlr)
+		ctrlManager := test.NewControllerManager(ctlr)
 
 		ctrlManager.StartAndWait(port)
 
 		// shut down server
 		defer ctrlManager.StopServer()
 
-		config, layers, manifest, err := GetImageComponents(100)
+		config, layers, manifest, err := test.GetImageComponents(100) //nolint: staticcheck
 		So(err, ShouldBeNil)
 
 		err = UploadImage(Image{Manifest: manifest, Config: config, Layers: layers}, baseURL, "a/zot-cve-test", "0.0.1")
@@ -340,8 +341,8 @@ func TestDigestSearchHTTPSubPaths(t *testing.T) {
 func TestDigestSearchDisabled(t *testing.T) {
 	Convey("Test disabling image search", t, func() {
 		var disabled bool
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = t.TempDir()
@@ -350,7 +351,7 @@ func TestDigestSearchDisabled(t *testing.T) {
 		}
 
 		ctlr := api.NewController(conf)
-		ctrlManager := NewControllerManager(ctlr)
+		ctrlManager := test.NewControllerManager(ctlr)
 
 		ctrlManager.StartAndWait(port)
 

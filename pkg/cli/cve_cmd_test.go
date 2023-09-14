@@ -37,13 +37,14 @@ import (
 	"zotregistry.io/zot/pkg/storage"
 	"zotregistry.io/zot/pkg/storage/local"
 	"zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 	. "zotregistry.io/zot/pkg/test/image-utils"
 	"zotregistry.io/zot/pkg/test/mocks"
 )
 
 func TestSearchCVECmd(t *testing.T) {
-	port := test.GetFreePort()
-	baseURL := test.GetBaseURL(port)
+	port := testc.GetFreePort()
+	baseURL := testc.GetBaseURL(port)
 	conf := config.New()
 	conf.HTTP.Port = port
 	rootDir := t.TempDir()
@@ -397,15 +398,15 @@ func TestSearchCVECmd(t *testing.T) {
 
 func TestNegativeServerResponse(t *testing.T) {
 	Convey("Test from real server without search endpoint", t, func() {
-		port := test.GetFreePort()
-		url := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		url := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 
 		dir := t.TempDir()
 
 		srcStorageCtlr := test.GetDefaultStoreController(dir, log.NewLogger("debug", ""))
-		err := test.WriteImageToFileSystem(CreateDefaultVulnerableImage(), "zot-cve-test", "0.0.1", srcStorageCtlr)
+		err := WriteImageToFileSystem(CreateDefaultVulnerableImage(), "zot-cve-test", "0.0.1", srcStorageCtlr)
 		So(err, ShouldBeNil)
 
 		conf.Storage.RootDirectory = dir
@@ -463,8 +464,8 @@ func TestNegativeServerResponse(t *testing.T) {
 	})
 
 	Convey("Test non-existing manifest blob", t, func() {
-		port := test.GetFreePort()
-		url := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		url := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 
@@ -481,7 +482,7 @@ func TestNegativeServerResponse(t *testing.T) {
 		config, layers, manifest, err := test.GetRandomImageComponents(num) //nolint:staticcheck
 		So(err, ShouldBeNil)
 
-		err = test.WriteImageToFileSystem(
+		err = WriteImageToFileSystem(
 			Image{
 				Manifest: manifest,
 				Layers:   layers,
@@ -563,8 +564,8 @@ func TestNegativeServerResponse(t *testing.T) {
 
 //nolint:dupl
 func TestServerCVEResponse(t *testing.T) {
-	port := test.GetFreePort()
-	url := test.GetBaseURL(port)
+	port := testc.GetFreePort()
+	url := testc.GetBaseURL(port)
 	conf := config.New()
 	conf.HTTP.Port = port
 
@@ -912,8 +913,8 @@ func TestServerCVEResponse(t *testing.T) {
 
 func TestCVESort(t *testing.T) {
 	rootDir := t.TempDir()
-	port := test.GetFreePort()
-	baseURL := test.GetBaseURL(port)
+	port := testc.GetFreePort()
+	baseURL := testc.GetBaseURL(port)
 	conf := config.New()
 	conf.HTTP.Port = port
 
@@ -936,7 +937,7 @@ func TestCVESort(t *testing.T) {
 
 	storeController := test.GetDefaultStoreController(rootDir, ctlr.Log)
 
-	err := test.WriteImageToFileSystem(image1, "repo", "tag", storeController)
+	err := WriteImageToFileSystem(image1, "repo", "tag", storeController)
 	if err != nil {
 		t.FailNow()
 	}
@@ -1064,8 +1065,8 @@ func TestCVESort(t *testing.T) {
 }
 
 func TestCVECommandGQL(t *testing.T) {
-	port := test.GetFreePort()
-	baseURL := test.GetBaseURL(port)
+	port := testc.GetFreePort()
+	baseURL := testc.GetBaseURL(port)
 	conf := config.New()
 	conf.HTTP.Port = port
 
@@ -1231,8 +1232,8 @@ func TestCVECommandGQL(t *testing.T) {
 }
 
 func TestCVECommandErrors(t *testing.T) {
-	port := test.GetFreePort()
-	baseURL := test.GetBaseURL(port)
+	port := testc.GetFreePort()
+	baseURL := testc.GetBaseURL(port)
 	conf := config.New()
 	conf.HTTP.Port = port
 

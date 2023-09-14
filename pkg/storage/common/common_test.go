@@ -184,7 +184,7 @@ func TestGetReferrersErrors(t *testing.T) {
 		})
 
 		storageCtlr := storage.StoreController{DefaultStore: imgStore}
-		err := test.WriteImageToFileSystem(CreateDefaultImage(), "zot-test", "0.0.1", storageCtlr)
+		err := WriteImageToFileSystem(CreateDefaultImage(), "zot-test", "0.0.1", storageCtlr)
 		So(err, ShouldBeNil)
 
 		digest := godigest.FromBytes([]byte("{}"))

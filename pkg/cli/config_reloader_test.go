@@ -15,6 +15,7 @@ import (
 
 	"zotregistry.io/zot/pkg/cli"
 	"zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 )
 
 func TestConfigReloader(t *testing.T) {
@@ -23,8 +24,8 @@ func TestConfigReloader(t *testing.T) {
 	defer func() { os.Args = oldArgs }()
 
 	Convey("reload access control config", t, func(c C) {
-		port := test.GetFreePort()
-		baseURL := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		logFile, err := os.CreateTemp("", "zot-log*.txt")
 		So(err, ShouldBeNil)
@@ -167,8 +168,8 @@ func TestConfigReloader(t *testing.T) {
 	})
 
 	Convey("reload sync config", t, func(c C) {
-		port := test.GetFreePort()
-		baseURL := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		logFile, err := os.CreateTemp("", "zot-log*.txt")
 		So(err, ShouldBeNil)
@@ -299,8 +300,8 @@ func TestConfigReloader(t *testing.T) {
 	})
 
 	Convey("reload scrub and CVE config", t, func(c C) {
-		port := test.GetFreePort()
-		baseURL := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		logFile, err := os.CreateTemp("", "zot-log*.txt")
 		So(err, ShouldBeNil)
@@ -414,8 +415,8 @@ func TestConfigReloader(t *testing.T) {
 	})
 
 	Convey("reload bad config", t, func(c C) {
-		port := test.GetFreePort()
-		baseURL := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		logFile, err := os.CreateTemp("", "zot-log*.txt")
 		So(err, ShouldBeNil)

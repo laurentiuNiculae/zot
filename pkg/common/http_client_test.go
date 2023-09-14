@@ -15,6 +15,7 @@ import (
 	"zotregistry.io/zot/pkg/common"
 	"zotregistry.io/zot/pkg/log"
 	"zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 )
 
 func TestHTTPClient(t *testing.T) {
@@ -25,7 +26,7 @@ func TestHTTPClient(t *testing.T) {
 		So(err, ShouldNotBeNil)
 
 		tempDir := t.TempDir()
-		err = test.CopyTestKeysAndCerts(tempDir)
+		err = testc.CopyTestKeysAndCerts(tempDir)
 		So(err, ShouldBeNil)
 		err = os.Chmod(path.Join(tempDir, "ca.crt"), 0o000)
 		So(err, ShouldBeNil)
@@ -35,7 +36,7 @@ func TestHTTPClient(t *testing.T) {
 
 	Convey("test CreateHTTPClient() no permissions on certificate", t, func() {
 		tempDir := t.TempDir()
-		err := test.CopyTestKeysAndCerts(tempDir)
+		err := testc.CopyTestKeysAndCerts(tempDir)
 		So(err, ShouldBeNil)
 		err = os.Chmod(path.Join(tempDir, "ca.crt"), 0o000)
 		So(err, ShouldBeNil)
@@ -46,7 +47,7 @@ func TestHTTPClient(t *testing.T) {
 
 	Convey("test CreateHTTPClient() no permissions on key", t, func() {
 		tempDir := t.TempDir()
-		err := test.CopyTestKeysAndCerts(tempDir)
+		err := testc.CopyTestKeysAndCerts(tempDir)
 		So(err, ShouldBeNil)
 		err = os.Chmod(path.Join(tempDir, "client.key"), 0o000)
 		So(err, ShouldBeNil)
@@ -56,15 +57,15 @@ func TestHTTPClient(t *testing.T) {
 	})
 
 	Convey("test MakeHTTPGetRequest() no permissions on key", t, func() {
-		port := test.GetFreePort()
-		baseURL := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		conf := config.New()
 		conf.HTTP.Port = port
 
 		ctlr := api.NewController(conf)
 		tempDir := t.TempDir()
-		err := test.CopyTestKeysAndCerts(tempDir)
+		err := testc.CopyTestKeysAndCerts(tempDir)
 		So(err, ShouldBeNil)
 		ctlr.Config.Storage.RootDirectory = tempDir
 

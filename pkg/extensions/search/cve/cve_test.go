@@ -40,6 +40,7 @@ import (
 	storageConstants "zotregistry.io/zot/pkg/storage/constants"
 	"zotregistry.io/zot/pkg/storage/local"
 	. "zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 	. "zotregistry.io/zot/pkg/test/image-utils"
 	"zotregistry.io/zot/pkg/test/mocks"
 )
@@ -418,8 +419,8 @@ func TestImageFormat(t *testing.T) {
 
 func TestCVESearchDisabled(t *testing.T) {
 	Convey("Test with CVE search disabled", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		htpasswdPath := MakeHtpasswdFile()
@@ -483,8 +484,8 @@ func TestCVESearchDisabled(t *testing.T) {
 func TestCVESearch(t *testing.T) {
 	Convey("Test image vulnerability scanning", t, func() {
 		updateDuration, _ := time.ParseDuration("1h")
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		htpasswdPath := MakeHtpasswdFile()
@@ -1548,8 +1549,8 @@ func TestFixedTags(t *testing.T) {
 func TestFixedTagsWithIndex(t *testing.T) {
 	Convey("Test fixed tags", t, func() {
 		tempDir := t.TempDir()
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		defaultVal := true

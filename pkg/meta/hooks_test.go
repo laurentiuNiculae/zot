@@ -48,7 +48,7 @@ func TestOnUpdateManifest(t *testing.T) {
 		config, layers, manifest, err := test.GetRandomImageComponents(100) //nolint:staticcheck
 		So(err, ShouldBeNil)
 
-		err = test.WriteImageToFileSystem(
+		err = WriteImageToFileSystem(
 			Image{
 				Config: config, Manifest: manifest, Layers: layers,
 			}, "repo", "tag1", storeController)

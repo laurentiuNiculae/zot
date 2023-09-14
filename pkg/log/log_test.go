@@ -50,8 +50,8 @@ func TestAuditLogMessages(t *testing.T) {
 	Convey("Make a new controller", t, func() {
 		dir := t.TempDir()
 
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 
 		outputPath := dir + "/zot.log"

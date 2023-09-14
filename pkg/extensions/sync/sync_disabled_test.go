@@ -15,14 +15,15 @@ import (
 	extconf "zotregistry.io/zot/pkg/extensions/config"
 	syncconf "zotregistry.io/zot/pkg/extensions/config/sync"
 	"zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 )
 
 func TestSyncExtension(t *testing.T) {
 	Convey("Make a new controller", t, func() {
 		conf := config.New()
-		port := test.GetFreePort()
+		port := testc.GetFreePort()
 
-		baseURL := test.GetBaseURL(port)
+		baseURL := testc.GetBaseURL(port)
 		globalDir := t.TempDir()
 		defaultValue := true
 

@@ -35,7 +35,7 @@ func TestScanBigTestFile(t *testing.T) {
 		testImage := filepath.Join(projRootDir, "test/data/zot-test")
 
 		tempDir := t.TempDir()
-		port := test.GetFreePort()
+		port := testc.GetFreePort()
 		conf := config.New()
 		conf.HTTP.Port = port
 		defaultVal := true
@@ -48,7 +48,7 @@ func TestScanBigTestFile(t *testing.T) {
 		ctlr := api.NewController(conf)
 		So(ctlr, ShouldNotBeNil)
 
-		err = test.CopyFiles(testImage, filepath.Join(tempDir, "zot-test"))
+		err = testc.CopyFiles(testImage, filepath.Join(tempDir, "zot-test"))
 		So(err, ShouldBeNil)
 
 		cm := test.NewControllerManager(ctlr)
@@ -70,8 +70,8 @@ func TestScanningByDigest(t *testing.T) {
 	Convey("Scan the individual manifests inside an index", t, func() {
 		// start server
 		tempDir := t.TempDir()
-		port := test.GetFreePort()
-		baseURL := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		defaultVal := true
@@ -191,7 +191,7 @@ func TestVulnerableLayer(t *testing.T) {
 			DefaultStore: imageStore,
 		}
 
-		err = test.WriteImageToFileSystem(img, "repo", img.DigestStr(), storeController)
+		err = WriteImageToFileSystem(img, "repo", img.DigestStr(), storeController)
 		So(err, ShouldBeNil)
 
 		params := boltdb.DBParameters{

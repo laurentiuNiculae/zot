@@ -29,6 +29,7 @@ import (
 	"zotregistry.io/zot/pkg/storage/local"
 	storageTypes "zotregistry.io/zot/pkg/storage/types"
 	"zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 	. "zotregistry.io/zot/pkg/test/image-utils"
 	"zotregistry.io/zot/pkg/test/mocks"
 )
@@ -183,7 +184,7 @@ func TestTrivyLibraryErrors(t *testing.T) {
 		rootDir := t.TempDir()
 
 		storageCtlr := test.GetDefaultStoreController(rootDir, log.NewLogger("debug", ""))
-		err := test.WriteImageToFileSystem(CreateDefaultVulnerableImage(), "zot-test", "0.0.1", storageCtlr)
+		err := WriteImageToFileSystem(CreateDefaultVulnerableImage(), "zot-test", "0.0.1", storageCtlr)
 		So(err, ShouldBeNil)
 
 		log := log.NewLogger("debug", "")
@@ -465,10 +466,10 @@ func TestDefaultTrivyDBUrl(t *testing.T) {
 		// Create temporary directory
 		rootDir := t.TempDir()
 
-		err := test.CopyFiles("../../../../../test/data/zot-test", path.Join(rootDir, "zot-test"))
+		err := testc.CopyFiles("../../../../../test/data/zot-test", path.Join(rootDir, "zot-test"))
 		So(err, ShouldBeNil)
 
-		err = test.CopyFiles("../../../../../test/data/zot-cve-java-test", path.Join(rootDir, "zot-cve-java-test"))
+		err = testc.CopyFiles("../../../../../test/data/zot-cve-java-test", path.Join(rootDir, "zot-cve-java-test"))
 		So(err, ShouldBeNil)
 
 		log := log.NewLogger("debug", "")

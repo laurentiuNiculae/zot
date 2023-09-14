@@ -15,6 +15,7 @@ import (
 	"zotregistry.io/zot/pkg/cli"
 	storageConstants "zotregistry.io/zot/pkg/storage/constants"
 	. "zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 )
 
 func TestServerUsage(t *testing.T) {
@@ -1595,7 +1596,7 @@ func TestScrub(t *testing.T) {
 		})
 
 		Convey("server is running", func(c C) {
-			port := GetFreePort()
+			port := testc.GetFreePort()
 			config := config.New()
 			config.HTTP.Port = port
 			controller := api.NewController(config)
@@ -1633,7 +1634,7 @@ func TestScrub(t *testing.T) {
 		})
 
 		Convey("no image store provided", func(c C) {
-			port := GetFreePort()
+			port := testc.GetFreePort()
 
 			tmpfile, err := os.CreateTemp("", "zot-test*.json")
 			So(err, ShouldBeNil)
@@ -1659,7 +1660,7 @@ func TestScrub(t *testing.T) {
 		})
 
 		Convey("bad index.json", func(c C) {
-			port := GetFreePort()
+			port := testc.GetFreePort()
 
 			dir := t.TempDir()
 
@@ -1716,8 +1717,8 @@ func TestScrub(t *testing.T) {
 
 // run cli and return output.
 func runCLIWithConfig(tempDir string, config string) (string, error) {
-	port := GetFreePort()
-	baseURL := GetBaseURL(port)
+	port := testc.GetFreePort()
+	baseURL := testc.GetBaseURL(port)
 
 	logFile, err := os.CreateTemp(tempDir, "zot-log*.txt")
 	if err != nil {

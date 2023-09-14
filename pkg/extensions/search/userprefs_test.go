@@ -24,14 +24,15 @@ import (
 	"zotregistry.io/zot/pkg/storage"
 	"zotregistry.io/zot/pkg/storage/local"
 	. "zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 	. "zotregistry.io/zot/pkg/test/image-utils"
 )
 
 //nolint:dupl
 func TestUserData(t *testing.T) {
 	Convey("Test user stars and bookmarks", t, func(c C) {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		defaultVal := true
 
 		accessibleRepo := "accessible-repo"
@@ -457,8 +458,8 @@ func TestUserData(t *testing.T) {
 }
 
 func TestChangingRepoState(t *testing.T) {
-	port := GetFreePort()
-	baseURL := GetBaseURL(port)
+	port := testc.GetFreePort()
+	baseURL := testc.GetBaseURL(port)
 	defaultVal := true
 
 	simpleUser := "test"
@@ -621,8 +622,8 @@ func TestChangingRepoState(t *testing.T) {
 func TestGlobalSearchWithUserPrefFiltering(t *testing.T) {
 	Convey("Bookmarks and Stars filtering", t, func() {
 		dir := t.TempDir()
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = dir
@@ -817,8 +818,8 @@ func TestGlobalSearchWithUserPrefFiltering(t *testing.T) {
 func TestExpandedRepoInfoWithUserPrefs(t *testing.T) {
 	Convey("ExpandedRepoInfo with User Prefs", t, func() {
 		dir := t.TempDir()
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = dir

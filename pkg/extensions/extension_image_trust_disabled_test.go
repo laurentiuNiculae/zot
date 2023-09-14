@@ -12,12 +12,13 @@ import (
 	"zotregistry.io/zot/pkg/api/config"
 	extconf "zotregistry.io/zot/pkg/extensions/config"
 	"zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 )
 
 func TestImageTrustExtension(t *testing.T) {
 	Convey("periodic signature verification is skipped when binary doesn't include imagetrust", t, func() {
 		conf := config.New()
-		port := test.GetFreePort()
+		port := testc.GetFreePort()
 
 		globalDir := t.TempDir()
 		defaultValue := true

@@ -17,6 +17,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 
 	"zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 )
 
 func getDefaultSearchConf(baseURL string) searchConfig {
@@ -37,7 +38,7 @@ func getDefaultSearchConf(baseURL string) searchConfig {
 
 func TestDoHTTPRequest(t *testing.T) {
 	Convey("doHTTPRequest nil result pointer", t, func() {
-		port := test.GetFreePort()
+		port := testc.GetFreePort()
 		server := test.StartTestHTTPServer(nil, port)
 		defer server.Close()
 
@@ -49,7 +50,7 @@ func TestDoHTTPRequest(t *testing.T) {
 	})
 
 	Convey("doHTTPRequest bad return json", t, func() {
-		port := test.GetFreePort()
+		port := testc.GetFreePort()
 		server := test.StartTestHTTPServer(test.HTTPRoutes{
 			{
 				Route: "/test",
@@ -87,8 +88,8 @@ func TestDoHTTPRequest(t *testing.T) {
 	})
 
 	Convey("fetchImageManifestStruct errors", t, func() {
-		port := test.GetFreePort()
-		baseURL := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		searchConf := getDefaultSearchConf(baseURL)
 
 		// 404 erorr will appear
@@ -110,8 +111,8 @@ func TestDoHTTPRequest(t *testing.T) {
 	})
 
 	Convey("fetchManifestStruct errors", t, func() {
-		port := test.GetFreePort()
-		baseURL := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		searchConf := getDefaultSearchConf(baseURL)
 
 		Convey("makeGETRequest manifest error, context is done", func() {
@@ -326,8 +327,8 @@ func TestDoHTTPRequest(t *testing.T) {
 }
 
 func TestDoJobErrors(t *testing.T) {
-	port := test.GetFreePort()
-	baseURL := test.GetBaseURL(port)
+	port := testc.GetFreePort()
+	baseURL := testc.GetBaseURL(port)
 	searchConf := getDefaultSearchConf(baseURL)
 
 	reqPool := &requestsPool{

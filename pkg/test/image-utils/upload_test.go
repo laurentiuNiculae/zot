@@ -14,14 +14,15 @@ import (
 	"zotregistry.io/zot/pkg/api"
 	"zotregistry.io/zot/pkg/api/config"
 	. "zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 	. "zotregistry.io/zot/pkg/test/image-utils"
 	"zotregistry.io/zot/pkg/test/inject"
 )
 
 func TestUploadImage(t *testing.T) {
 	Convey("Manifest without schemaVersion should fail validation", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		conf := config.New()
 		conf.HTTP.Port = port
@@ -57,8 +58,8 @@ func TestUploadImage(t *testing.T) {
 	})
 
 	Convey("Post request results in an error", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		conf := config.New()
 		conf.HTTP.Port = port
@@ -73,8 +74,8 @@ func TestUploadImage(t *testing.T) {
 	})
 
 	Convey("Post request status differs from accepted", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		tempDir := t.TempDir()
 		conf := config.New()
@@ -101,8 +102,8 @@ func TestUploadImage(t *testing.T) {
 	})
 
 	Convey("Put request results in an error", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		conf := config.New()
 		conf.HTTP.Port = port
@@ -124,8 +125,8 @@ func TestUploadImage(t *testing.T) {
 	})
 
 	Convey("Image uploaded successfully", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		conf := config.New()
 		conf.HTTP.Port = port
@@ -166,8 +167,8 @@ func TestUploadImage(t *testing.T) {
 	Convey("Upload image with authentification", t, func() {
 		tempDir := t.TempDir()
 		conf := config.New()
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		user1 := "test"
 		password1 := "test"
@@ -236,8 +237,8 @@ func TestUploadImage(t *testing.T) {
 	})
 
 	Convey("Blob upload wrong response status code", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		tempDir := t.TempDir()
 		conf := config.New()
@@ -289,8 +290,8 @@ func TestUploadImage(t *testing.T) {
 	})
 
 	Convey("CreateBlobUpload wrong response status code", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		tempDir := t.TempDir()
 		conf := config.New()
@@ -331,8 +332,8 @@ func TestUploadImage(t *testing.T) {
 
 func TestInjectUploadImage(t *testing.T) {
 	Convey("Inject failures for unreachable lines", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		tempDir := t.TempDir()
 		conf := config.New()
@@ -395,8 +396,8 @@ func TestInjectUploadImage(t *testing.T) {
 
 func TestUploadMultiarchImage(t *testing.T) {
 	Convey("make controller", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		conf := config.New()
 		conf.HTTP.Port = port
@@ -474,8 +475,8 @@ func TestUploadMultiarchImage(t *testing.T) {
 
 func TestInjectUploadImageWithBasicAuth(t *testing.T) {
 	Convey("Inject failures for unreachable lines", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		tempDir := t.TempDir()
 		conf := config.New()

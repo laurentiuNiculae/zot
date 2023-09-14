@@ -44,9 +44,11 @@ import (
 	"zotregistry.io/zot/pkg/storage/local"
 	storageTypes "zotregistry.io/zot/pkg/storage/types"
 	. "zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
+	"zotregistry.io/zot/pkg/test/cosign"
 	. "zotregistry.io/zot/pkg/test/image-utils"
 	"zotregistry.io/zot/pkg/test/mocks"
-	ocilayout "zotregistry.io/zot/pkg/test/oci-layout"
+	ociUtil "zotregistry.io/zot/pkg/test/oci-layout"
 )
 
 const (
@@ -378,8 +380,8 @@ func getMockCveInfo(metaDB mTypes.MetaDB, log log.Logger) cveinfo.CveInfo {
 func TestRepoListWithNewestImage(t *testing.T) {
 	Convey("Test repoListWithNewestImage by tag with HTTP", t, func() {
 		subpath := "/a"
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		rootDir := t.TempDir()
@@ -664,8 +666,8 @@ func TestRepoListWithNewestImage(t *testing.T) {
 
 	Convey("Test repoListWithNewestImage with vulnerability scan enabled", t, func() {
 		subpath := "/a"
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		rootDir := t.TempDir()
@@ -807,8 +809,8 @@ func TestRepoListWithNewestImage(t *testing.T) {
 
 func TestGetReferrersGQL(t *testing.T) {
 	Convey("get referrers", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = t.TempDir()
@@ -939,8 +941,8 @@ func TestGetReferrersGQL(t *testing.T) {
 	})
 
 	Convey("referrers for image index", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = t.TempDir()
@@ -1067,8 +1069,8 @@ func TestGetReferrersGQL(t *testing.T) {
 	})
 
 	Convey("Get referrers with index as referrer", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = t.TempDir()
@@ -1171,8 +1173,8 @@ func TestExpandedRepoInfo(t *testing.T) {
 		tagToBeRemoved := "3.0"
 		repo1 := "test1"
 		tempDir := t.TempDir()
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		conf := config.New()
 		conf.HTTP.Port = port
@@ -1274,8 +1276,8 @@ func TestExpandedRepoInfo(t *testing.T) {
 		subpath := "/a"
 		rootDir := t.TempDir()
 		subRootDir := t.TempDir()
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = rootDir
@@ -1384,7 +1386,7 @@ func TestExpandedRepoInfo(t *testing.T) {
 		}
 		So(found, ShouldEqual, true)
 
-		err = SignImageUsingCosign("zot-cve-test:0.0.1", port)
+		err = cosign.SignImageUsingCosign("zot-cve-test:0.0.1", port)
 		So(err, ShouldBeNil)
 
 		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
@@ -1456,7 +1458,7 @@ func TestExpandedRepoInfo(t *testing.T) {
 		}
 		So(found, ShouldEqual, true)
 
-		err = SignImageUsingCosign("zot-test@"+testManifestDigest.String(), port)
+		err = cosign.SignImageUsingCosign("zot-test@"+testManifestDigest.String(), port)
 		So(err, ShouldBeNil)
 
 		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "/query?query=" + url.QueryEscape(query))
@@ -1499,8 +1501,8 @@ func TestExpandedRepoInfo(t *testing.T) {
 	Convey("Test expanded repo info with tagged referrers", t, func() {
 		const test = "test"
 		rootDir := t.TempDir()
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = rootDir
@@ -1573,8 +1575,8 @@ func TestExpandedRepoInfo(t *testing.T) {
 	})
 
 	Convey("Test image tags order", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = t.TempDir()
@@ -1648,8 +1650,8 @@ func TestExpandedRepoInfo(t *testing.T) {
 
 	Convey("With Multiarch Images", t, func() {
 		conf := config.New()
-		conf.HTTP.Port = GetFreePort()
-		baseURL := GetBaseURL(conf.HTTP.Port)
+		conf.HTTP.Port = testc.GetFreePort()
+		baseURL := testc.GetBaseURL(conf.HTTP.Port)
 		conf.Storage.RootDirectory = t.TempDir()
 
 		defaultVal := true
@@ -1776,8 +1778,8 @@ func TestExpandedRepoInfo(t *testing.T) {
 func TestDerivedImageList(t *testing.T) {
 	rootDir := t.TempDir()
 
-	port := GetFreePort()
-	baseURL := GetBaseURL(port)
+	port := testc.GetFreePort()
+	baseURL := testc.GetBaseURL(port)
 	conf := config.New()
 	conf.HTTP.Port = port
 	conf.Storage.RootDirectory = rootDir
@@ -2169,8 +2171,8 @@ func TestDerivedImageList(t *testing.T) {
 //nolint:dupl
 func TestDerivedImageListNoRepos(t *testing.T) {
 	Convey("No repositories found", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		conf := config.New()
 		conf.HTTP.Port = port
@@ -2222,7 +2224,7 @@ func TestGetImageManifest(t *testing.T) {
 		storeController := storage.StoreController{
 			DefaultStore: mockImageStore,
 		}
-		olu := ocilayout.NewBaseOciLayoutUtils(storeController, log.NewLogger("debug", ""))
+		olu := ociUtil.NewBaseOciLayoutUtils(storeController, log.NewLogger("debug", ""))
 
 		_, _, err := olu.GetImageManifest("nonexistent-repo", "latest")
 		So(err, ShouldNotBeNil)
@@ -2238,7 +2240,7 @@ func TestGetImageManifest(t *testing.T) {
 		storeController := storage.StoreController{
 			DefaultStore: mockImageStore,
 		}
-		olu := ocilayout.NewBaseOciLayoutUtils(storeController, log.NewLogger("debug", ""))
+		olu := ociUtil.NewBaseOciLayoutUtils(storeController, log.NewLogger("debug", ""))
 
 		_, _, err := olu.GetImageManifest("test-repo", "latest") //nolint:goconst
 		So(err, ShouldNotBeNil)
@@ -2248,8 +2250,8 @@ func TestGetImageManifest(t *testing.T) {
 func TestBaseImageList(t *testing.T) {
 	rootDir := t.TempDir()
 
-	port := GetFreePort()
-	baseURL := GetBaseURL(port)
+	port := testc.GetFreePort()
+	baseURL := testc.GetBaseURL(port)
 	conf := config.New()
 	conf.HTTP.Port = port
 	conf.Storage.RootDirectory = rootDir
@@ -2815,8 +2817,8 @@ func TestBaseImageList(t *testing.T) {
 //nolint:dupl
 func TestBaseImageListNoRepos(t *testing.T) {
 	Convey("No repositories found", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		conf := config.New()
 		conf.HTTP.Port = port
@@ -2870,7 +2872,7 @@ func TestGetRepositories(t *testing.T) {
 			DefaultStore: mockImageStore,
 			SubStore:     map[string]storageTypes.ImageStore{"test": mockImageStore},
 		}
-		olu := ocilayout.NewBaseOciLayoutUtils(storeController, log.NewLogger("debug", ""))
+		olu := ociUtil.NewBaseOciLayoutUtils(storeController, log.NewLogger("debug", ""))
 
 		repoList, err := olu.GetRepositories()
 		So(repoList, ShouldBeEmpty)
@@ -2880,7 +2882,7 @@ func TestGetRepositories(t *testing.T) {
 			DefaultStore: mocks.MockedImageStore{},
 			SubStore:     map[string]storageTypes.ImageStore{"test": mockImageStore},
 		}
-		olu = ocilayout.NewBaseOciLayoutUtils(storeController, log.NewLogger("debug", ""))
+		olu = ociUtil.NewBaseOciLayoutUtils(storeController, log.NewLogger("debug", ""))
 
 		repoList, err = olu.GetRepositories()
 		So(repoList, ShouldBeEmpty)
@@ -2889,8 +2891,8 @@ func TestGetRepositories(t *testing.T) {
 }
 
 func TestGlobalSearchImageAuthor(t *testing.T) {
-	port := GetFreePort()
-	baseURL := GetBaseURL(port)
+	port := testc.GetFreePort()
+	baseURL := testc.GetBaseURL(port)
 	conf := config.New()
 	conf.HTTP.Port = port
 	tempDir := t.TempDir()
@@ -3045,8 +3047,8 @@ func TestGlobalSearch(t *testing.T) {
 
 		subRootDir := path.Join(subDir, subpath)
 
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = dir
@@ -3179,7 +3181,7 @@ func TestGlobalSearch(t *testing.T) {
 		)
 		So(err, ShouldBeNil)
 
-		olu := ocilayout.NewBaseOciLayoutUtils(ctlr.StoreController, log.NewLogger("debug", ""))
+		olu := ociUtil.NewBaseOciLayoutUtils(ctlr.StoreController, log.NewLogger("debug", ""))
 
 		// Initialize the objects containing the expected data
 		repos, err := olu.GetRepositories()
@@ -3364,8 +3366,8 @@ func TestGlobalSearch(t *testing.T) {
 
 		subRootDir := path.Join(subDir, subpath)
 
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = dir
@@ -3500,7 +3502,7 @@ func TestGlobalSearch(t *testing.T) {
 		)
 		So(err, ShouldBeNil)
 
-		olu := ocilayout.NewBaseOciLayoutUtils(ctlr.StoreController, log.NewLogger("debug", ""))
+		olu := ociUtil.NewBaseOciLayoutUtils(ctlr.StoreController, log.NewLogger("debug", ""))
 
 		// Initialize the objects containing the expected data
 		repos, err := olu.GetRepositories()
@@ -3680,8 +3682,8 @@ func TestCleaningFilteringParamsGlobalSearch(t *testing.T) {
 	Convey("Test cleaning filtering parameters for global search", t, func() {
 		dir := t.TempDir()
 
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = dir
@@ -3743,8 +3745,8 @@ func TestCleaningFilteringParamsGlobalSearch(t *testing.T) {
 func TestGlobalSearchFiltering(t *testing.T) {
 	Convey("Global search HasToBeSigned filtering", t, func() {
 		dir := t.TempDir()
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = dir
@@ -3784,7 +3786,7 @@ func TestGlobalSearchFiltering(t *testing.T) {
 		)
 		So(err, ShouldBeNil)
 
-		err = SignImageUsingCosign("signed-repo:test", port)
+		err = cosign.SignImageUsingCosign("signed-repo:test", port)
 		So(err, ShouldBeNil)
 
 		query := `{
@@ -3815,8 +3817,8 @@ func TestGlobalSearchWithInvalidInput(t *testing.T) {
 	Convey("Global search with invalid input", t, func() {
 		dir := t.TempDir()
 
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = dir
@@ -3905,8 +3907,8 @@ func TestImageList(t *testing.T) {
 	Convey("Test ImageList", t, func() {
 		rootDir := t.TempDir()
 
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		conf := config.New()
 		conf.HTTP.Port = port
@@ -4059,8 +4061,8 @@ func TestGlobalSearchPagination(t *testing.T) {
 	Convey("Test global search pagination", t, func() {
 		dir := t.TempDir()
 
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = dir
@@ -4253,8 +4255,8 @@ func TestMetaDBWhenSigningImages(t *testing.T) {
 
 		subRootDir := path.Join(subDir, subpath)
 
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = dir
@@ -4348,7 +4350,7 @@ func TestMetaDBWhenSigningImages(t *testing.T) {
 		`
 
 		Convey("Sign with cosign", func() {
-			err = SignImageUsingCosign("repo1:1.0.1", port)
+			err = cosign.SignImageUsingCosign("repo1:1.0.1", port)
 			So(err, ShouldBeNil)
 
 			resp, err := resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(queryImage1))
@@ -4428,7 +4430,7 @@ func TestMetaDBWhenSigningImages(t *testing.T) {
 					},
 				}
 
-				err := SignImageUsingCosign("repo1:1.0.1", port)
+				err := cosign.SignImageUsingCosign("repo1:1.0.1", port)
 				So(err, ShouldNotBeNil)
 			})
 		})
@@ -4468,7 +4470,7 @@ func TestMetaDBWhenSigningImages(t *testing.T) {
 		})
 
 		Convey("Sign with cosign index", func() {
-			err = SignImageUsingCosign("repo1:index", port)
+			err = cosign.SignImageUsingCosign("repo1:index", port)
 			So(err, ShouldBeNil)
 
 			resp, err := resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(queryIndex))
@@ -4491,8 +4493,8 @@ func TestMetaDBWhenPushingImages(t *testing.T) {
 	Convey("Cover errors when pushing", t, func() {
 		dir := t.TempDir()
 
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = dir
@@ -4577,8 +4579,8 @@ func TestMetaDBIndexOperations(t *testing.T) {
 	Convey("Idex Operations BoltDB", t, func() {
 		dir := t.TempDir()
 
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = dir
@@ -4646,7 +4648,7 @@ func RunMetaDBIndexTests(baseURL, port string) {
 		responseImage := responseImages[0]
 		So(len(responseImage.Manifests), ShouldEqual, 3)
 
-		err = SignImageUsingCosign(fmt.Sprintf("repo@%s", indexDigest), port)
+		err = cosign.SignImageUsingCosign(fmt.Sprintf("repo@%s", indexDigest), port)
 		So(err, ShouldBeNil)
 
 		resp, err = resty.R().Get(baseURL + graphqlQueryPrefix + "?query=" + url.QueryEscape(query))
@@ -5204,8 +5206,8 @@ func TestMetaDBWhenReadingImages(t *testing.T) {
 	Convey("Push test image", t, func() {
 		dir := t.TempDir()
 
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = dir
@@ -5284,8 +5286,8 @@ func TestMetaDBWhenReadingImages(t *testing.T) {
 func TestMetaDBWhenDeletingImages(t *testing.T) {
 	Convey("Setting up zot repo with test images", t, func() {
 		dir := t.TempDir()
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		conf := config.New()
 		conf.HTTP.Port = port
@@ -5374,7 +5376,7 @@ func TestMetaDBWhenDeletingImages(t *testing.T) {
 
 		Convey("Delete a cosign signature", func() {
 			repo := "repo1"
-			err := SignImageUsingCosign("repo1:1.0.1", port)
+			err := cosign.SignImageUsingCosign("repo1:1.0.1", port)
 			So(err, ShouldBeNil)
 
 			query := `
@@ -5724,8 +5726,8 @@ func updateManifestConfig(manifest ispec.Manifest, config ispec.Image) (ispec.Ma
 
 func TestSearchSize(t *testing.T) {
 	Convey("Repo sizes", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		conf := config.New()
 		conf.HTTP.Port = port
@@ -5927,8 +5929,8 @@ func TestSearchSize(t *testing.T) {
 
 func TestImageSummary(t *testing.T) {
 	Convey("GraphQL query ImageSummary", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = t.TempDir()
@@ -6148,8 +6150,8 @@ func TestImageSummary(t *testing.T) {
 	})
 
 	Convey("GraphQL query ImageSummary with Vulnerability scan enabled", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = t.TempDir()
@@ -6286,8 +6288,8 @@ func TestImageSummary(t *testing.T) {
 	})
 
 	Convey("GraphQL query for Artifact Type", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = t.TempDir()
@@ -6414,8 +6416,8 @@ func TestImageSummary(t *testing.T) {
 
 func TestUploadingArtifactsWithDifferentMediaType(t *testing.T) {
 	Convey("", t, func() {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.RootDirectory = t.TempDir()

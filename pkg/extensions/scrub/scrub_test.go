@@ -23,6 +23,7 @@ import (
 	"zotregistry.io/zot/pkg/storage/cache"
 	"zotregistry.io/zot/pkg/storage/local"
 	"zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 	. "zotregistry.io/zot/pkg/test/image-utils"
 )
 
@@ -32,7 +33,7 @@ const (
 
 func TestScrubExtension(t *testing.T) {
 	Convey("Blobs integrity not affected", t, func(c C) {
-		port := test.GetFreePort()
+		port := testc.GetFreePort()
 
 		logFile, err := os.CreateTemp("", "zot-log*.txt")
 		So(err, ShouldBeNil)
@@ -64,7 +65,7 @@ func TestScrubExtension(t *testing.T) {
 		ctlr := api.NewController(conf)
 
 		srcStorageCtlr := test.GetDefaultStoreController(dir, log.NewLogger("debug", ""))
-		err = test.WriteImageToFileSystem(CreateDefaultVulnerableImage(), repoName, "0.0.1", srcStorageCtlr)
+		err = WriteImageToFileSystem(CreateDefaultVulnerableImage(), repoName, "0.0.1", srcStorageCtlr)
 		So(err, ShouldBeNil)
 
 		cm := test.NewControllerManager(ctlr)
@@ -79,7 +80,7 @@ func TestScrubExtension(t *testing.T) {
 	})
 
 	Convey("Blobs integrity affected", t, func(c C) {
-		port := test.GetFreePort()
+		port := testc.GetFreePort()
 
 		logFile, err := os.CreateTemp("", "zot-log*.txt")
 		So(err, ShouldBeNil)
@@ -109,7 +110,7 @@ func TestScrubExtension(t *testing.T) {
 
 		srcStorageCtlr := test.GetDefaultStoreController(dir, log.NewLogger("debug", ""))
 		image := CreateDefaultVulnerableImage()
-		err = test.WriteImageToFileSystem(image, repoName, "0.0.1", srcStorageCtlr)
+		err = WriteImageToFileSystem(image, repoName, "0.0.1", srcStorageCtlr)
 		So(err, ShouldBeNil)
 
 		manifestDigest := image.ManifestDescriptor.Digest
@@ -131,7 +132,7 @@ func TestScrubExtension(t *testing.T) {
 	})
 
 	Convey("Generator error - not enough permissions to access root directory", t, func(c C) {
-		port := test.GetFreePort()
+		port := testc.GetFreePort()
 
 		logFile, err := os.CreateTemp("", "zot-log*.txt")
 		So(err, ShouldBeNil)
@@ -162,7 +163,7 @@ func TestScrubExtension(t *testing.T) {
 		srcStorageCtlr := test.GetDefaultStoreController(dir, log.NewLogger("debug", ""))
 		image := CreateDefaultVulnerableImage()
 
-		err = test.WriteImageToFileSystem(image, repoName, "0.0.1", srcStorageCtlr)
+		err = WriteImageToFileSystem(image, repoName, "0.0.1", srcStorageCtlr)
 		So(err, ShouldBeNil)
 
 		So(os.Chmod(path.Join(dir, repoName), 0o000), ShouldBeNil)
@@ -206,7 +207,7 @@ func TestRunScrubRepo(t *testing.T) {
 		srcStorageCtlr := test.GetDefaultStoreController(dir, log)
 		image := CreateDefaultVulnerableImage()
 
-		err = test.WriteImageToFileSystem(image, repoName, "0.0.1", srcStorageCtlr)
+		err = WriteImageToFileSystem(image, repoName, "0.0.1", srcStorageCtlr)
 		So(err, ShouldBeNil)
 
 		err = scrub.RunScrubRepo(context.Background(), imgStore, repoName, log)
@@ -242,7 +243,7 @@ func TestRunScrubRepo(t *testing.T) {
 		srcStorageCtlr := test.GetDefaultStoreController(dir, log)
 		image := CreateDefaultVulnerableImage()
 
-		err = test.WriteImageToFileSystem(image, repoName, "0.0.1", srcStorageCtlr)
+		err = WriteImageToFileSystem(image, repoName, "0.0.1", srcStorageCtlr)
 		So(err, ShouldBeNil)
 
 		manifestDigest := image.ManifestDescriptor.Digest
@@ -285,7 +286,7 @@ func TestRunScrubRepo(t *testing.T) {
 		srcStorageCtlr := test.GetDefaultStoreController(dir, log)
 		image := CreateDefaultVulnerableImage()
 
-		err = test.WriteImageToFileSystem(image, repoName, "0.0.1", srcStorageCtlr)
+		err = WriteImageToFileSystem(image, repoName, "0.0.1", srcStorageCtlr)
 		So(err, ShouldBeNil)
 
 		So(os.Chmod(path.Join(dir, repoName), 0o000), ShouldBeNil)

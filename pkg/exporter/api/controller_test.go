@@ -26,6 +26,7 @@ import (
 	"zotregistry.io/zot/pkg/exporter/api"
 	"zotregistry.io/zot/pkg/extensions/monitoring"
 	. "zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 )
 
 func getRandomLatencyN(max int64) time.Duration {
@@ -81,8 +82,8 @@ func TestNewExporter(t *testing.T) {
 	Convey("Make an exporter controller", t, func() {
 		exporterConfig := api.DefaultConfig()
 		So(exporterConfig, ShouldNotBeNil)
-		exporterPort := GetFreePort()
-		serverPort := GetFreePort()
+		exporterPort := testc.GetFreePort()
+		serverPort := testc.GetFreePort()
 		exporterConfig.Exporter.Port = exporterPort
 		exporterConfig.Exporter.Metrics.Path = strings.TrimPrefix(t.TempDir(), "/tmp/")
 		exporterConfig.Server.Port = serverPort

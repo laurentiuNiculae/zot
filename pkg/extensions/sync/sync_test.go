@@ -49,6 +49,7 @@ import (
 	storageConstants "zotregistry.io/zot/pkg/storage/constants"
 	"zotregistry.io/zot/pkg/test"
 	testc "zotregistry.io/zot/pkg/test/common"
+	"zotregistry.io/zot/pkg/test/cosign"
 	. "zotregistry.io/zot/pkg/test/image-utils"
 	"zotregistry.io/zot/pkg/test/mocks"
 )
@@ -90,13 +91,13 @@ func makeUpstreamServer(
 ) (*api.Controller, string, string, string, *resty.Client) {
 	t.Helper()
 
-	srcPort := test.GetFreePort()
+	srcPort := testc.GetFreePort()
 	srcConfig := config.New()
 	client := resty.New()
 
 	var srcBaseURL string
 	if secure {
-		srcBaseURL = test.GetSecureBaseURL(srcPort)
+		srcBaseURL = testc.GetSecureBaseURL(srcPort)
 
 		srcConfig.HTTP.TLS = &config.TLSConfig{
 			Cert:   ServerCert,
@@ -121,7 +122,7 @@ func makeUpstreamServer(
 
 		client.SetCertificates(cert)
 	} else {
-		srcBaseURL = test.GetBaseURL(srcPort)
+		srcBaseURL = testc.GetBaseURL(srcPort)
 	}
 
 	var htpasswdPath string
@@ -140,12 +141,12 @@ func makeUpstreamServer(
 	srcDir := t.TempDir()
 	srcStorageCtrl := test.GetDefaultStoreController(srcDir, log.NewLogger("debug", ""))
 
-	err := test.WriteImageToFileSystem(CreateDefaultImage(), "zot-test", "0.0.1", srcStorageCtrl)
+	err := WriteImageToFileSystem(CreateDefaultImage(), "zot-test", "0.0.1", srcStorageCtrl)
 	if err != nil {
 		panic(err)
 	}
 
-	err = test.WriteImageToFileSystem(CreateDefaultVulnerableImage(), "zot-cve-test", "0.0.1", srcStorageCtrl)
+	err = WriteImageToFileSystem(CreateDefaultVulnerableImage(), "zot-cve-test", "0.0.1", srcStorageCtrl)
 	if err != nil {
 		panic(err)
 	}
@@ -168,13 +169,13 @@ func makeDownstreamServer(
 ) (*api.Controller, string, string, *resty.Client) {
 	t.Helper()
 
-	destPort := test.GetFreePort()
+	destPort := testc.GetFreePort()
 	destConfig := config.New()
 	client := resty.New()
 
 	var destBaseURL string
 	if secure {
-		destBaseURL = test.GetSecureBaseURL(destPort)
+		destBaseURL = testc.GetSecureBaseURL(destPort)
 
 		destConfig.HTTP.TLS = &config.TLSConfig{
 			Cert:   ServerCert,
@@ -199,7 +200,7 @@ func makeDownstreamServer(
 
 		client.SetCertificates(cert)
 	} else {
-		destBaseURL = test.GetBaseURL(destPort)
+		destBaseURL = testc.GetBaseURL(destPort)
 	}
 
 	destConfig.HTTP.Port = destPort
@@ -723,8 +724,8 @@ func TestOnDemand(t *testing.T) {
 		Convey("Signature copier errors", func() {
 			// start upstream server
 			rootDir := t.TempDir()
-			port := test.GetFreePort()
-			srcBaseURL := test.GetBaseURL(port)
+			port := testc.GetFreePort()
+			srcBaseURL := testc.GetBaseURL(port)
 			conf := config.New()
 			conf.HTTP.Port = port
 			conf.Storage.GC = false
@@ -750,7 +751,7 @@ func TestOnDemand(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			// sign using cosign
-			err = test.SignImageUsingCosign(fmt.Sprintf("remote-repo@%s", manifestDigest.String()), port)
+			err = cosign.SignImageUsingCosign(fmt.Sprintf("remote-repo@%s", manifestDigest.String()), port)
 			So(err, ShouldBeNil)
 
 			// add cosign sbom
@@ -822,10 +823,10 @@ func TestOnDemand(t *testing.T) {
 			regex := ".*"
 			semver := true
 
-			destPort := test.GetFreePort()
+			destPort := testc.GetFreePort()
 			destConfig := config.New()
 
-			destBaseURL := test.GetBaseURL(destPort)
+			destBaseURL := testc.GetBaseURL(destPort)
 
 			hostname, err := os.Hostname()
 			So(err, ShouldBeNil)
@@ -1669,9 +1670,9 @@ func TestPermsDenied(t *testing.T) {
 			Registries: []syncconf.RegistryConfig{syncRegistryConfig},
 		}
 
-		destPort := test.GetFreePort()
+		destPort := testc.GetFreePort()
 		destConfig := config.New()
-		destBaseURL := test.GetBaseURL(destPort)
+		destBaseURL := testc.GetBaseURL(destPort)
 
 		destConfig.HTTP.Port = destPort
 
@@ -1760,9 +1761,9 @@ func TestConfigReloader(t *testing.T) {
 			Registries: []syncconf.RegistryConfig{syncRegistryConfig},
 		}
 
-		destPort := test.GetFreePort()
+		destPort := testc.GetFreePort()
 		destConfig := config.New()
-		destBaseURL := test.GetBaseURL(destPort)
+		destBaseURL := testc.GetBaseURL(destPort)
 
 		destConfig.HTTP.Port = destPort
 
@@ -2035,11 +2036,11 @@ func TestMandatoryAnnotations(t *testing.T) {
 			Registries: []syncconf.RegistryConfig{syncRegistryConfig},
 		}
 
-		destPort := test.GetFreePort()
+		destPort := testc.GetFreePort()
 		destConfig := config.New()
 		destClient := resty.New()
 
-		destBaseURL := test.GetBaseURL(destPort)
+		destBaseURL := testc.GetBaseURL(destPort)
 
 		destConfig.HTTP.Port = destPort
 
@@ -2349,8 +2350,8 @@ func TestBasicAuth(t *testing.T) {
 			scm.StartAndWait(sctlr.Config.HTTP.Port)
 			defer scm.StopServer()
 
-			destPort := test.GetFreePort()
-			destBaseURL := test.GetBaseURL(destPort)
+			destPort := testc.GetFreePort()
+			destBaseURL := testc.GetBaseURL(destPort)
 
 			destConfig := config.New()
 			destConfig.HTTP.Port = destPort
@@ -2967,7 +2968,7 @@ func TestCertsWithWrongPerms(t *testing.T) {
 		}
 
 		// can't create http client because of no perms on ca cert
-		destPort := test.GetFreePort()
+		destPort := testc.GetFreePort()
 		destConfig := config.New()
 		destConfig.HTTP.Port = destPort
 
@@ -3102,9 +3103,9 @@ func TestSubPaths(t *testing.T) {
 	Convey("Verify sync with storage subPaths", t, func() {
 		updateDuration, _ := time.ParseDuration("30m")
 
-		srcPort := test.GetFreePort()
+		srcPort := testc.GetFreePort()
 		srcConfig := config.New()
-		srcBaseURL := test.GetBaseURL(srcPort)
+		srcBaseURL := testc.GetBaseURL(srcPort)
 
 		srcConfig.HTTP.Port = srcPort
 
@@ -3115,10 +3116,10 @@ func TestSubPaths(t *testing.T) {
 		subpath := "/subpath"
 		srcStorageCtlr := test.GetDefaultStoreController(path.Join(srcDir, subpath), log.NewLogger("debug", ""))
 
-		err := test.WriteImageToFileSystem(CreateDefaultImage(), "zot-test", "0.0.1", srcStorageCtlr)
+		err := WriteImageToFileSystem(CreateDefaultImage(), "zot-test", "0.0.1", srcStorageCtlr)
 		So(err, ShouldBeNil)
 
-		err = test.WriteImageToFileSystem(CreateDefaultVulnerableImage(), "zot-cve-test", "0.0.1", srcStorageCtlr)
+		err = WriteImageToFileSystem(CreateDefaultVulnerableImage(), "zot-cve-test", "0.0.1", srcStorageCtlr)
 		So(err, ShouldBeNil)
 
 		srcConfig.Storage.RootDirectory = srcDir
@@ -3156,7 +3157,7 @@ func TestSubPaths(t *testing.T) {
 			Registries: []syncconf.RegistryConfig{syncRegistryConfig},
 		}
 
-		destPort := test.GetFreePort()
+		destPort := testc.GetFreePort()
 		destConfig := config.New()
 
 		destDir := t.TempDir()
@@ -3175,7 +3176,7 @@ func TestSubPaths(t *testing.T) {
 			},
 		}
 
-		destBaseURL := test.GetBaseURL(destPort)
+		destBaseURL := testc.GetBaseURL(destPort)
 		destConfig.HTTP.Port = destPort
 
 		destConfig.Extensions = &extconf.ExtensionConfig{}
@@ -4520,7 +4521,7 @@ func TestSyncedSignaturesMetaDB(t *testing.T) {
 		err = test.SignImageUsingNotary(repoName+":"+tag, srcPort)
 		So(err, ShouldBeNil)
 
-		err = test.SignImageUsingCosign(repoName+":"+tag, srcPort)
+		err = cosign.SignImageUsingCosign(repoName+":"+tag, srcPort)
 		So(err, ShouldBeNil)
 
 		// Create destination registry
@@ -4578,9 +4579,9 @@ func TestSyncedSignaturesMetaDB(t *testing.T) {
 
 func TestOnDemandRetryGoroutine(t *testing.T) {
 	Convey("Verify ondemand sync retries in background on error", t, func() {
-		srcPort := test.GetFreePort()
+		srcPort := testc.GetFreePort()
 		srcConfig := config.New()
-		srcBaseURL := test.GetBaseURL(srcPort)
+		srcBaseURL := testc.GetBaseURL(srcPort)
 
 		srcConfig.HTTP.Port = srcPort
 		srcConfig.Storage.GC = false
@@ -4589,10 +4590,10 @@ func TestOnDemandRetryGoroutine(t *testing.T) {
 
 		srcStorageCtlr := test.GetDefaultStoreController(srcDir, log.NewLogger("debug", ""))
 
-		err := test.WriteImageToFileSystem(CreateDefaultImage(), "zot-test", "0.0.1", srcStorageCtlr)
+		err := WriteImageToFileSystem(CreateDefaultImage(), "zot-test", "0.0.1", srcStorageCtlr)
 		So(err, ShouldBeNil)
 
-		err = test.WriteImageToFileSystem(CreateDefaultVulnerableImage(), "zot-cve-test", "0.0.1", srcStorageCtlr)
+		err = WriteImageToFileSystem(CreateDefaultVulnerableImage(), "zot-cve-test", "0.0.1", srcStorageCtlr)
 		So(err, ShouldBeNil)
 
 		srcConfig.Storage.RootDirectory = srcDir
@@ -4791,9 +4792,9 @@ func TestOnDemandRetryGoroutineErr(t *testing.T) {
 
 func TestOnDemandMultipleImage(t *testing.T) {
 	Convey("Verify ondemand sync retries in background on error, multiple calls should spawn one routine", t, func() {
-		srcPort := test.GetFreePort()
+		srcPort := testc.GetFreePort()
 		srcConfig := config.New()
-		srcBaseURL := test.GetBaseURL(srcPort)
+		srcBaseURL := testc.GetBaseURL(srcPort)
 
 		srcConfig.HTTP.Port = srcPort
 		srcConfig.Storage.GC = false
@@ -4802,10 +4803,10 @@ func TestOnDemandMultipleImage(t *testing.T) {
 
 		srcStorageCtlr := test.GetDefaultStoreController(srcDir, log.NewLogger("debug", ""))
 
-		err := test.WriteImageToFileSystem(CreateDefaultImage(), "zot-test", "0.0.1", srcStorageCtlr)
+		err := WriteImageToFileSystem(CreateDefaultImage(), "zot-test", "0.0.1", srcStorageCtlr)
 		So(err, ShouldBeNil)
 
-		err = test.WriteImageToFileSystem(CreateDefaultVulnerableImage(), "zot-cve-test", "0.0.1", srcStorageCtlr)
+		err = WriteImageToFileSystem(CreateDefaultVulnerableImage(), "zot-cve-test", "0.0.1", srcStorageCtlr)
 		So(err, ShouldBeNil)
 
 		srcConfig.Storage.RootDirectory = srcDir
@@ -5232,9 +5233,9 @@ func TestSignaturesOnDemand(t *testing.T) {
 			Registries: []syncconf.RegistryConfig{syncRegistryConfig},
 		}
 
-		destPort := test.GetFreePort()
+		destPort := testc.GetFreePort()
 		destConfig := config.New()
-		destBaseURL := test.GetBaseURL(destPort)
+		destBaseURL := testc.GetBaseURL(destPort)
 		destConfig.HTTP.Port = destPort
 
 		destDir := t.TempDir()
@@ -5440,9 +5441,9 @@ func TestSyncOnlyDiff(t *testing.T) {
 			Registries: []syncconf.RegistryConfig{syncRegistryConfig},
 		}
 
-		destPort := test.GetFreePort()
+		destPort := testc.GetFreePort()
 		destConfig := config.New()
-		destBaseURL := test.GetBaseURL(destPort)
+		destBaseURL := testc.GetBaseURL(destPort)
 		destConfig.HTTP.Port = destPort
 
 		destDir := t.TempDir()
@@ -5450,10 +5451,10 @@ func TestSyncOnlyDiff(t *testing.T) {
 		// copy images so we have them before syncing, sync should not pull them again
 		destStorageCtrl := test.GetDefaultStoreController(destDir, log.NewLogger("debug", ""))
 
-		err := test.WriteImageToFileSystem(CreateDefaultImage(), "zot-test", "0.0.1", destStorageCtrl)
+		err := WriteImageToFileSystem(CreateDefaultImage(), "zot-test", "0.0.1", destStorageCtrl)
 		So(err, ShouldBeNil)
 
-		err = test.WriteImageToFileSystem(CreateDefaultVulnerableImage(), "zot-cve-test", "0.0.1", destStorageCtrl)
+		err = WriteImageToFileSystem(CreateDefaultVulnerableImage(), "zot-cve-test", "0.0.1", destStorageCtrl)
 		So(err, ShouldBeNil)
 
 		destConfig.Storage.RootDirectory = destDir
@@ -5526,9 +5527,9 @@ func TestSyncWithDiffDigest(t *testing.T) {
 			Registries: []syncconf.RegistryConfig{syncRegistryConfig},
 		}
 
-		destPort := test.GetFreePort()
+		destPort := testc.GetFreePort()
 		destConfig := config.New()
-		destBaseURL := test.GetBaseURL(destPort)
+		destBaseURL := testc.GetBaseURL(destPort)
 		destConfig.HTTP.Port = destPort
 
 		destDir := t.TempDir()
@@ -5536,10 +5537,10 @@ func TestSyncWithDiffDigest(t *testing.T) {
 		// copy images so we have them before syncing, sync should not pull them again
 		srcStorageCtlr := test.GetDefaultStoreController(destDir, log.NewLogger("debug", ""))
 
-		err := test.WriteImageToFileSystem(CreateDefaultImage(), "zot-test", "0.0.1", srcStorageCtlr)
+		err := WriteImageToFileSystem(CreateDefaultImage(), "zot-test", "0.0.1", srcStorageCtlr)
 		So(err, ShouldBeNil)
 
-		err = test.WriteImageToFileSystem(CreateDefaultVulnerableImage(), "zot-cve-test", "0.0.1", srcStorageCtlr)
+		err = WriteImageToFileSystem(CreateDefaultVulnerableImage(), "zot-cve-test", "0.0.1", srcStorageCtlr)
 		So(err, ShouldBeNil)
 
 		destConfig.Storage.RootDirectory = destDir

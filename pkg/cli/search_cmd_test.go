@@ -19,6 +19,7 @@ import (
 	"zotregistry.io/zot/pkg/api/config"
 	extconf "zotregistry.io/zot/pkg/extensions/config"
 	"zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 	. "zotregistry.io/zot/pkg/test/image-utils"
 )
 
@@ -32,8 +33,8 @@ func TestReferrerCLI(t *testing.T) {
 	Convey("Test GQL", t, func() {
 		rootDir := t.TempDir()
 
-		port := test.GetFreePort()
-		baseURL := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.GC = false
@@ -129,8 +130,8 @@ func TestReferrerCLI(t *testing.T) {
 	Convey("Test REST", t, func() {
 		rootDir := t.TempDir()
 
-		port := test.GetFreePort()
-		baseURL := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.GC = false
@@ -224,8 +225,8 @@ func TestFormatsReferrersCLI(t *testing.T) {
 	Convey("Create server", t, func() {
 		rootDir := t.TempDir()
 
-		port := test.GetFreePort()
-		baseURL := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.GC = false
@@ -428,8 +429,8 @@ func TestSearchCLI(t *testing.T) {
 	Convey("Test GQL", t, func() {
 		rootDir := t.TempDir()
 
-		port := test.GetFreePort()
-		baseURL := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.GC = false
@@ -542,8 +543,8 @@ func TestFormatsSearchCLI(t *testing.T) {
 	Convey("", t, func() {
 		rootDir := t.TempDir()
 
-		port := test.GetFreePort()
-		baseURL := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.GC = false
@@ -727,8 +728,8 @@ func TestSearchCLIErrors(t *testing.T) {
 }
 
 func TestSearchCommandGQL(t *testing.T) {
-	port := test.GetFreePort()
-	baseURL := test.GetBaseURL(port)
+	port := testc.GetFreePort()
+	baseURL := testc.GetBaseURL(port)
 	conf := config.New()
 	conf.HTTP.Port = port
 
@@ -814,8 +815,8 @@ func TestSearchCommandGQL(t *testing.T) {
 }
 
 func TestSearchCommandREST(t *testing.T) {
-	port := test.GetFreePort()
-	baseURL := test.GetBaseURL(port)
+	port := testc.GetFreePort()
+	baseURL := testc.GetBaseURL(port)
 	conf := config.New()
 	conf.HTTP.Port = port
 
@@ -867,8 +868,8 @@ func TestSearchCommandREST(t *testing.T) {
 
 func TestSearchSort(t *testing.T) {
 	rootDir := t.TempDir()
-	port := test.GetFreePort()
-	baseURL := test.GetBaseURL(port)
+	port := testc.GetFreePort()
+	baseURL := testc.GetBaseURL(port)
 	conf := config.New()
 	conf.HTTP.Port = port
 
@@ -892,12 +893,12 @@ func TestSearchSort(t *testing.T) {
 
 	storeController := test.GetDefaultStoreController(rootDir, ctlr.Log)
 
-	err := test.WriteImageToFileSystem(image1, "b-repo", "tag2", storeController)
+	err := WriteImageToFileSystem(image1, "b-repo", "tag2", storeController)
 	if err != nil {
 		t.FailNow()
 	}
 
-	err = test.WriteImageToFileSystem(image2, "a-test-repo", "tag2", storeController)
+	err = WriteImageToFileSystem(image2, "a-test-repo", "tag2", storeController)
 	if err != nil {
 		t.FailNow()
 	}

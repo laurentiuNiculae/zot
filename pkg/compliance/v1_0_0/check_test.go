@@ -13,7 +13,7 @@ import (
 	"zotregistry.io/zot/pkg/api/config"
 	"zotregistry.io/zot/pkg/compliance"
 	"zotregistry.io/zot/pkg/compliance/v1_0_0"
-	. "zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 )
 
 //nolint:gochecknoglobals
@@ -55,8 +55,8 @@ func TestWorkflowsOutputJSON(t *testing.T) {
 func startServer(t *testing.T) (*api.Controller, string) {
 	t.Helper()
 
-	port := GetFreePort()
-	baseURL := GetBaseURL(port)
+	port := testc.GetFreePort()
+	baseURL := testc.GetBaseURL(port)
 	conf := config.New()
 	conf.HTTP.Address = listenAddress
 	conf.HTTP.Port = port

@@ -22,6 +22,7 @@ import (
 	extconf "zotregistry.io/zot/pkg/extensions/config"
 	syncconf "zotregistry.io/zot/pkg/extensions/config/sync"
 	"zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 )
 
 const (
@@ -32,7 +33,7 @@ const (
 func TestEnableExtension(t *testing.T) {
 	Convey("Verify log if sync disabled in config", t, func() {
 		globalDir := t.TempDir()
-		port := test.GetFreePort()
+		port := testc.GetFreePort()
 		conf := config.New()
 		falseValue := false
 
@@ -72,7 +73,7 @@ func TestMetricsExtension(t *testing.T) {
 	Convey("Verify Metrics enabled for storage subpaths", t, func() {
 		globalDir := t.TempDir()
 		conf := config.New()
-		port := test.GetFreePort()
+		port := testc.GetFreePort()
 		conf.HTTP.Port = port
 
 		logFile, err := os.CreateTemp(globalDir, "zot-log*.txt")
@@ -112,9 +113,9 @@ func TestMetricsExtension(t *testing.T) {
 func TestMgmtExtension(t *testing.T) {
 	globalDir := t.TempDir()
 	conf := config.New()
-	port := test.GetFreePort()
+	port := testc.GetFreePort()
 	conf.HTTP.Port = port
-	baseURL := test.GetBaseURL(port)
+	baseURL := testc.GetBaseURL(port)
 
 	logFile, err := os.CreateTemp(globalDir, "zot-log*.txt")
 	if err != nil {
@@ -693,9 +694,9 @@ func TestMgmtExtension(t *testing.T) {
 	Convey("Verify mgmt auth info route enabled without any auth", t, func() {
 		globalDir := t.TempDir()
 		conf := config.New()
-		port := test.GetFreePort()
+		port := testc.GetFreePort()
 		conf.HTTP.Port = port
-		baseURL := test.GetBaseURL(port)
+		baseURL := testc.GetBaseURL(port)
 
 		logFile, err := os.CreateTemp(globalDir, "zot-log*.txt")
 		So(err, ShouldBeNil)
@@ -759,8 +760,8 @@ func TestMgmtWithBearer(t *testing.T) {
 		authTestServer := test.MakeAuthTestServer(ServerKey, unauthorizedNamespace)
 		defer authTestServer.Close()
 
-		port := test.GetFreePort()
-		baseURL := test.GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 
 		conf := config.New()
 		conf.HTTP.Port = port
@@ -907,7 +908,7 @@ func TestAllowedMethodsHeaderMgmt(t *testing.T) {
 
 	Convey("Test http options response", t, func() {
 		conf := config.New()
-		port := test.GetFreePort()
+		port := testc.GetFreePort()
 		conf.HTTP.Port = port
 		conf.Extensions = &extconf.ExtensionConfig{}
 		conf.Extensions.Search = &extconf.SearchConfig{}
@@ -916,7 +917,7 @@ func TestAllowedMethodsHeaderMgmt(t *testing.T) {
 		conf.Extensions.UI = &extconf.UIConfig{}
 		conf.Extensions.UI.Enable = &defaultVal
 
-		baseURL := test.GetBaseURL(port)
+		baseURL := testc.GetBaseURL(port)
 
 		ctlr := api.NewController(conf)
 		ctlr.Config.Storage.RootDirectory = t.TempDir()

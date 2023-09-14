@@ -15,6 +15,7 @@ import (
 
 	"zotregistry.io/zot/pkg/cli"
 	. "zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 )
 
 const readLogFileTimeout = 5 * time.Second
@@ -25,8 +26,8 @@ func TestServeExtensions(t *testing.T) {
 	defer func() { os.Args = oldArgs }()
 
 	Convey("config file with no extensions", t, func(c C) {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		logFile, err := os.CreateTemp("", "zot-log*.txt")
 		So(err, ShouldBeNil)
 		defer os.Remove(logFile.Name()) // clean up
@@ -66,8 +67,8 @@ func TestServeExtensions(t *testing.T) {
 	})
 
 	Convey("config file with empty extensions", t, func(c C) {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		logFile, err := os.CreateTemp("", "zot-log*.txt")
 		So(err, ShouldBeNil)
 		defer os.Remove(logFile.Name()) // clean up
@@ -111,8 +112,8 @@ func TestServeExtensions(t *testing.T) {
 }
 
 func testWithMetricsEnabled(cfgContentFormat string) {
-	port := GetFreePort()
-	baseURL := GetBaseURL(port)
+	port := testc.GetFreePort()
+	baseURL := testc.GetBaseURL(port)
 	logFile, err := os.CreateTemp("", "zot-log*.txt")
 	So(err, ShouldBeNil)
 
@@ -223,8 +224,8 @@ func TestServeMetricsExtension(t *testing.T) {
 	})
 
 	Convey("with explicit disable", t, func(c C) {
-		port := GetFreePort()
-		baseURL := GetBaseURL(port)
+		port := testc.GetFreePort()
+		baseURL := testc.GetBaseURL(port)
 		logFile, err := os.CreateTemp("", "zot-log*.txt")
 		So(err, ShouldBeNil)
 		defer os.Remove(logFile.Name()) // clean up

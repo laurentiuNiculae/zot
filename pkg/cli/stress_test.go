@@ -18,6 +18,7 @@ import (
 	"zotregistry.io/zot/pkg/api/config"
 	"zotregistry.io/zot/pkg/cli"
 	"zotregistry.io/zot/pkg/test"
+	testc "zotregistry.io/zot/pkg/test/common"
 )
 
 const (
@@ -38,7 +39,7 @@ func TestSressTooManyOpenFiles(t *testing.T) {
 		initialLimit, err := setMaxOpenFilesLimit(MaxFileDescriptors)
 		So(err, ShouldBeNil)
 
-		port := test.GetFreePort()
+		port := testc.GetFreePort()
 		conf := config.New()
 		conf.HTTP.Port = port
 		conf.Storage.Dedupe = false

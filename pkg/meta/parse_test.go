@@ -25,6 +25,7 @@ import (
 	"zotregistry.io/zot/pkg/storage/local"
 	storageTypes "zotregistry.io/zot/pkg/storage/types"
 	"zotregistry.io/zot/pkg/test"
+	"zotregistry.io/zot/pkg/test/cosign"
 	. "zotregistry.io/zot/pkg/test/image-utils"
 	"zotregistry.io/zot/pkg/test/mocks"
 )
@@ -311,7 +312,7 @@ func TestParseStorageErrors(t *testing.T) {
 
 				_, _, cosignManifestContent, _ := test.GetRandomImageComponents(10) //nolint:staticcheck
 				_, _, signedManifest, _ := test.GetRandomImageComponents(10)        //nolint:staticcheck
-				signatureTag, err := test.GetCosignSignatureTagForManifest(signedManifest)
+				signatureTag, err := cosign.GetCosignSignatureTagForManifest(signedManifest)
 				So(err, ShouldBeNil)
 
 				cosignManifestContent.Annotations = map[string]string{ispec.AnnotationRefName: signatureTag}
@@ -411,7 +412,7 @@ func RunParseStorageTests(rootDir string, metaDB mTypes.MetaDB) {
 
 			manifests = append(manifests, manifest)
 
-			err = test.WriteImageToFileSystem(
+			err = WriteImageToFileSystem(
 				Image{
 					Config:   config,
 					Layers:   layers,
@@ -421,7 +422,7 @@ func RunParseStorageTests(rootDir string, metaDB mTypes.MetaDB) {
 		}
 
 		// add fake signature for tag1
-		signatureTag, err := test.GetCosignSignatureTagForManifest(manifests[1])
+		signatureTag, err := cosign.GetCosignSignatureTagForManifest(manifests[1])
 		So(err, ShouldBeNil)
 
 		manifestBlob, err := json.Marshal(manifests[1])
@@ -432,7 +433,7 @@ func RunParseStorageTests(rootDir string, metaDB mTypes.MetaDB) {
 		config, layers, manifest, err := test.GetRandomImageComponents(100) //nolint:staticcheck
 		So(err, ShouldBeNil)
 
-		err = test.WriteImageToFileSystem(
+		err = WriteImageToFileSystem(
 			Image{
 				Config:   config,
 				Layers:   layers,
@@ -494,7 +495,7 @@ func RunParseStorageTests(rootDir string, metaDB mTypes.MetaDB) {
 		config, layers, manifest, err := test.GetRandomImageComponents(100) //nolint:staticcheck
 		So(err, ShouldBeNil)
 
-		err = test.WriteImageToFileSystem(
+		err = WriteImageToFileSystem(
 			Image{
 				Config:   config,
 				Layers:   layers,
@@ -506,7 +507,7 @@ func RunParseStorageTests(rootDir string, metaDB mTypes.MetaDB) {
 		image, err := test.GetRandomImage() //nolint:staticcheck
 		So(err, ShouldBeNil)
 
-		signatureTag, err := test.GetCosignSignatureTagForManifest(image.Manifest)
+		signatureTag, err := cosign.GetCosignSignatureTagForManifest(image.Manifest)
 		So(err, ShouldBeNil)
 
 		missingImageDigest := image.Digest()
@@ -515,7 +516,7 @@ func RunParseStorageTests(rootDir string, metaDB mTypes.MetaDB) {
 		config, layers, manifest, err = test.GetRandomImageComponents(100) //nolint:staticcheck
 		So(err, ShouldBeNil)
 
-		err = test.WriteImageToFileSystem(
+		err = WriteImageToFileSystem(
 			Image{
 				Config:   config,
 				Layers:   layers,
@@ -553,7 +554,7 @@ func RunParseStorageTests(rootDir string, metaDB mTypes.MetaDB) {
 
 		manifestDigest := image.Digest()
 
-		err = test.WriteImageToFileSystem(image, repo, "tag", storeController)
+		err = WriteImageToFileSystem(image, repo, "tag", storeController)
 		So(err, ShouldBeNil)
 
 		err = metaDB.SetRepoReference(repo, "tag", manifestDigest, ispec.MediaTypeImageManifest)

@@ -1,4 +1,4 @@
-package test
+package http
 
 import (
 	"errors"
@@ -47,7 +47,7 @@ func StartTestHTTPServer(routes HTTPRoutes, port string) *http.Server {
 		}
 	}()
 
-	WaitTillServerReady(baseURL + "/test")
+	testc.WaitTillServerReady(baseURL + "/test")
 
 	return server
 }
