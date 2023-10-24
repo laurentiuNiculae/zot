@@ -19,6 +19,7 @@ import (
 	zerr "zotregistry.io/zot/errors"
 	"zotregistry.io/zot/pkg/api/constants"
 	zcommon "zotregistry.io/zot/pkg/common"
+	"zotregistry.io/zot/pkg/extensions/search/pagination"
 	"zotregistry.io/zot/pkg/log"
 	"zotregistry.io/zot/pkg/meta/common"
 	mConvert "zotregistry.io/zot/pkg/meta/convert"
@@ -823,6 +824,11 @@ func (dwr *DynamoDB) ResetRepoReferences(repo string) error {
 		Referrers:  map[string]*proto_go.ReferrersInfo{"": {}},
 		Signatures: map[string]*proto_go.ManifestSignatures{"": {Map: map[string]*proto_go.SignaturesInfo{"": {}}}},
 	})
+}
+
+func (bdw *DynamoDB) SearchReposPage(ctx context.Context, searchText string, filter mTypes.Filter, pageInput pagination.PageInput,
+) ([]mTypes.RepoMeta, zcommon.PageInfo, error) {
+	panic("")
 }
 
 func (dwr *DynamoDB) GetRepoMeta(ctx context.Context, repo string) (mTypes.RepoMeta, error) {

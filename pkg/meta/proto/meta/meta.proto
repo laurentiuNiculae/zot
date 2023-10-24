@@ -42,13 +42,13 @@ message RepoMeta {
     string                     Name = 1;
     map<string, TagDescriptor> Tags = 2;
 
-    map<string, DescriptorStatistics> Statistics = 3;
-    map<string, ManifestSignatures>   Signatures = 4;
-    map<string, ReferrersInfo>        Referrers  = 5;
+    bool  IsStarred    = 3;
+    bool  IsBookmarked = 4;
+    int32 Rank         = 5;
 
-    bool  IsStarred    = 6;
-    bool  IsBookmarked = 7;
-    int32 Rank         = 8;
+    map<string, DescriptorStatistics> Statistics = 6;
+    map<string, ManifestSignatures>   Signatures = 7;
+    map<string, ReferrersInfo>        Referrers  = 8;
 
     int32 Stars = 9;
 
@@ -60,8 +60,14 @@ message RepoMeta {
     int32 Downloads = 14;
 }
 
+message RepoImageInfo {
+    map<string, DescriptorStatistics> Statistics = 1;
+    map<string, ManifestSignatures>   Signatures = 2;
+    map<string, ReferrersInfo>        Referrers  = 3;
+}
+
 message RepoBlobs {
-    string Name = 1;
+    string Name  = 1;
     map<string, BlobInfo> Blobs = 2;
 }
 

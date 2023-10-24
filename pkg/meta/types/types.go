@@ -6,6 +6,8 @@ import (
 
 	godigest "github.com/opencontainers/go-digest"
 	ispec "github.com/opencontainers/image-spec/specs-go/v1"
+	zcommon "zotregistry.io/zot/pkg/common"
+	"zotregistry.io/zot/pkg/extensions/search/pagination"
 )
 
 // Used to model changes to an object after a call to the DB.
@@ -68,6 +70,10 @@ type MetaDB interface { //nolint:interfacebloat
 
 	// SearchRepos searches for repos given a search string
 	SearchRepos(ctx context.Context, searchText string) ([]RepoMeta, error)
+
+	// SearchRepos searches for repos given a search string
+	SearchReposPage(ctx context.Context, searchText string, filter Filter, pageInput pagination.PageInput,
+	) ([]RepoMeta, zcommon.PageInfo, error)
 
 	// SearchTags searches for images(repo:tag) given a search string
 	SearchTags(ctx context.Context, searchText string) ([]FullImageMeta, error)

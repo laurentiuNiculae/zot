@@ -17,6 +17,8 @@ import (
 	zerr "zotregistry.io/zot/errors"
 	"zotregistry.io/zot/pkg/api/constants"
 	zcommon "zotregistry.io/zot/pkg/common"
+	"zotregistry.io/zot/pkg/extensions/search/pagination"
+	metaPage "zotregistry.io/zot/pkg/extensions/search/pagination/meta-pagination"
 	"zotregistry.io/zot/pkg/log"
 	"zotregistry.io/zot/pkg/meta/common"
 	mConvert "zotregistry.io/zot/pkg/meta/convert"
@@ -74,6 +76,9 @@ func New(boltDB *bbolt.DB, log log.Logger) (*BoltDB, error) {
 		if err != nil {
 			return err
 		}
+
+		repoBlobsBuck.CreateBucketIfNotExists([]byte("RepoImageInfo"))
+		repoBlobsBuck.CreateBucketIfNotExists([]byte("RepoBlobsInfo"))
 
 		return nil
 	})
@@ -183,7 +188,8 @@ func (bdw *BoltDB) SetRepoReference(ctx context.Context, repo string, reference 
 
 	err = bdw.DB.Update(func(tx *bbolt.Tx) error {
 		repoBuck := tx.Bucket([]byte(RepoMetaBuck))
-		repoBlobsBuck := tx.Bucket([]byte(RepoBlobsBuck))
+		repoBlobsInfo := tx.Bucket([]byte(RepoBlobsBuck)).Bucket([]byte("RepoBlobsInfo"))
+		repoImageInfo := tx.Bucket([]byte(RepoBlobsBuck)).Bucket([]byte("RepoImageInfo"))
 		repoLastUpdatedBuck := repoBlobsBuck.Bucket([]byte(RepoLastUpdatedBuck))
 		imageBuck := tx.Bucket([]byte(ImageMetaBuck))
 
@@ -201,7 +207,7 @@ func (bdw *BoltDB) SetRepoReference(ctx context.Context, repo string, reference 
 			return err
 		}
 
-		protoRepoMeta, err := getProtoRepoMeta(repo, repoBuck)
+		protoRepoMeta, err := bdw.getProtoRepoMeta(repoBuck, repoImageInfo, repo)
 		if err != nil && !errors.Is(err, zerr.ErrRepoMetaNotFound) {
 			return err
 		}
@@ -270,7 +276,7 @@ func (bdw *BoltDB) SetRepoReference(ctx context.Context, repo string, reference 
 		}
 
 		// 4. Blobs
-		repoBlobsBytes := repoBlobsBuck.Get([]byte(repo))
+		repoBlobsBytes := repoBlobsInfo.Get([]byte(protoRepoMeta.Name))
 
 		repoBlobs, err := unmarshalProtoRepoBlobs(repo, repoBlobsBytes)
 		if err != nil {
@@ -284,12 +290,12 @@ func (bdw *BoltDB) SetRepoReference(ctx context.Context, repo string, reference 
 			return err
 		}
 
-		err = setProtoRepoBlobs(repoBlobs, repoBlobsBuck)
+		err = setProtoRepoBlobs(repoBlobs, repoBlobsInfo)
 		if err != nil {
 			return err
 		}
 
-		return setProtoRepoMeta(protoRepoMeta, repoBuck)
+		return bdw.setProtoRepoMeta(repoBuck, repoImageInfo, protoRepoMeta)
 	})
 
 	return err
@@ -386,6 +392,72 @@ func setProtoRepoMeta(repoMeta *proto_go.RepoMeta, repoBuck *bbolt.Bucket) error
 	return repoBuck.Put([]byte(repoMeta.Name), repoMetaBlob)
 }
 
+func (bdw *BoltDB) getProtoRepoMeta(repoBuck, repoImageInfo *bbolt.Bucket, repo string) (*proto_go.RepoMeta, error) {
+	repoMetaBlob := repoBuck.Get([]byte(repo))
+
+	protoRepoMeta := &proto_go.RepoMeta{
+		Name: repo,
+		Tags: map[string]*proto_go.TagDescriptor{"": {}}, // This is done so Protobuf can initialize a non-nil map
+	}
+
+	if len(repoMetaBlob) > 0 {
+		err := proto.Unmarshal(repoMetaBlob, protoRepoMeta)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	protoRepoImageInfoBlob := repoImageInfo.Get([]byte(repo))
+
+	protoRepoImageInfo := &proto_go.RepoImageInfo{
+		Statistics: map[string]*proto_go.DescriptorStatistics{"": {}},
+		Signatures: map[string]*proto_go.ManifestSignatures{"": {Map: map[string]*proto_go.SignaturesInfo{"": {}}}},
+		Referrers:  map[string]*proto_go.ReferrersInfo{"": {}},
+	}
+
+	if len(protoRepoImageInfoBlob) > 0 {
+		err := proto.Unmarshal(protoRepoImageInfoBlob, protoRepoImageInfo)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	protoRepoMeta.Statistics = protoRepoImageInfo.Statistics
+	protoRepoMeta.Signatures = protoRepoImageInfo.Signatures
+	protoRepoMeta.Referrers = protoRepoImageInfo.Referrers
+
+	return protoRepoMeta, nil
+}
+
+func (bdw *BoltDB) setProtoRepoMeta(repoBuck, repoImageInfo *bbolt.Bucket, protoRepoMeta *proto_go.RepoMeta) error {
+	protoRepoImageInfo := &proto_go.RepoImageInfo{}
+
+	protoRepoImageInfo.Statistics = protoRepoMeta.Statistics
+	protoRepoImageInfo.Signatures = protoRepoMeta.Signatures
+	protoRepoImageInfo.Referrers = protoRepoMeta.Referrers
+
+	protoRepoMeta.Statistics = nil
+	protoRepoMeta.Signatures = nil
+	protoRepoMeta.Referrers = nil
+
+	repoMetaBlob, err := proto.Marshal(protoRepoMeta)
+	if err != nil {
+		return err
+	}
+
+	protoRepoImageInfoBlob, err := proto.Marshal(protoRepoImageInfo)
+	if err != nil {
+		return err
+	}
+
+	err = repoImageInfo.Put([]byte(protoRepoMeta.Name), protoRepoImageInfoBlob)
+	if err != nil {
+		return err
+	}
+
+	return repoBuck.Put([]byte(protoRepoMeta.Name), repoMetaBlob)
+}
+
 func (bdw *BoltDB) FilterImageMeta(ctx context.Context, digests []string,
 ) (map[string]mTypes.ImageMeta, error) {
 	imageMetaMap := map[string]mTypes.ImageMeta{}
@@ -430,13 +502,14 @@ func (bdw *BoltDB) SearchRepos(ctx context.Context, searchText string,
 	err := bdw.DB.View(func(transaction *bbolt.Tx) error {
 		var (
 			repoBuck      = transaction.Bucket([]byte(RepoMetaBuck))
+			repoImageInfo = transaction.Bucket([]byte(RepoBlobsBuck)).Bucket([]byte("RepoImageInfo"))
 			userBookmarks = getUserBookmarks(ctx, transaction)
 			userStars     = getUserStars(ctx, transaction)
 		)
 
 		cursor := repoBuck.Cursor()
 
-		for repoName, repoMetaBlob := cursor.First(); repoName != nil; repoName, repoMetaBlob = cursor.Next() {
+		for repoName, _ := cursor.First(); repoName != nil; repoName, _ = cursor.Next() {
 			if ok, err := reqCtx.RepoIsUserAvailable(ctx, string(repoName)); !ok || err != nil {
 				continue
 			}
@@ -446,7 +519,8 @@ func (bdw *BoltDB) SearchRepos(ctx context.Context, searchText string,
 				continue
 			}
 
-			protoRepoMeta, err := unmarshalProtoRepoMeta(string(repoName), repoMetaBlob)
+			// protoRepoMeta, err := unmarshalProtoRepoMeta(string(repoName), repoMetaBlob)
+			protoRepoMeta, err := bdw.getProtoRepoMeta(repoBuck, repoImageInfo, string(repoName))
 			if err != nil {
 				return err
 			}
@@ -468,6 +542,150 @@ func (bdw *BoltDB) SearchRepos(ctx context.Context, searchText string,
 	})
 
 	return repos, err
+}
+
+func (bdw *BoltDB) SearchReposPage(ctx context.Context, searchText string, filter mTypes.Filter, pageInput pagination.PageInput,
+) ([]mTypes.RepoMeta, zcommon.PageInfo, error) {
+	repoMetaPageFinder, err := metaPage.NewRepoMetaPageFinder(pageInput.Limit, pageInput.Offset, pageInput.SortBy)
+	if err != nil {
+		return nil, zcommon.PageInfo{}, err
+	}
+
+	repos := []mTypes.RepoMeta{}
+	pageInfo := zcommon.PageInfo{}
+
+	err = bdw.DB.View(func(transaction *bbolt.Tx) error {
+		var (
+			repoBuck      = transaction.Bucket([]byte(RepoMetaBuck))
+			repoImageInfo = transaction.Bucket([]byte(RepoBlobsBuck)).Bucket([]byte("RepoImageInfo"))
+			userBookmarks = getUserBookmarks(ctx, transaction)
+			userStars     = getUserStars(ctx, transaction)
+		)
+
+		cursor := repoBuck.Cursor()
+
+		for repoName, _ := cursor.First(); repoName != nil; repoName, _ = cursor.Next() {
+			if ok, err := reqCtx.RepoIsUserAvailable(ctx, string(repoName)); !ok || err != nil {
+				continue
+			}
+
+			rank := common.RankRepoName(searchText, string(repoName))
+			if rank == -1 {
+				continue
+			}
+
+			repoMetaBlob := repoBuck.Get(repoName)
+
+			protoRepoMeta := &proto_go.RepoMeta{
+				Name: string(repoName),
+				Tags: map[string]*proto_go.TagDescriptor{"": {}}, // This is done so Protobuf can initialize a non-nil map
+			}
+
+			if len(repoMetaBlob) > 0 {
+				err := proto.Unmarshal(repoMetaBlob, protoRepoMeta)
+				if err != nil {
+					return err
+				}
+			}
+
+			delete(protoRepoMeta.Tags, "")
+
+			protoRepoMeta.Rank = int32(rank)
+			protoRepoMeta.IsStarred = zcommon.Contains(userStars, protoRepoMeta.Name)
+			protoRepoMeta.IsBookmarked = zcommon.Contains(userBookmarks, protoRepoMeta.Name)
+
+			repoMeta := mConvert.GetRepoMeta(protoRepoMeta)
+
+			if RepoMetaAcceptedByFilter(repoMeta, filter) {
+				repoMetaPageFinder.Add(repoMeta)
+			}
+		}
+
+		repos, pageInfo = repoMetaPageFinder.Page()
+
+		for i := range repos {
+			protoRepoImageInfoBlob := repoImageInfo.Get([]byte(repos[i].Name))
+
+			protoRepoImageInfo := &proto_go.RepoImageInfo{
+				Statistics: map[string]*proto_go.DescriptorStatistics{"": {}},
+				Signatures: map[string]*proto_go.ManifestSignatures{"": {Map: map[string]*proto_go.SignaturesInfo{"": {}}}},
+				Referrers:  map[string]*proto_go.ReferrersInfo{"": {}},
+			}
+
+			if len(protoRepoImageInfoBlob) > 0 {
+				err := proto.Unmarshal(protoRepoImageInfoBlob, protoRepoImageInfo)
+				if err != nil {
+					return err
+				}
+			}
+
+			repos[i].Statistics = mConvert.GetStatisticsMap(protoRepoImageInfo.Statistics)
+			repos[i].Signatures = mConvert.GetSignatures(protoRepoImageInfo.Signatures)
+			repos[i].Referrers = mConvert.GetReferrers(protoRepoImageInfo.Referrers)
+		}
+
+		return nil
+	})
+
+	return repos, pageInfo, err
+}
+
+func RepoMetaAcceptedByFilter(repoMeta mTypes.RepoMeta, filter mTypes.Filter) bool {
+	osFilters := strSliceFromRef(filter.Os)
+	archFilters := strSliceFromRef(filter.Arch)
+
+	platformMatchFound := len(repoMeta.Platforms) == 0 && filter.Os == nil && filter.Arch == nil
+
+	for _, platform := range repoMeta.Platforms {
+		osCheck := true
+
+		if len(osFilters) > 0 {
+			osCheck = zcommon.ContainsStringIgnoreCase(osFilters, platform.OS)
+		}
+
+		archCheck := true
+
+		if len(archFilters) > 0 {
+			archCheck = zcommon.ContainsStringIgnoreCase(archFilters, platform.Architecture)
+		}
+
+		if osCheck && archCheck {
+			platformMatchFound = true
+
+			break
+		}
+	}
+
+	if !platformMatchFound {
+		return false
+	}
+
+	// TODO
+	// if filter.HasToBeSigned != nil && *filter.HasToBeSigned && !repoMeta.LastUpdatedImage.IsSigned {
+	// 	return false
+	// }
+
+	if filter.IsBookmarked != nil && *filter.IsBookmarked != repoMeta.IsBookmarked {
+		return false
+	}
+
+	if filter.IsStarred != nil && *filter.IsStarred != repoMeta.IsStarred {
+		return false
+	}
+
+	return true
+}
+
+func strSliceFromRef(slice []*string) []string {
+	resultSlice := make([]string, len(slice))
+
+	for i := range slice {
+		if slice[i] != nil {
+			resultSlice[i] = *slice[i]
+		}
+	}
+
+	return resultSlice
 }
 
 func getProtoImageMeta(imageBuck *bbolt.Bucket, digest string) (*proto_go.ImageMeta, error) {
@@ -890,6 +1108,7 @@ func (bdw *BoltDB) AddManifestSignature(repo string, signedManifestDigest godige
 	err := bdw.DB.Update(func(tx *bbolt.Tx) error {
 		repoMetaBuck := tx.Bucket([]byte(RepoMetaBuck))
 
+		// TODO: Here
 		repoMetaBlob := repoMetaBuck.Get([]byte(repo))
 
 		if len(repoMetaBlob) == 0 {

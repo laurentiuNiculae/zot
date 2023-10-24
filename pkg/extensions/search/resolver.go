@@ -641,7 +641,7 @@ func globalSearch(ctx context.Context, query string, metaDB mTypes.MetaDB, filte
 			),
 		}
 
-		repoMetaList, err := metaDB.SearchRepos(ctx, query)
+		repoMetaList, pageInfo, err := metaDB.SearchReposPage(ctx, query, localFilter, pageInput)
 		if err != nil {
 			return &gql_generated.PaginatedReposResult{}, []*gql_generated.ImageSummary{},
 				[]*gql_generated.LayerSummary{}, err
@@ -653,8 +653,8 @@ func globalSearch(ctx context.Context, query string, metaDB mTypes.MetaDB, filte
 				[]*gql_generated.LayerSummary{}, err
 		}
 
-		repos, pageInfo, err := convert.PaginatedRepoMeta2RepoSummaries(ctx, repoMetaList, imageMetaMap, localFilter,
-			pageInput, cveInfo,
+		repos, pageInfo, err := convert.PaginatedRepoMeta2RepoSummaries(ctx, repoMetaList, imageMetaMap, mTypes.Filter{},
+			pagination.PageInput{SortBy: pageInput.SortBy}, cveInfo,
 			skip)
 		if err != nil {
 			return &gql_generated.PaginatedReposResult{}, []*gql_generated.ImageSummary{},

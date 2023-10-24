@@ -6,6 +6,8 @@ import (
 
 	godigest "github.com/opencontainers/go-digest"
 
+	zcommon "zotregistry.io/zot/pkg/common"
+	"zotregistry.io/zot/pkg/extensions/search/pagination"
 	mTypes "zotregistry.io/zot/pkg/meta/types"
 )
 
@@ -130,6 +132,11 @@ func (sdm MetaDBMock) GetRepoLastUpdated(repo string) time.Time {
 	}
 
 	return time.Time{}
+}
+
+func (sdm MetaDBMock) SearchReposPage(ctx context.Context, searchText string, filter mTypes.Filter, pageInput pagination.PageInput,
+) ([]mTypes.RepoMeta, zcommon.PageInfo, error) {
+	panic("")
 }
 
 func (sdm MetaDBMock) ResetDB() error {
