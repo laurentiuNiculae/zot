@@ -32,7 +32,7 @@ require (
 	github.com/prometheus/client_model v0.5.0
 	github.com/rs/zerolog v1.31.0
 	github.com/smartystreets/goconvey v1.8.1
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.17.0
 	github.com/stretchr/testify v1.8.4
 	github.com/swaggo/swag v1.16.2
@@ -323,7 +323,7 @@ require (
 	github.com/containers/ocicrypt v1.1.8 // indirect
 	github.com/containers/storage v1.50.2 // indirect
 	github.com/coreos/go-oidc/v3 v3.7.0 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.3 // indirect
 	github.com/cyberphone/json-canonicalization v0.0.0-20230710064741-aa7fe85c7dbd // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
