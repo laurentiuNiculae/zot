@@ -190,7 +190,7 @@ func (bdw *BoltDB) SetRepoReference(ctx context.Context, repo string, reference 
 		repoBuck := tx.Bucket([]byte(RepoMetaBuck))
 		repoBlobsInfo := tx.Bucket([]byte(RepoBlobsBuck)).Bucket([]byte("RepoBlobsInfo"))
 		repoImageInfo := tx.Bucket([]byte(RepoBlobsBuck)).Bucket([]byte("RepoImageInfo"))
-		repoLastUpdatedBuck := repoBlobsBuck.Bucket([]byte(RepoLastUpdatedBuck))
+		repoLastUpdatedBuck := tx.Bucket([]byte(RepoBlobsBuck)).Bucket([]byte(RepoLastUpdatedBuck))
 		imageBuck := tx.Bucket([]byte(ImageMetaBuck))
 
 		// 1. Add image data to db if needed
@@ -519,7 +519,7 @@ func (bdw *BoltDB) SearchRepos(ctx context.Context, searchText string,
 				continue
 			}
 
-			// protoRepoMeta, err := unmarshalProtoRepoMeta(string(repoName), repoMetaBlob)
+			// TODO protoRepoMeta, err := unmarshalProtoRepoMeta(string(repoName), repoMetaBlob)
 			protoRepoMeta, err := bdw.getProtoRepoMeta(repoBuck, repoImageInfo, string(repoName))
 			if err != nil {
 				return err

@@ -48,6 +48,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.23.2
 	github.com/aws/aws-secretsmanager-caching-go v1.1.3
+	github.com/clarketm/json v1.17.1
 	github.com/containers/image/v5 v5.29.0
 	github.com/google/go-github/v52 v52.0.0
 	github.com/gorilla/handlers v1.5.2
